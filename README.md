@@ -4,7 +4,7 @@
 
 What I'm hoping it'll do:
 - Decode and play audio
-  - On a seperate thread so audio playback doesn't kill the main thread if something goes wrong
+  - On a seperate thread so audio playback doesn't kill the main thread if something goes horribly wrong
   - Could use a `getNextSample()` method for all codecs or each codec could create a thread
 - Modify and re-encode audio
   - Also on a seperate thread
