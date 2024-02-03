@@ -44,4 +44,5 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - As a user, I want to play my music
 - As a user, I want to be able to convert my music to a different format
 - As a user, I want to manage my music library
+
 In effect I'm creating a iTunes competitor.
