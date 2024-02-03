@@ -15,57 +15,6 @@ public class Main {
     private static boolean USE_CLI = true;
     private static boolean end = false;
 
-    // No other class needs to know this
-    private static class PlaybackThread extends Thread {
-        private boolean run = true;
-
-        // Modifies: this
-        // Effects:  ends thread
-        public void killThread() {
-            run = false;
-            safeJoin();
-        }
-
-        // Effects: join() but no try-catch
-        public void safeJoin() {
-            try {
-                join();
-            } catch (InterruptedException e) {
-                return;
-            }
-        }
-
-        // Effects: join(long millis) but no try-catch
-        public void safeJoin(long millis) {
-            try {
-                join(millis);
-            } catch (InterruptedException e) {
-                return;
-            }
-        }
-
-        // Effects: join(long millis, int nanos) but no try-catch
-        public void safeJoin(long millis, int nanos) {
-            try {
-                join(millis, nanos);
-            } catch (InterruptedException e) {
-                return;
-            }
-        }
-
-        // Effects: plays audio in file loadedFile
-        public void run() {
-            while (run) {
-                try {
-                    sleep(100);
-                } catch (InterruptedException e) {
-                    return;
-                }
-                Cli.writePlaybackState();
-            }
-        }
-    }
-
     // Effects: returns true if arr contains item, false otherwise
     //          this function is null-safe
     private static boolean strArrContains(String[] arr, String item) {
@@ -95,6 +44,7 @@ public class Main {
         }
     }
 
+    // public interface to the private CLI class
     public static class CliInterface {
         public static void updatePlaybackStatus() {
             Cli.writePlaybackState();
@@ -103,8 +53,62 @@ public class Main {
 
     // CLI mode
     private static class Cli {
+        // No other class needs to know this
+        // class for the thread which handles the playback indicator
+        // in CLI mode
+        private static class PlaybackThread extends Thread {
+            private boolean run = true;
+
+            // Modifies: this
+            // Effects:  ends thread
+            public void killThread() {
+                run = false;
+                safeJoin();
+            }
+
+            // Effects: join() but no try-catch
+            public void safeJoin() {
+                try {
+                    join();
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+
+            // Effects: join(long millis) but no try-catch
+            public void safeJoin(long millis) {
+                try {
+                    join(millis);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+
+            // Effects: join(long millis, int nanos) but no try-catch
+            public void safeJoin(long millis, int nanos) {
+                try {
+                    join(millis, nanos);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+
+            // Effects: plays audio in file loadedFile
+            public void run() {
+                while (run) {
+                    try {
+                        sleep(100);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                    Cli.writePlaybackState();
+                }
+            }
+        }
+
         private static Boolean cliMainMenu = true;
 
+        // main function for the CLI
         private static void main(String[] args) {
             AnsiConsole.systemInstall();
             if (AnsiConsole.getTerminalWidth() == 0) {
@@ -128,7 +132,11 @@ public class Main {
             }
         }
 
+        // metaclass for handling the switch statment groups
         private static class CliSwitchModes {
+
+            // Subelement of cliMain, if all requirements for it are met,
+            // all requirements for this are met
             private static void audioHandlers(String mode, Scanner inputScanner) {
                 switch (mode) {
                     case "c": {
@@ -147,6 +155,8 @@ public class Main {
             }
         }
 
+        // CLI switch manager
+        // calls corresponding functions for different actions
         private static void cliMain(Scanner inputScanner, PlaybackThread visualizerThread, String selected) {
             cliMainMenu = false;
             switch (selected.toLowerCase()) {
@@ -170,6 +180,7 @@ public class Main {
             }
         }
 
+        // Effects: Prints the error for an unknown command
         private static void unknownCommandError() {
             AnsiConsole.out().println("Invalid option.");
             AnsiConsole.out().println("Either you mistyped something, or it hasn't been implemented yet.");
@@ -180,6 +191,8 @@ public class Main {
             }
         }
 
+        // Modifies: this, playbackManager
+        // Effects:  Cleans up extra threads
         private static void cleanup(PlaybackThread visualizerThread) {
             visualizerThread.killThread();
             visualizerThread.interrupt();
@@ -218,6 +231,9 @@ public class Main {
         }
 
         // Modifies: Console
+        // Effects:  updates the audio status bar
+        //           writes the entire status bar in one single print statement,
+        //           which fixes a race condition with the KEYBOARD
         private static void writePlaybackState() {
             double time = playbackManager.getPercentPlayed();
             int w = AnsiConsole.getTerminalWidth() - 2;

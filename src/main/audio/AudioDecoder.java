@@ -2,6 +2,8 @@ package audio;
 
 import javax.sound.sampled.AudioFormat;
 
+// Audio decoder interface
+// Most functions explain themselves
 public interface AudioDecoder {
 
     // Effects: returns true if audio can be decoded currently
