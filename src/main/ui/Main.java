@@ -186,7 +186,7 @@ public class Main {
         private static void playFile(Scanner inputScanner, PlaybackThread visualizerThread) {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
             writePlaybackState();
-            AnsiConsole.out.print(Ansi.ansi().cursor(2, 1));
+            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
             AnsiConsole.out().println("Please enter the filename:");
             String filenameIn = inputScanner.nextLine();
             // Fix whitespace errors
