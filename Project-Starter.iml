@@ -27,5 +27,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="jaad-0.8.4" level="project" />
+    <orderEntry type="library" name="jansi-2.4.2-SNAPSHOT" level="project" />
   </component>
 </module>
