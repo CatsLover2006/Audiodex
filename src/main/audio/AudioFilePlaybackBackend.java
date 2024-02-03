@@ -7,9 +7,12 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
+// Backend for allowing interactions between the UI and filesystem
+// Specific to decoding audio
 public class AudioFilePlaybackBackend {
 
     // No other class needs to know this
+    // This is the audio decoding thread
     private class DecodingThread extends Thread {
         private boolean run = true;
 

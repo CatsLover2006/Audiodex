@@ -2,6 +2,8 @@ package audio;
 
 import javax.sound.sampled.AudioFormat;
 
+// Audio data structure class
+// Will be used for the database
 public class AudioDataStructure {
     private final String filename;
     private final long bitrate;

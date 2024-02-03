@@ -15,6 +15,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.List;
 
+// Audio decoder for the MP4 file type
+// Only supports AAC MP4 files but to my knowledge there are no other
+// audio formats that use MP4 as a primary
 public class MP4 implements AudioDecoder {
     Frame frame;
     private MP4Container container;
