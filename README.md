@@ -10,9 +10,9 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - Modify and reencode audio
   - Also on a seperate thread
 - Manage a list of music files
-  - Includes AC3-based music titles
+  - Includes ID3-based music titles
   - Notes filetype, bitrate, codec and other useful information about the file (cache?)
-- Read and modify AC3 tags
+- Read and modify ID3 tags
   - (Maybe) Including album art
 - All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding, most use native executables
@@ -25,7 +25,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - MP4, M4A, M4B: AAC (Encode)
 - AAC (Present but completely untested and probably broken)
 - WAV (Uncompressed audio)
-- AIFF (Uncompressed audio with AC3 tags)
+- AIFF (Uncompressed audio with ID3 tags)
 - MP3
 - OGG, OGA, MOGG: Vorbis
 - FLAC (Lossless audio)
