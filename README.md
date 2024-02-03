@@ -1,5 +1,8 @@
 # Chance's CPSC 210 Personal Project
 
+***NOTE***: This project cannot properly run within the IntelliJ IDE environment. This is due to it not properly supporting ANSI terminal commands, which I use extensively to assist with indicators.<br>
+***NOTE 2***: This project expects you have music files to play. Due to copyright law, I have not included any; as such, there is no way to do automatic testing of the audio encoding and decoding functions. 
+
 ## AudioDex
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
 
@@ -18,7 +21,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - I'm going to use libraries to handle decoding and encoding, most use native executables
   
 ### Currently supported filetypes/codecs:
-- MP4, M4A, M4B: AAC (Decode only, jank AF)
+- MP4, M4A, M4B: AAC (Decode only)
   - M4B needs verification
 
 ### Planned filetypes/codecs:
@@ -32,3 +35,13 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - (Hopefully) ALAC (Lossless audio)
 - (Maybe) APE (Lossless audio)
 - (Maybe) WMA
+
+### Known Issues:
+- Slow storage interfaces can cause audio popping
+  - Likely due to the decoder being starved for data
+
+## User Stories
+- As a user, I want to play my music
+- As a user, I want to be able to convert my music to a different format
+- As a user, I want to manage my music library
+In effect I'm creating a iTunes competitor.
