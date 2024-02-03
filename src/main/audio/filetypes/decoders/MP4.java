@@ -120,6 +120,9 @@ public class MP4 implements AudioDecoder {
 
     // Effects: returns the current time in the audio in seconds
     public double getCurrentTime() {
+        if (frame == null) {
+            return 0;
+        }
         return frame.getTime();
     }
 
