@@ -95,6 +95,12 @@ public class Main {
         }
     }
 
+    public static class CliInterface {
+        public static void updatePlaybackStatus() {
+            Cli.writePlaybackState();
+        }
+    }
+
     // CLI mode
     private static class Cli {
         private static Boolean cliMainMenu = true;
@@ -216,6 +222,11 @@ public class Main {
             double time = playbackManager.getPercentPlayed();
             int w = AnsiConsole.getTerminalWidth() - 2;
             String burstWrite = "[";
+            if (playbackManager.paused()) {
+                burstWrite = Ansi.ansi().fgBrightRed().toString() + "PAUSED"
+                        + Ansi.ansi().fgDefault().toString() + " [";
+                w -= 7;
+            }
             for (int i = 0; i < w; i++) {
                 if (i < Math.floor(time * w)) {
                     burstWrite += "#";
@@ -226,16 +237,9 @@ public class Main {
                 }
             }
             AnsiConsole.out().flush();
-            AnsiConsole.out().print(Ansi.ansi().saveCursorPosition());
-            AnsiConsole.out().print(Ansi.ansi().bold());
-            AnsiConsole.out().print(Ansi.ansi().fgBright(Ansi.Color.WHITE));
-            AnsiConsole.out().print(Ansi.ansi().bg(Ansi.Color.BLACK));
-            AnsiConsole.out().print(Ansi.ansi().cursor(1, 1));
-            AnsiConsole.out().print(burstWrite + "]");
-            AnsiConsole.out().print(Ansi.ansi().boldOff());
-            AnsiConsole.out().print(Ansi.ansi().fgDefault());
-            AnsiConsole.out().print(Ansi.ansi().bgDefault());
-            AnsiConsole.out().print(Ansi.ansi().restoreCursorPosition());
+            AnsiConsole.out().print(Ansi.ansi().saveCursorPosition().toString()
+                    + Ansi.ansi().cursor(1, 1).toString() + burstWrite + "]"
+                    + Ansi.ansi().restoreCursorPosition().toString());
         }
 
         // Modifies: loaded file container through playbackManager

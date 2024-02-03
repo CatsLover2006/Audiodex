@@ -53,18 +53,13 @@ public class AudioFilePlaybackBackend {
             while (run && loadedFile.moreSamples()) {
                 sample = loadedFile.getNextSample();
                 line.write(sample, 0, sample.length);
-                /*for (byte sampleSub : sample) {
-                    String hex = Integer.toHexString(sampleSub);
-                    if (hex.length() % 2 == 1) {
-                        hex = "0" + hex;
-                    }
-                    System.out.print(hex);
-                }//*/// This was debugging1
             }
             line.stop();
             loadedFile.closeAudioFile();
             loadedFile = null;
             Main.finishedSong();
+            // This might be cursed, but whatever
+            decoderThread = null;
         }
     }
 
@@ -72,23 +67,17 @@ public class AudioFilePlaybackBackend {
     private AudioFormat audioFormat;
     private SourceDataLine line = null;
     private DecodingThread decoderThread = null;
+    protected boolean paused = false;
 
     // Requires: filename points to file (in order for anything to happen)
     // Modifies: this
     // Effects:  loads audio and gets decoder thread to
     public void loadAudio(String filename) {
-        if (decoderThread != null && decoderThread.isAlive()) {
-            pauseAudio();
-        }
-        if (line != null && line.isActive()) {
-            line.stop();
-            line.close();
-        }
-        if (loadedFile != null && loadedFile.isReady()) {
-            loadedFile.closeAudioFile();
-            loadedFile = null;
-        }
+        unloadAudio();
         loadedFile = AudioFileLoader.loadFile(filename);
+        if (loadedFile == null) {
+            return;
+        }
         loadedFile.prepareToPlayAudio();
         if (!loadedFile.isReady()) {
             return;
@@ -100,6 +89,26 @@ public class AudioFilePlaybackBackend {
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // loadAudio helper
+    private void unloadAudio() {
+        if (decoderThread != null && decoderThread.isAlive()) {
+            pauseAudio();
+        }
+        if (line != null && line.isActive()) {
+            line.stop();
+            line.close();
+        }
+        if (loadedFile != null && loadedFile.isReady()) {
+            loadedFile.closeAudioFile();
+            loadedFile = null;
+        }
+        paused = false;
+    }
+
+    public boolean paused() {
+        return decoderThread != null && paused;
     }
 
     // Effects: returns a number between 0.0 and 1.0 relating to how much of the audio is played
@@ -144,6 +153,10 @@ public class AudioFilePlaybackBackend {
     // Modifies: this
     // Effects:  resumes paused audio
     public void playAudio() {
+        if (loadedFile == null) {
+            return;
+        }
+        paused = false;
         if (decoderThread.isAlive()) {
             line.start();
             decoderThread.resume();
@@ -151,21 +164,25 @@ public class AudioFilePlaybackBackend {
             line.start();
             decoderThread.start();
         }
+        Main.CliInterface.updatePlaybackStatus();
     }
 
     // Modifies: this
     // Effects:  pauses audio (if it isn't already paused)
     public void pauseAudio() {
+        paused = true;
         if (decoderThread.isAlive()) {
             decoderThread.suspend();
             line.stop();
         }
+        Main.CliInterface.updatePlaybackStatus();
     }
 
     // Modifies: this
     // Effects:  sets playback pointer to the beginning of the loaded file
     public void restartAudio() {
         loadedFile.goToTime(0);
+        Main.CliInterface.updatePlaybackStatus();
     }
 
     // Requires: 0 <= time <= audio length
@@ -173,6 +190,7 @@ public class AudioFilePlaybackBackend {
     // Effects:  sets playback pointer to the specified time
     public void seekTo(double time) {
         loadedFile.goToTime(time);
+        Main.CliInterface.updatePlaybackStatus();
     }
 
     // Effects: waits for audio playback to finish
