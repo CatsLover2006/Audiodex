@@ -6,7 +6,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ### Plans
 - Decode and play audio
   - On a seperate thread so audio playback doesn't kill the main thread if something goes horribly wrong
-  - Could use a `getNextSample()` method for all codecs or each codec could create a thread
+  - Uses a `getNextSample()` method for all codecs
 - Modify and reencode audio
   - Also on a seperate thread
 - Manage a list of music files
