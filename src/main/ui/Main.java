@@ -132,29 +132,7 @@ public class Main {
             }
         }
 
-        // metaclass for handling the switch statment groups
-        private static class CliSwitchModes {
-
-            // Subelement of cliMain, if all requirements for it are met,
-            // all requirements for this are met
-            private static void audioHandlers(String mode, Scanner inputScanner) {
-                switch (mode) {
-                    case "c": {
-                        playbackManager.playAudio();
-                        break;
-                    }
-                    case "p": {
-                        playbackManager.pauseAudio();
-                        break;
-                    }
-                    case "s": {
-                        seekAudio(inputScanner);
-                        break;
-                    }
-                }
-            }
-        }
-
+        @SuppressWarnings("methodlength") // Large switch/case
         // CLI switch manager
         // calls corresponding functions for different actions
         private static void cliMain(Scanner inputScanner, PlaybackThread visualizerThread, String selected) {
@@ -164,10 +142,16 @@ public class Main {
                     playFile(inputScanner, visualizerThread);
                     break;
                 }
-                case "c":
-                case "p":
+                case "c": {
+                    playbackManager.playAudio();
+                    break;
+                }
+                case "p": {
+                    playbackManager.pauseAudio();
+                    break;
+                }
                 case "s": {
-                    CliSwitchModes.audioHandlers(selected.toLowerCase(), inputScanner);
+                    seekAudio(inputScanner);
                     break;
                 }
                 case "4": {
