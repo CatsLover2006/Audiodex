@@ -9,6 +9,8 @@ public class AudioFileLoader {
     public static AudioDecoder loadFile(String filename) {
         String filetype = filename.substring(filename.length() - 4);
         switch (filetype.toLowerCase()) {
+            case ".mp3":
+                return new MP3(filename);
             case ".mp4":
             case ".m4a":
             case ".m4b":

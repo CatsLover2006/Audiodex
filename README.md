@@ -23,13 +23,15 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ### Currently supported filetypes/codecs:
 - MP4, M4A, M4B: AAC (Decode only)
   - M4B needs verification
+- MP3 (Decode only)
+  - MP2, MP1 might be decodable as well, filetype detection is unimplemented
 
 ### Planned filetypes/codecs:
 - MP4, M4A, M4B: AAC (Encode)
 - AAC (Present but completely untested and probably broken)
 - WAV (Uncompressed audio)
 - AIFF (Uncompressed audio with ID3 tags)
-- MP3
+- MP3 (Encode)
 - OGG, OGA, MOGG: Vorbis
 - FLAC (Lossless audio)
 - (Hopefully) ALAC (Lossless audio)

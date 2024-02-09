@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioSample;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.SampleBuffer;
@@ -41,7 +42,7 @@ public class MP4 implements AudioDecoder {
 
     // Modifies: this
     // Effects: loads audio and makes all other functions valid
-    public boolean prepareToPlayAudio() {
+    public void prepareToPlayAudio() {
         try {
             file = new RandomAccessFile(filename, "r");
             container = new MP4Container(file);
@@ -51,7 +52,7 @@ public class MP4 implements AudioDecoder {
             if (tracks.isEmpty()) {
                 file.close();
                 file = null;
-                return false;
+                return;
             }
             this.tracks = (AudioTrack) tracks.get(0);
             audioFormat = new AudioFormat(this.tracks.getSampleRate(), this.tracks.getSampleSize(),
@@ -59,10 +60,8 @@ public class MP4 implements AudioDecoder {
             decoder = new Decoder(this.tracks.getDecoderSpecificInfo());
             ready = true;
             System.out.println("AAC decoder ready!");
-            return true;
         } catch (IOException e) {
             ready = false;
-            return false;
         }
     }
 
@@ -83,20 +82,20 @@ public class MP4 implements AudioDecoder {
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
-    public byte[] getNextSample() {
+    public AudioSample getNextSample() {
         while (moreSamples()) {
             try {
                 frame = tracks.readNextFrame();
                 decoder.decodeFrame(frame.getData(), buffer);
-                return buffer.getData();
+                return new AudioSample(buffer.getData());
             } catch (AACException e) {
                 e.printStackTrace();
             } catch (IOException e) {
-                return new byte[] {0};
+                return new AudioSample();
             }
             // If we encountered an error, just move along to the next sample
         }
-        return new byte[] {0};
+        return new AudioSample();
     }
 
     // Requires: prepareToPlayAudio() called
@@ -133,8 +132,8 @@ public class MP4 implements AudioDecoder {
         return duration;
     }
 
-    // Effects:  returns false if there are more samples to be played
-    //           will return true is no file is loaded
+    // Effects:  returns true if there are more samples to be played
+    //           will return false is no file is loaded
     public boolean moreSamples() {
         if (!ready) {
             return false;

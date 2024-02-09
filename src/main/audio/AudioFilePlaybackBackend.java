@@ -20,7 +20,6 @@ public class AudioFilePlaybackBackend {
         // Effects:  ends thread
         public void killThread() {
             run = false;
-            safeJoin();
         }
 
         // Effects: join() but no try-catch
@@ -52,10 +51,11 @@ public class AudioFilePlaybackBackend {
 
         // Effects: plays audio in file loadedFile
         public void run() {
-            byte[] sample;
+            AudioSample sample;
             while (run && loadedFile.moreSamples()) {
                 sample = loadedFile.getNextSample();
-                line.write(sample, 0, sample.length);
+                line.write(sample.getData(), 0, sample.getLength());
+                //System.out.println(sample.getLength()); // Debugging info
             }
             line.stop();
             loadedFile.closeAudioFile();
@@ -127,21 +127,21 @@ public class AudioFilePlaybackBackend {
     }
 
     // Effects: returns the audio length in seconds
-    //          returns 0.0 if none is loaded
+    //          returns -1 if none is loaded
     public double getFileDuration() {
         if (loadedFile != null) {
             return loadedFile.getFileDuration();
         }
-        return 0;
+        return -1;
     }
 
     // Effects: returns the audio played in seconds
-    //          returns 0.0 if none is loaded
+    //          returns -1 if none is loaded
     public double getCurrentTime() {
         if (loadedFile != null) {
             return loadedFile.getCurrentTime();
         }
-        return 0;
+        return -1;
     }
 
     // Modifies: this
@@ -160,11 +160,10 @@ public class AudioFilePlaybackBackend {
             return;
         }
         paused = false;
+        line.start();
         if (decoderThread.isAlive()) {
-            line.start();
             decoderThread.resume();
         } else {
-            line.start();
             decoderThread.start();
         }
         Main.CliInterface.updatePlaybackStatus();
