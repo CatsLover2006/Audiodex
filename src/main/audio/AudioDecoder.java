@@ -11,8 +11,7 @@ public interface AudioDecoder {
 
     // Modifies: this
     // Effects:  loads audio and makes all other functions valid
-    //           returns false if something went wrong during initialization
-    public boolean prepareToPlayAudio();
+    public void prepareToPlayAudio();
 
     // Requires: prepareToPlayAudio() called
     // Modifies: this
@@ -22,7 +21,7 @@ public interface AudioDecoder {
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
-    public byte[] getNextSample();
+    public AudioSample getNextSample();
 
     // Requires: prepareToPlayAudio() called
     //           0 <= time <= audio length
@@ -46,8 +45,8 @@ public interface AudioDecoder {
     // Effects:  sets the audio format of the file
     public void setAudioOutputFormat(AudioFormat format);
 
-    // Effects:  returns false if there are more samples to be played
-    //           will return true is no file is loaded
+    // Effects:  returns true if there are more samples to be played
+    //           will return false is no file is loaded
     public boolean moreSamples();
 
 }

@@ -5,6 +5,9 @@
       <element id="module-output" name="Project-Starter" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/jaad-0.8.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/jansi-2.4.2-SNAPSHOT.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/mp3spi-1.9.5.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jlayer-1.0.1.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/tritonus-share-0.3.7.4.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

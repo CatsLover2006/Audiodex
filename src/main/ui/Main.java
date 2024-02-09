@@ -8,6 +8,7 @@ import java.util.Scanner;
 import org.fusesource.jansi.*;
 import org.fusesource.jansi.io.*;
 
+import static java.lang.Math.floor;
 import static java.lang.Thread.*;
 
 public class Main {
@@ -181,6 +182,8 @@ public class Main {
             visualizerThread.killThread();
             visualizerThread.interrupt();
             playbackManager.cleanBackend();
+            visualizerThread = null;
+            playbackManager = null;
             end = true;
         }
 
@@ -214,6 +217,14 @@ public class Main {
             }
         }
 
+        // Effects: returns formatted time
+        private static String formatTime(long seconds) {
+            if (seconds == -1) {
+                return "X:XX";
+            }
+            return String.format("%01d:%02d", seconds / 60, seconds % 60);
+        }
+
         // Modifies: Console
         // Effects:  updates the audio status bar
         //           writes the entire status bar in one single print statement,
@@ -221,14 +232,16 @@ public class Main {
         private static void writePlaybackState() {
             double time = playbackManager.getPercentPlayed();
             int w = AnsiConsole.getTerminalWidth() - 2;
-            String burstWrite = "[";
+            String burstWrite = formatTime((long) floor(playbackManager.getCurrentTime())) + " [";
             if (playbackManager.paused()) {
                 burstWrite = Ansi.ansi().fgBrightRed().toString() + "PAUSED"
-                        + Ansi.ansi().fgDefault().toString() + " [";
-                w -= 7;
+                        + Ansi.ansi().fgDefault().toString() + " " + burstWrite;
+                w += Ansi.ansi().fgBrightRed().toString().length() + Ansi.ansi().fgDefault().toString().length();
             }
+            String fileDuration = formatTime((long) floor(playbackManager.getFileDuration()));
+            w -= burstWrite.length() + fileDuration.length();
             for (int i = 0; i < w; i++) {
-                if (i < Math.floor(time * w)) {
+                if (i < floor(time * w)) {
                     burstWrite += "#";
                 } else if (i < Math.round(time * w)) {
                     burstWrite += "=";
@@ -238,7 +251,7 @@ public class Main {
             }
             AnsiConsole.out().flush();
             AnsiConsole.out().print(Ansi.ansi().saveCursorPosition().toString()
-                    + Ansi.ansi().cursor(1, 1).toString() + burstWrite + "]"
+                    + Ansi.ansi().cursor(1, 1).toString() + burstWrite + "] " + fileDuration
                     + Ansi.ansi().restoreCursorPosition().toString());
         }
 
