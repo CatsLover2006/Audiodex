@@ -2,6 +2,7 @@ package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
 import audio.AudioSample;
+import audio.ID3Container;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.SampleBuffer;
@@ -10,11 +11,25 @@ import net.sourceforge.jaad.mp4.api.AudioTrack;
 import net.sourceforge.jaad.mp4.api.Frame;
 import net.sourceforge.jaad.mp4.api.Movie;
 import net.sourceforge.jaad.mp4.api.Track;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.TagException;
+import ui.Main;
 
 import javax.sound.sampled.AudioFormat;
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static java.io.File.separatorChar;
 
 // Audio decoder for the MP4 file type
 // Only supports AAC MP4 files but to my knowledge there are no other
@@ -30,6 +45,7 @@ public class MP4 implements AudioDecoder {
     private SampleBuffer buffer = new SampleBuffer();
     private RandomAccessFile file;
     private double duration;
+    private ID3Container cachedID3;
 
     public boolean isReady() {
         return ready;
@@ -44,6 +60,7 @@ public class MP4 implements AudioDecoder {
     // Effects: loads audio and makes all other functions valid
     public void prepareToPlayAudio() {
         try {
+            //cachedID3 = makeID3();
             file = new RandomAccessFile(filename, "r");
             container = new MP4Container(file);
             Movie movie = container.getMovie();
@@ -76,6 +93,9 @@ public class MP4 implements AudioDecoder {
             file = null;
             ready = false;
         } catch (IOException e) {
+            ready = false;
+        } catch (NullPointerException e) {
+            file = null;
             ready = false;
         }
     }
@@ -123,7 +143,7 @@ public class MP4 implements AudioDecoder {
     // Effects: returns the current time in the audio in seconds
     public double getCurrentTime() {
         if (frame == null) {
-            return 0;
+            return -1;
         }
         return frame.getTime();
     }
@@ -139,5 +159,53 @@ public class MP4 implements AudioDecoder {
             return false;
         }
         return tracks.hasMoreFrames();
+    }
+
+    private static final HashMap<FieldKey, String> keyConv;
+
+    static {
+        keyConv = new HashMap<FieldKey, String>();
+        keyConv.put(FieldKey.ARTIST, "Artist");
+        keyConv.put(FieldKey.ALBUM, "Album");
+        keyConv.put(FieldKey.ALBUM_ARTIST, "AlbumArtist");
+        keyConv.put(FieldKey.TITLE, "Title");
+        keyConv.put(FieldKey.TRACK, "Track");
+        keyConv.put(FieldKey.TRACK_TOTAL, "Tracks");
+        keyConv.put(FieldKey.DISC_NO, "Disc");
+        keyConv.put(FieldKey.DISC_TOTAL, "Discs");
+        keyConv.put(FieldKey.YEAR, "Year");
+        keyConv.put(FieldKey.GENRE, "GenreString");
+        keyConv.put(FieldKey.COMMENT, "Comment");
+        keyConv.put(FieldKey.LYRICS, "Lyrics");
+        keyConv.put(FieldKey.COMPOSER, "Composer");
+        keyConv.put(FieldKey.RECORD_LABEL, "Publisher");
+        keyConv.put(FieldKey.COPYRIGHT, "Copyright");
+        keyConv.put(FieldKey.ENCODER, "Encoder");
+    }
+
+    // Effects: returns decoded ID3 data
+    public ID3Container getID3() {
+        ID3Container base = new ID3Container();
+        base.setID3Data("VBR", "UNKNOWN");
+        base.setID3Data("bitRate", tracks.getSampleSize());
+        base.setID3Data("sampleRate", tracks.getSampleRate());
+        File file = new File(filename);
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(file);
+        } catch (Exception e) {
+            return base;
+        }
+        Tag tag = f.getTag();
+        for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
+            base.setID3Long(entry.getValue(), tag.getFirst(entry.getKey()));
+        }
+        return base;
+    }
+
+    // Effects: returns filename without directories
+    public String getFileName() {
+        String[] dirList = filename.split(String.valueOf(separatorChar));
+        return dirList[dirList.length - 1];
     }
 }

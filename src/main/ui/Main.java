@@ -5,6 +5,8 @@ import audio.AudioFilePlaybackBackend;
 import java.io.File;
 import java.util.InputMismatchException;
 import java.util.Scanner;
+
+import audio.ID3Container;
 import org.fusesource.jansi.*;
 import org.fusesource.jansi.io.*;
 
@@ -12,6 +14,7 @@ import static java.lang.Math.floor;
 import static java.lang.Thread.*;
 
 public class Main {
+    private static ID3Container id3;
     private static AudioFilePlaybackBackend playbackManager;
     private static boolean USE_CLI = true;
     private static boolean end = false;
@@ -34,7 +37,7 @@ public class Main {
             if (Cli.cliMainMenu) {
                 Cli.printMenu();
             }
-            Cli.writePlaybackState();
+            Cli.doPlaybackStatusWrite();
         }
     }
 
@@ -48,7 +51,11 @@ public class Main {
     // public interface to the private CLI class
     public static class CliInterface {
         public static void updatePlaybackStatus() {
-            Cli.writePlaybackState();
+            Cli.doPlaybackStatusWrite();
+        }
+
+        public static void println(Object in) {
+            AnsiConsole.out().println(in);
         }
     }
 
@@ -96,13 +103,19 @@ public class Main {
 
             // Effects: plays audio in file loadedFile
             public void run() {
+                if (AnsiConsole.getTerminalWidth() == 0) {
+                    return;
+                }
                 while (run) {
                     try {
                         sleep(100);
                     } catch (InterruptedException e) {
                         return;
                     }
-                    Cli.writePlaybackState();
+                    if (playbackManager == null) {
+                        return;
+                    }
+                    Cli.doPlaybackStatusWrite();
                 }
             }
         }
@@ -113,10 +126,7 @@ public class Main {
         private static void main(String[] args) {
             AnsiConsole.systemInstall();
             if (AnsiConsole.getTerminalWidth() == 0) {
-                AnsiConsole.out().println("This application does not work within your terminal.");
-                AnsiConsole.out().print("Please switch to a different terminal, ");
-                AnsiConsole.out().println("or use an actual terminal if you are in an IDE.");
-                return;
+                AnsiConsole.out().println("This application works better in a regular java console.");
             }
             PlaybackThread visualizerThread = new PlaybackThread();
             visualizerThread.start();
@@ -124,7 +134,7 @@ public class Main {
             while (true) {
                 cliMainMenu = true;
                 printMenu();
-                writePlaybackState();
+                doPlaybackStatusWrite();
                 cliMain(inputScanner, visualizerThread, inputScanner.nextLine());
                 if (end) {
                     AnsiConsole.out().println("Goodbye!");
@@ -159,10 +169,26 @@ public class Main {
                     cleanup(visualizerThread);
                     return;
                 }
+                case "}": {
+                    debug(inputScanner);
+                    return;
+                }
                 default: {
                     unknownCommandError();
                 }
             }
+        }
+
+        private static void debug(Scanner scanner) {
+            AnsiConsole.out().println(Ansi.ansi().fgBrightGreen() + "Debugging now!");
+            AnsiConsole.out().println("ID3Container toString Data:");
+            AnsiConsole.out().println(playbackManager.getID3().toString());
+            try {
+                sleep(10000);
+            } catch (InterruptedException e) {
+                e.printStackTrace(); // Why?
+            }
+            AnsiConsole.out().print(Ansi.ansi().fgDefault());
         }
 
         // Effects: Prints the error for an unknown command
@@ -191,7 +217,7 @@ public class Main {
         // Effects: plays a file
         private static void playFile(Scanner inputScanner, PlaybackThread visualizerThread) {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
-            writePlaybackState();
+            doPlaybackStatusWrite();
             AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
             AnsiConsole.out().println("Please enter the filename:");
             String filenameIn = inputScanner.nextLine();
@@ -205,6 +231,7 @@ public class Main {
                 playbackManager.loadAudio(filename);
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
+                id3 = playbackManager.getID3();
                 visualizerThread = new PlaybackThread();
                 visualizerThread.start();
             } else {
@@ -212,7 +239,7 @@ public class Main {
                 try {
                     sleep(1000);
                 } catch (InterruptedException e) {
-                    return; // Why?
+                    // Why?
                 }
             }
         }
@@ -223,6 +250,26 @@ public class Main {
                 return "X:XX";
             }
             return String.format("%01d:%02d", seconds / 60, seconds % 60);
+        }
+
+        // Effects: runs writePlaybackState() will null catching
+        //          also doubles as checking against IntelliJ console
+        private static void doPlaybackStatusWrite() {
+            if (AnsiConsole.getTerminalWidth() == 0) {
+                String w = formatTime((long) floor(playbackManager.getCurrentTime())) + " of "
+                        + formatTime((long) floor(playbackManager.getFileDuration()));
+                if (playbackManager.paused()) {
+                    AnsiConsole.out().print(Ansi.ansi().fgBrightRed().toString() + "PAUSED"
+                            + Ansi.ansi().fgDefault().toString() + "; ");
+                }
+                AnsiConsole.out().println(w);
+                return;
+            }
+            try {
+                writePlaybackState();
+            } catch (NullPointerException e) {
+                // Lol no
+            }
         }
 
         // Modifies: Console
@@ -259,7 +306,7 @@ public class Main {
         // Effects:  seeks to location in song
         private static void seekAudio(Scanner inputScanner) {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
-            writePlaybackState();
+            doPlaybackStatusWrite();
             AnsiConsole.out.print(Ansi.ansi().cursor(2, 1));
             AnsiConsole.out().println("Please input the time (in seconds) you'd like to go to.");
             while (true) {
@@ -281,14 +328,15 @@ public class Main {
         // Effects: prints main menu
         private static void printMenu() {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
-            writePlaybackState();
-            AnsiConsole.out.print(Ansi.ansi().cursor(2, 1));
+            doPlaybackStatusWrite();
+            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
             AnsiConsole.out().println("What would you like to do?");
             AnsiConsole.out().println("1. Play a file");
             AnsiConsole.out().println("2. Add file to database");
             AnsiConsole.out().println("3. Play a file from database");
             AnsiConsole.out().println("4. Exit");
             if (playbackManager.audioIsLoaded()) {
+                AnsiConsole.out().println("Now Playing: " + playbackManager.getPlaybackString());
                 AnsiConsole.out().println("P. Pause");
                 AnsiConsole.out().println("C. Play");
                 AnsiConsole.out().println("S. Seek");
