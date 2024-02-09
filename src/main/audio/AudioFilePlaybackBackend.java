@@ -224,4 +224,29 @@ public class AudioFilePlaybackBackend {
     public boolean audioIsLoaded() {
         return loadedFile != null;
     }
+
+    // Effects: passthrough for ID3Container of file
+    public ID3Container getID3() {
+        if (loadedFile == null) {
+            return new ID3Container();
+        }
+        return loadedFile.getID3();
+    }
+
+    public String getPlaybackString() {
+        if (loadedFile == null) {
+            return "Not Playing";
+        }
+        ID3Container id3 = loadedFile.getID3();
+        String workingData = (String) id3.getID3Data("Title");
+        if (workingData == null || workingData.equals("null") || workingData.isEmpty()) {
+            return loadedFile.getFileName();
+        }
+        String base = workingData;
+        workingData = (String) id3.getID3Data("Artist");
+        if (workingData == null || workingData.equals("null") || workingData.isEmpty()) {
+            base += " by " + workingData;
+        }
+        return base;
+    }
 }

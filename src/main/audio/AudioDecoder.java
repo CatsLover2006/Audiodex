@@ -6,47 +6,52 @@ import javax.sound.sampled.AudioFormat;
 // Most functions explain themselves
 public interface AudioDecoder {
 
+    // Effects: returns filename without directories
+    String getFileName();
+
     // Effects: returns true if audio can be decoded currently
-    public boolean isReady();
+    boolean isReady();
 
     // Modifies: this
     // Effects:  loads audio and makes all other functions valid
-    public void prepareToPlayAudio();
+    void prepareToPlayAudio();
 
     // Requires: prepareToPlayAudio() called
     // Modifies: this
     // Effects:  unloads audio file, to save memory
     //           getAudioOutputFormat() and atEndOfFile() remain valid
-    public void closeAudioFile();
+    void closeAudioFile();
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
-    public AudioSample getNextSample();
+    AudioSample getNextSample();
 
     // Requires: prepareToPlayAudio() called
     //           0 <= time <= audio length
     // Modifies: this
     // Effects:  moves audio to a different point of the file
-    public void goToTime(double time);
+    void goToTime(double time);
 
     // Effects: returns the current time in the audio in seconds
-    public double getCurrentTime();
+    double getCurrentTime();
 
     // Effects: returns the duration of the audio in seconds
-    public double getFileDuration();
+    double getFileDuration();
 
     // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
     // Effects:  returns the audio format of the file
-    public AudioFormat getAudioOutputFormat();
+    AudioFormat getAudioOutputFormat();
 
     // Requires: prepareToPlayAudio() has never been called
     //           won't crash but is pointless
     // Modifies: this
     // Effects:  sets the audio format of the file
-    public void setAudioOutputFormat(AudioFormat format);
+    void setAudioOutputFormat(AudioFormat format);
 
-    // Effects:  returns true if there are more samples to be played
-    //           will return false is no file is loaded
-    public boolean moreSamples();
+    // Effects: returns true if there are more samples to be played
+    //          will return false is no file is loaded
+    boolean moreSamples();
 
+    // Effects: returns decoded ID3 data
+    ID3Container getID3();
 }

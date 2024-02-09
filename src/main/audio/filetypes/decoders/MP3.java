@@ -7,13 +7,13 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
+import audio.ID3Container;
+import com.mpatric.mp3agic.*;
 import javazoom.spi.mpeg.sampled.convert.DecodedMpegAudioInputStream;
-import javazoom.spi.mpeg.sampled.file.MpegAudioFileFormat;
 import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
 
-import static java.lang.Math.random;
+import static java.io.File.separatorChar;
 
 public class MP3 implements AudioDecoder {
     private MpegAudioFileReader fileReader;
@@ -55,6 +55,7 @@ public class MP3 implements AudioDecoder {
                     false);
             decoded = new DecodedMpegAudioInputStream(format, in);
             audioFrameRate = baseFormat.getFrameRate();
+            System.out.println("MP3 decoder ready!");
             ready = true;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -138,5 +139,68 @@ public class MP3 implements AudioDecoder {
     //           will return false is no file is loaded
     public boolean moreSamples() {
         return numberBytesRead != -1;
+    }
+
+    // Effects: returns decoded ID3 data
+    public ID3Container getID3() {
+        Mp3File id3Grabber;
+        try {
+            id3Grabber = new Mp3File(filename);
+        } catch (Exception e) {
+            return new ID3Container();
+        }
+        ID3Container id3 = new ID3Container();
+        id3.setID3Data("VBR", id3Grabber.isVbr() ? "YES" : "NO");
+        id3.setID3Data("bitRate", id3Grabber.getBitrate());
+        id3.setID3Data("sampleRate", id3Grabber.getSampleRate());
+        if (id3Grabber.hasId3v1Tag()) {
+            getID3v1(id3, id3Grabber);
+        }
+        if (id3Grabber.hasId3v2Tag()) {
+            getID3v2(id3, id3Grabber);
+        }
+        return id3;
+    }
+
+    // Modifies: id3
+    // Effects:  fills in relevant ID3 fields
+    private void getID3v1(ID3Container id3, Mp3File id3Grabber) {
+        ID3v1 id3v1Tag = id3Grabber.getId3v1Tag();
+        id3.setID3Long("Track", id3v1Tag.getTrack());
+        id3.setID3Long("Year", id3v1Tag.getYear());
+        id3.setID3Data("Artist", id3v1Tag.getArtist());
+        id3.setID3Data("Title", id3v1Tag.getTitle());
+        id3.setID3Data("Album", id3v1Tag.getAlbum());
+        id3.setID3Data("GenreInt", id3v1Tag.getGenre());
+        id3.setID3Data("GenreString", id3v1Tag.getGenreDescription());
+        id3.setID3Data("Comment", id3v1Tag.getComment());
+    }
+
+    // Modifies: id3
+    // Effects:  fills in relevant ID3 fields
+    private void getID3v2(ID3Container id3, Mp3File id3Grabber) {
+        ID3v2 id3v2Tag = id3Grabber.getId3v2Tag();
+        id3.setID3Data("Artist", id3v2Tag.getArtist());
+        id3.setID3Data("Title", id3v2Tag.getTitle());
+        id3.setID3Data("Album", id3v2Tag.getAlbum());
+        id3.setID3Long("Track", id3v2Tag.getTrack());
+        id3.setID3Long("Year", id3v2Tag.getYear());
+        id3.setID3Data("GenreInt", id3v2Tag.getGenre());
+        id3.setID3Data("GenreString", id3v2Tag.getGenreDescription());
+        id3.setID3Data("Comment", id3v2Tag.getComment());
+        id3.setID3Data("Lyrics", id3v2Tag.getLyrics());
+        id3.setID3Data("Composer", id3v2Tag.getComposer());
+        id3.setID3Data("Publisher", id3v2Tag.getPublisher());
+        id3.setID3Data("OriginalArtist", id3v2Tag.getOriginalArtist());
+        id3.setID3Data("AlbumArtist", id3v2Tag.getAlbumArtist());
+        id3.setID3Data("Copyright", id3v2Tag.getCopyright());
+        id3.setID3Data("URL", id3v2Tag.getUrl());
+        id3.setID3Data("Encoder", id3v2Tag.getEncoder());
+    }
+
+    // Effects: returns filename without directories
+    public String getFileName() {
+        String[] dirList = filename.split(String.valueOf(separatorChar));
+        return dirList[dirList.length - 1];
     }
 }

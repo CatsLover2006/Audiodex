@@ -22,7 +22,7 @@ public class AudioDataStructure {
         AudioFormat format = audioDecoder.getAudioOutputFormat();
         bitrate = (long) (format.getSampleSizeInBits() / format.getSampleRate());
         sampleSize = format.getSampleSizeInBits();
-        id3Data = null;
+        id3Data = audioDecoder.getID3();
     }
 
     // Modifies: this
@@ -35,6 +35,19 @@ public class AudioDataStructure {
         this.sampleSize = sampleSize;
         audioFileType = fileType;
         this.id3Data = id3Data;
+    }
+
+    // Modifies: this
+    // Effects:  creates a data structure for the audio from known data (loading from database)
+    //           ID3 string variant
+    public AudioDataStructure(String filename, long bitrate,
+                              int sampleSize, AudioFileTypes fileType,
+                              String id3Data) {
+        this.filename = filename;
+        this.bitrate = bitrate;
+        this.sampleSize = sampleSize;
+        audioFileType = fileType;
+        this.id3Data = ID3Container.fromString(id3Data);
     }
 
     // Effects: gets sample size in bits
