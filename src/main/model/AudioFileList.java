@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static java.nio.file.Files.delete;
 import static model.ListFileHandler.*;
 
 // Instantiable class to handle the file list
@@ -123,5 +124,78 @@ public class AudioFileList {
     // Effects:  saves current database pointer
     private boolean saveDatabaseIndex() {
         return FileManager.writeToFile(userDir + "audiodex.dbindex", Long.toString(dbIndex, 36));
+    }
+
+    // Modifies: database files
+    // Effects:  reverts to previous database, if avaliable
+    public void revertDb() {
+        dbIndex--;
+        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.basedb";
+        if ((new File(filename)).exists()) {
+            loadDatabaseFile();
+            saveDatabaseIndex();
+            Main.CliInterface.println("Successfully reverted database!");
+        } else {
+            Main.CliInterface.println("Could not find previous version of database...");
+            dbIndex++;
+        }
+    }
+
+    // Modifies: database files
+    // Effects:  cleans (deletes all files for) database with specified filename
+    public void cleanDb(String filename) {
+        if ((new File(filename)).exists()) {
+            Main.CliInterface.println("Cleaning database at " + filename + "...");
+            try {
+                String f = new String(Files.readAllBytes(Paths.get(filename)));
+                String[] fs = f.split(ListFileHandler.RESERVED_CHARACTERS[0]);
+                if (fs.length >= 2) {
+                    cleanDb(fs[1]);
+                }
+                try {
+                    delete(Paths.get(filename));
+                } catch (Exception e) {
+                    // lol
+                }
+                Main.CliInterface.println("Cleaned database at " + filename + "!");
+            } catch (IOException e) {
+                // RIP
+            }
+        } else {
+            Main.CliInterface.println("No database to clean!");
+        }
+    }
+
+    // Modifies: database files
+    // Effects:  cleans (deletes all files for) database for index
+    public void cleanDb(long index) {
+        cleanDb(userDir + Long.toString(index, 36) + ".audiodex.basedb");
+    }
+
+    // Modifies: database files
+    // Effects:  cleans (deletes all files for) database for index
+    public void cleanOldDb() {
+        for (long i = 0; i < dbIndex; i++) {
+            cleanDb(i);
+        }
+    }
+
+    // Modifies: database files
+    // Effects:  clean (delete all files for) all databases, reset the database pointer
+    //           and saves the database again
+    public void cleanDbFldr() {
+        dbIndex = 0;
+        File[] fileList = (new File(userDir)).listFiles();
+        for (File f : fileList) {
+            try {
+                String filename = f.getAbsolutePath();
+                delete(f.toPath());
+                Main.CliInterface.println("Deleted " + filename + ".");
+            } catch (IOException e) {
+                // LMAO
+            }
+        }
+        saveDatabaseFile();
+        saveDatabaseIndex();
     }
 }
