@@ -43,7 +43,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] M4A: AAC
   - MP4 and M4B are redundant formats
 - [ ] MP3
-- [ ] OGG, OGA, MOGG: Vorbis
+  - MP2 and MP1 are irrelevant to encode to nowadays, and there are no Java libraries to do so
+- [ ] OGG: Vorbis
 - [ ] AAC
 - [ ] WAV
 - [ ] AIFF
@@ -55,6 +56,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ## Known Issues:
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
+  - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 
 ## User Stories
 - As a user, I want to play my music
