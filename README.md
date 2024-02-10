@@ -18,8 +18,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - [x] Notes filetype, bitrate, codec and other useful information about the file (cache)
 - [x] Read and [ ] modify ID3 tags
   - [x] (Maybe) Including album art
-- All this, preferably without requiring native binaries
-  - I'm going to use libraries to handle decoding and encoding, most use native executables
+- [x] All this, preferably without requiring native binaries
+  - I'm going to use libraries to handle decoding and encoding
   
 ## Filetype Support
 ### Decode:
