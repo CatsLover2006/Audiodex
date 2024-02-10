@@ -16,8 +16,11 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] Manage a list of music files
   - [x] Includes ID3-based music titles
   - [x] Notes filetype, bitrate, codec and other useful information about the file (cache)
-- [-] Read and modify ID3 tags
-  - [ ] (Maybe) Including album art
+- [x] ID3 tag management
+  - [x] Read ID3 tags
+  - [ ] Write ID3 tags
+  - [ ] (Maybe) Read album art
+  - [ ] (Probably not) Write album art
 - [x] All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding
   
