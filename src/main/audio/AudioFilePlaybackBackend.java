@@ -233,6 +233,7 @@ public class AudioFilePlaybackBackend {
         return loadedFile.getID3();
     }
 
+    // Effects: returns playback string for display
     public String getPlaybackString() {
         if (loadedFile == null) {
             return "Not Playing";
@@ -244,7 +245,7 @@ public class AudioFilePlaybackBackend {
         }
         String base = workingData;
         workingData = (String) id3.getID3Data("Artist");
-        if (workingData == null || workingData.equals("null") || workingData.isEmpty()) {
+        if (!(workingData == null || workingData.equals("null") || workingData.isEmpty())) {
             base += " by " + workingData;
         }
         return base;

@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 
 import javax.sound.sampled.AudioFormat;
@@ -202,5 +203,9 @@ public class MP3 implements AudioDecoder {
     public String getFileName() {
         String[] dirList = filename.split(String.valueOf(separatorChar));
         return dirList[dirList.length - 1];
+    }
+
+    public AudioFileType getFileType() {
+        return AudioFileType.MP3;
     }
 }

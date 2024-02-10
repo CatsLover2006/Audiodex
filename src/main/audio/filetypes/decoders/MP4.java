@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import net.sourceforge.jaad.aac.AACException;
@@ -13,18 +14,15 @@ import net.sourceforge.jaad.mp4.api.Movie;
 import net.sourceforge.jaad.mp4.api.Track;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
-import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.TagException;
-import ui.Main;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.time.Instant;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -198,7 +196,12 @@ public class MP4 implements AudioDecoder {
         }
         Tag tag = f.getTag();
         for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
-            base.setID3Long(entry.getValue(), tag.getFirst(entry.getKey()));
+            try {
+                Date d = Date.from(Instant.parse(tag.getFirst(entry.getKey())));
+                base.setID3Long(entry.getValue(), String.valueOf(1900 + d.getYear()));
+            } catch (Exception e) {
+                base.setID3Long(entry.getValue(), tag.getFirst(entry.getKey()));
+            }
         }
         return base;
     }
@@ -207,5 +210,9 @@ public class MP4 implements AudioDecoder {
     public String getFileName() {
         String[] dirList = filename.split(String.valueOf(separatorChar));
         return dirList[dirList.length - 1];
+    }
+
+    public AudioFileType getFileType() {
+        return AudioFileType.AAC_MP4;
     }
 }

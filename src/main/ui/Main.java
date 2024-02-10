@@ -1,5 +1,6 @@
 package ui;
 
+import audio.AudioDataStructure;
 import audio.AudioFilePlaybackBackend;
 
 import java.io.File;
@@ -7,6 +8,7 @@ import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import audio.ID3Container;
+import model.AudioFileList;
 import org.fusesource.jansi.*;
 import org.fusesource.jansi.io.*;
 
@@ -18,6 +20,8 @@ public class Main {
     private static AudioFilePlaybackBackend playbackManager;
     private static boolean USE_CLI = true;
     private static boolean end = false;
+    private static String filename = "";
+    private static AudioFileList database;
 
     // Effects: returns true if arr contains item, false otherwise
     //          this function is null-safe
@@ -42,6 +46,8 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        database = new AudioFileList();
+        database.loadDatabase();
         playbackManager = new AudioFilePlaybackBackend();
         if (USE_CLI) {
             Cli.main(args);
@@ -153,6 +159,18 @@ public class Main {
                     playFile(inputScanner, visualizerThread);
                     break;
                 }
+                case "2": {
+                    addDatabaseFile(inputScanner);
+                    break;
+                }
+                case "3": {
+                    addDatabaseDir(inputScanner);
+                    break;
+                }
+                case "5": {
+                    database.saveDatabaseFile();
+                    break;
+                }
                 case "c": {
                     playbackManager.playAudio();
                     break;
@@ -165,14 +183,18 @@ public class Main {
                     seekAudio(inputScanner);
                     break;
                 }
-                case "4": {
+                case "q": {
                     cleanup(visualizerThread);
                     return;
                 }
-                case "}": {
-                    debug(inputScanner);
+                case "d": {
+                    database.addFileToDatabase((new File(filename)).getAbsolutePath());
                     return;
                 }
+                /*case "}": {
+                    debug(inputScanner);
+                    return;
+                }//*///
                 default: {
                     unknownCommandError();
                 }
@@ -181,14 +203,58 @@ public class Main {
 
         private static void debug(Scanner scanner) {
             AnsiConsole.out().println(Ansi.ansi().fgBrightGreen() + "Debugging now!");
-            AnsiConsole.out().println("ID3Container toString Data:");
-            AnsiConsole.out().println(playbackManager.getID3().toString());
-            try {
-                sleep(10000);
-            } catch (InterruptedException e) {
-                e.printStackTrace(); // Why?
-            }
+            AnsiConsole.out().println("AudioDataStructure toString Data:");
+            AudioDataStructure ads = new AudioDataStructure(filename);
+            String str = ads.toString();
+            AnsiConsole.out().println(str);
+            AudioDataStructure adsFrom = AudioDataStructure.fromString(str);
+            AnsiConsole.out().println("AudioDataStructure fromString Decode Data:");
+            AnsiConsole.out().println(adsFrom.toString());
             AnsiConsole.out().print(Ansi.ansi().fgDefault());
+        }
+
+        private static void addDatabaseFile(Scanner scanner) {
+            AnsiConsole.out().print(Ansi.ansi().eraseScreen());
+            doPlaybackStatusWrite();
+            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
+            AnsiConsole.out().println("Please enter the filename:");
+            String filenameIn = scanner.nextLine();
+            // Fix whitespace errors
+            String filename = filenameIn.trim();
+            // Check if file exists
+            File f = new File(filename);
+            if (f.isFile()) {
+                database.addFileToDatabase(f.getAbsolutePath());
+            } else {
+                AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
+                    // Why?
+                }
+            }
+        }
+
+        private static void addDatabaseDir(Scanner scanner) {
+            AnsiConsole.out().print(Ansi.ansi().eraseScreen());
+            doPlaybackStatusWrite();
+            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
+            AnsiConsole.out().println("Please enter the directory name:");
+            String filenameIn = scanner.nextLine();
+            // Fix whitespace errors
+            String filename = filenameIn.trim();
+            // Check if file exists
+            File f = new File(filename);
+            if (f.isDirectory()) {
+                database.addDirToDatabase(f.getAbsolutePath());
+            } else {
+                AnsiConsole.out().println("Directory doesn't exist, is a file, or is inaccessible.");
+                try {
+                    sleep(1000);
+                } catch (InterruptedException e) {
+                    // Why?
+                }
+            }
         }
 
         // Effects: Prints the error for an unknown command
@@ -222,13 +288,13 @@ public class Main {
             AnsiConsole.out().println("Please enter the filename:");
             String filenameIn = inputScanner.nextLine();
             // Fix whitespace errors
-            String filename = filenameIn.trim();
+            filename = filenameIn.trim();
             // Check if file exists
             File f = new File(filename);
             if (f.isFile()) {
                 visualizerThread.killThread();
                 visualizerThread.safeJoin();
-                playbackManager.loadAudio(filename);
+                playbackManager.loadAudio(f.getAbsolutePath());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
                 id3 = playbackManager.getID3();
@@ -333,13 +399,16 @@ public class Main {
             AnsiConsole.out().println("What would you like to do?");
             AnsiConsole.out().println("1. Play a file");
             AnsiConsole.out().println("2. Add file to database");
-            AnsiConsole.out().println("3. Play a file from database");
-            AnsiConsole.out().println("4. Exit");
+            AnsiConsole.out().println("3. Scan directory into database");
+            AnsiConsole.out().println("4. Browse database");
+            AnsiConsole.out().println("5. Save database");
+            AnsiConsole.out().println("Q. Exit");
             if (playbackManager.audioIsLoaded()) {
                 AnsiConsole.out().println("Now Playing: " + playbackManager.getPlaybackString());
                 AnsiConsole.out().println("P. Pause");
                 AnsiConsole.out().println("C. Play");
                 AnsiConsole.out().println("S. Seek");
+                AnsiConsole.out().println("D. Add playing file to database");
             }
         }
     }
