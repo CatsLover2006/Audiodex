@@ -239,6 +239,9 @@ public class AudioFilePlaybackBackend {
             return "Not Playing";
         }
         ID3Container id3 = loadedFile.getID3();
+        if (id3 == null) {
+            return loadedFile.getFileName();
+        }
         String workingData = (String) id3.getID3Data("Title");
         if (workingData == null || workingData.equals("null") || workingData.isEmpty()) {
             return loadedFile.getFileName();

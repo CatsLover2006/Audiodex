@@ -27,12 +27,12 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ## Filetype Support
 ### Decode:
 - [x] MP4, M4A, M4B: AAC
-  - M4B needs verification
-- [x] MP3
-  - MP2, MP1 might be decodable as well, their filetype detection is unimplemented
+  - M4B needs verification (I have none of these files)
+- [x] MP3, MP2
+  - MP1 is probably decodable as well, but quite literally nobody uses this format so I can't test
 - [ ] OGG, OGA, MOGG: Vorbis
 - [ ] AAC
-- [ ] WAV
+- [x] WAV
 - [ ] AIFF
 - [ ] FLAC
 - [ ] (Hopefully) ALAC
@@ -40,7 +40,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Maybe) WMA
 
 ### Encode:
-- [ ] MP4, M4A, M4B: AAC
+- [ ] M4A: AAC
+  - MP4 and M4B are redundant formats
 - [ ] MP3
 - [ ] OGG, OGA, MOGG: Vorbis
 - [ ] AAC
