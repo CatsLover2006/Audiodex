@@ -65,7 +65,7 @@ public class AudioFileList {
             if (fileList == null || fileList.length == 0) {
                 return;
             }
-            for (File file : fileList) {
+            for (File file : fileList) { // Database uses absolute file paths, otherwise it would fail to load audio
                 addFileToDatabase(file.getAbsolutePath());
             }
         }

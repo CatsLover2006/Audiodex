@@ -187,7 +187,7 @@ public class Main {
                     cleanup(visualizerThread);
                     return;
                 }
-                case "d": {
+                case "d": { // Database uses absolute file paths, otherwise it would fail to load audio
                     database.addFileToDatabase((new File(filename)).getAbsolutePath());
                     return;
                 }
@@ -223,7 +223,7 @@ public class Main {
             String filename = filenameIn.trim();
             // Check if file exists
             File f = new File(filename);
-            if (f.isFile()) {
+            if (f.isFile()) { // Database uses absolute file paths, otherwise it would fail to load audio
                 database.addFileToDatabase(f.getAbsolutePath());
             } else {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
@@ -245,7 +245,7 @@ public class Main {
             String filename = filenameIn.trim();
             // Check if file exists
             File f = new File(filename);
-            if (f.isDirectory()) {
+            if (f.isDirectory()) { // Database uses absolute file paths, otherwise it would fail to load audio
                 database.addDirToDatabase(f.getAbsolutePath());
             } else {
                 AnsiConsole.out().println("Directory doesn't exist, is a file, or is inaccessible.");
