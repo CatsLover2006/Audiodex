@@ -12,9 +12,8 @@ public class ID3Container {
     public static final String[] knownKeys = {
             "Artist", "Title", "Album", "Track", "Year", "GenreInt",
             "GenreString", "Comment", "Lyrics", "Composer", "Tracks",
-            "Publisher", "OriginalArtist", "AlbumArtist", "sampleRate",
-            "Copyright", "URL", "Encoder", "VBR", "bitRate", "Disc",
-            "Discs"
+            "Publisher", "OriginalArtist", "AlbumArtist", "Copyright",
+            "URL", "Encoder", "VBR", "Disc", "Discs"
     }; // Known keys in ID3 data
 
     // Effects: creates an empty hashmap to place data
@@ -35,6 +34,9 @@ public class ID3Container {
     // Modifies: this
     // Effects:  sets specified key to specified value
     public void setID3Data(String key, Object value) {
+        if (value == null) {
+            return;
+        }
         if (id3data.containsKey(key)) {
             id3data.replace(key, value);
         } else {
@@ -45,6 +47,9 @@ public class ID3Container {
     // Modifies: this
     // Effects:  sets specified key to specified long
     public void setID3Long(String key, String value) {
+        if (value == null) {
+            return;
+        }
         try {
             setID3Data(key, Long.parseLong(value));
         } catch (NumberFormatException e) {
@@ -64,7 +69,7 @@ public class ID3Container {
             out += id3data.get(key);
             out += RESERVED_CHARACTERS[0]; // Key separator
         }
-        return out.substring(0, out.length() - 1); //
+        return out.substring(0, out.length() - RESERVED_CHARACTERS[0].length()); // Delete the last key separator
     }
 
     // Requires: inputting valid input (from toString)
@@ -80,6 +85,8 @@ public class ID3Container {
                 base.setID3Data(value[0], integerVal);
             } catch (NumberFormatException e) {
                 base.setID3Data(value[0], value[1]);
+            } catch (IndexOutOfBoundsException e) {
+                // LMAO its a null value
             }
         }
         return base;
