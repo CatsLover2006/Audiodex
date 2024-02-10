@@ -179,6 +179,10 @@ public class Main {
                     playbackManager.pauseAudio();
                     break;
                 }
+                case "m": {
+                    dbMenu(inputScanner);
+                    break;
+                }
                 case "s": {
                     seekAudio(inputScanner);
                     break;
@@ -403,6 +407,7 @@ public class Main {
             AnsiConsole.out().println("4. Browse database");
             AnsiConsole.out().println("5. Save database");
             AnsiConsole.out().println("Q. Exit");
+            AnsiConsole.out().println("M. Enter database backup manager");
             if (playbackManager.audioIsLoaded()) {
                 AnsiConsole.out().println("Now Playing: " + playbackManager.getPlaybackString());
                 AnsiConsole.out().println("P. Pause");
@@ -410,6 +415,48 @@ public class Main {
                 AnsiConsole.out().println("S. Seek");
                 AnsiConsole.out().println("D. Add playing file to database");
             }
+        }
+
+        // Modifies: database (maybe)
+        // Effects:  at minimum, prints the menu to the screen
+        //           at maximum, resets the database
+        private static void dbMenu(Scanner inputScanner) {
+            cliMainMenu = false;
+            printDbMenu();
+            String selected = inputScanner.nextLine();
+            switch (selected.toLowerCase()) {
+                case "1": {
+                    database.revertDb();
+                    break;
+                }
+                case "2": {
+                    database.cleanDb(inputScanner.nextLine().trim());
+                    break;
+                }
+                case "3": {
+                    database.cleanOldDb();
+                    break;
+                }
+                case "r": {
+                    database.cleanDbFldr();
+                    break;
+                }
+            }
+            AnsiConsole.out().print(Ansi.ansi().fgDefault());
+        }
+
+        // Effects: prints database management menu
+        private static void printDbMenu() {
+            AnsiConsole.out().print(Ansi.ansi().eraseScreen());
+            AnsiConsole.out().print(Ansi.ansi().fgBrightRed());
+            doPlaybackStatusWrite();
+            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
+            AnsiConsole.out().println("Here be dragons...");
+            AnsiConsole.out().println("1. Revert to previous database version");
+            AnsiConsole.out().println("2. Clean database files (enter *.audiodex.basedb file on next line)");
+            AnsiConsole.out().println("3. Clean all old database files");
+            AnsiConsole.out().println("R. Refresh database folder");
+            AnsiConsole.out().println("To return to main menu, enter any other character");
         }
     }
 }
