@@ -1,7 +1,7 @@
 # Chance's CPSC 210 Personal Project
 
-~~***NOTE***: This project cannot properly run within the IntelliJ IDE shell environment. This is due to it not properly supporting ANSI terminal commands, which I use extensively to assist with indicators. I will publish a JAR file release before I submit it to mark for Phase 1.~~ No longer an issue, I added a secondary mode that sort of fixes it under IntelliJ, enough to where it's usable<br>
-***NOTE 2***: This project expects you have music files to play. Due to copyright law, I have not included any; as such, there is no way to do automatic testing of the audio encoding and decoding functions. 
+~~***NOTE***: This project cannot properly run within the IntelliJ IDE shell environment. This is due to it not properly supporting ANSI terminal commands, which I use extensively to assist with indicators. I will publish a JAR file release before I submit it to mark for Phase 1.~~ No longer an issue, I added a secondary mode that sort of fixes it under IntelliJ, enough to where it's usable.<br>
+***NOTE 2***: This project expects you have music files to play. Due to copyright law, I have not included any; as such, there is no way to do automatic testing of the audio encoding and decoding functions.<br>
 ***NOTE 3***: This project saves data at an absolute location in the user's home directory, and it saves filenames as absolute references within the database. The former could be changed, but the latter is required for the database to function if the program is launched from a different location on the filesystem.
 
 ## AudioDex
