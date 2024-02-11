@@ -5,7 +5,6 @@ import ui.Main;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -17,19 +16,32 @@ import static model.ListFileHandler.*;
 
 // Instantiable class to handle the file list
 public class AudioFileList {
-    private List<AudioDataStructure> fileList;
+    private final List<AudioDataStructure> fileList;
     private long dbIndex;
     private String userDir;
 
     // Modifies: this
     // Effects:  fileList is empty, loads database from (user home directory)/audiodex
     public AudioFileList() {
-        fileList = new ArrayList<AudioDataStructure>();
+        fileList = new ArrayList<>();
         userDir = System.getProperty("user.home") + "/audiodex/";
         File userDirFile = new File(userDir);
         if (!userDirFile.exists()) {
             userDirFile.mkdirs();
         }
+    }
+
+    // Effects: gets list size
+    public int listSize() {
+        return fileList.size();
+    }
+
+    // Effects: gets element from list
+    public AudioDataStructure get(int i) {
+        if (i < 0 || i >= fileList.size()) {
+            return null;
+        }
+        return fileList.get(i);
     }
 
     // Modifies: this
@@ -77,14 +89,13 @@ public class AudioFileList {
     public void loadDatabase() {
         String filename = userDir + "audiodex.dbindex";
         try {
-            dbIndex = Long.parseLong(new String(Files.readAllBytes(Paths.get(filename)),
-                    StandardCharsets.UTF_8), 36);
+            dbIndex = Long.parseLong(Files.readString(Paths.get(filename)), 36);
         } catch (Exception e) {
             dbIndex = 0;
             Main.CliInterface.println("New database.");
             return;
         }
-        Main.CliInterface.println("Successfully loaded database index: " + Long.toString(dbIndex));
+        Main.CliInterface.println("Successfully loaded database index: " + dbIndex);
         loadDatabaseFile();
     }
 
@@ -109,8 +120,7 @@ public class AudioFileList {
         }
         dbIndex++;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.basedb";
-        List<AudioDataStructure> copyList = new ArrayList<AudioDataStructure>();
-        copyList.addAll(fileList);
+        List<AudioDataStructure> copyList = new ArrayList<>(fileList);
         Main.CliInterface.println("Saving database to " + filename + "...");
         try {
             encodeList(copyList, filename);
@@ -186,6 +196,9 @@ public class AudioFileList {
     public void cleanDbFldr() {
         dbIndex = 0;
         File[] fileList = (new File(userDir)).listFiles();
+        if (fileList == null) {
+            return;
+        }
         for (File f : fileList) {
             try {
                 String filename = f.getAbsolutePath();

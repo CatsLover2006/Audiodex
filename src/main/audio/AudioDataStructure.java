@@ -2,6 +2,8 @@ package audio;
 
 import javax.sound.sampled.AudioFormat;
 
+import static java.io.File.separatorChar;
+
 // Audio data structure class
 // Will be used for the database
 public class AudioDataStructure {
@@ -10,11 +12,11 @@ public class AudioDataStructure {
             "🜃" // Value separator
     };
 
-    private final String filename;
-    private final long bitrate;
-    private final int sampleSize;
-    private final AudioFileType audioFileType;
-    private final ID3Container id3Data;
+    private String filename;
+    private long bitrate;
+    private int sampleSize;
+    private AudioFileType audioFileType;
+    private ID3Container id3Data;
 
     // Requires: filename points to a file (obviously)
     // Modifies: this
@@ -56,6 +58,11 @@ public class AudioDataStructure {
         this.id3Data = ID3Container.fromString(id3Data);
     }
 
+    // Effects: gets ID3Container
+    public ID3Container getId3Data() {
+        return id3Data;
+    }
+
     // Effects: gets sample size in bits
     public int getSampleSize() {
         return sampleSize;
@@ -84,8 +91,8 @@ public class AudioDataStructure {
         out += "fn" + RESERVED_CHARACTERS[1] + filename + RESERVED_CHARACTERS[0];
         out += "t" + RESERVED_CHARACTERS[1] + audioFileType.toString() + RESERVED_CHARACTERS[0];
         out += "id3" + RESERVED_CHARACTERS[1] + id3Data + RESERVED_CHARACTERS[0];
-        out += "br" + RESERVED_CHARACTERS[1] + String.valueOf(bitrate) + RESERVED_CHARACTERS[0];
-        out += "ss" + RESERVED_CHARACTERS[1] + String.valueOf(sampleSize) + RESERVED_CHARACTERS[0];
+        out += "br" + RESERVED_CHARACTERS[1] + bitrate + RESERVED_CHARACTERS[0];
+        out += "ss" + RESERVED_CHARACTERS[1] + sampleSize + RESERVED_CHARACTERS[0];
         return out.substring(0, out.length() - RESERVED_CHARACTERS[0].length()); // Delete the last key separator
     }
 
@@ -102,8 +109,8 @@ public class AudioDataStructure {
         long bitrate = 0;
         int sampleSize = 0;
         AudioFileType fileType = null;
-        for (int i = 0; i < keys.length; i++) {
-            String[] dat = keys[i].split(RESERVED_CHARACTERS[1]); // Value separator
+        for (String key : keys) {
+            String[] dat = key.split(RESERVED_CHARACTERS[1]); // Value separator
             try {
                 switch (dat[0]) {
                     case "fn": {
@@ -132,5 +139,26 @@ public class AudioDataStructure {
             }
         }
         return new AudioDataStructure(filename, bitrate, sampleSize, fileType, id3);
+    }
+
+    // Effects: returns playback string for display
+    public String getPlaybackString() {
+        String workingData = (String) id3Data.getID3Data("Title");
+        if (workingData == null || workingData.equals("null") || workingData.isEmpty()) {
+            String[] dirList = filename.split(String.valueOf(separatorChar));
+            return dirList[dirList.length - 1];
+        }
+        String base = workingData;
+        workingData = (String) id3Data.getID3Data("Artist");
+        if (!(workingData == null || workingData.equals("null") || workingData.isEmpty())) {
+            base += " by " + workingData;
+        }
+        return base;
+    }
+
+    // Modifies: this
+    // Effects:  replaces ID3Container
+    public void updateID3(ID3Container nu) {
+        id3Data = nu;
     }
 }
