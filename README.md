@@ -16,6 +16,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] Manage a list of music files
   - [x] Includes ID3-based music titles
   - [x] Notes filetype, bitrate, codec and other useful information about the file (cache)
+  - [x] Queue files from music list for playback
 - [x] ID3 tag management
   - [x] Read ID3 tags
   - [ ] Write ID3 tags
@@ -60,6 +61,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 
 ## User Stories
 - As a user, I want to play my music
+  - As a user, I want to play my music library nonstop for an extended period of time
 - As a user, I want to be able to convert my music to a different format
 - As a user, I want to manage my music library
 

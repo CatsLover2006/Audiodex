@@ -1,24 +1,21 @@
 package audio;
 
 import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.Map;
-import java.util.Set;
 
 // Container for ID3 data
 public class ID3Container {
-    private HashMap id3data;
+    private final HashMap<String, Object> id3data;
 
     public static final String[] knownKeys = {
             "Artist", "Title", "Album", "Track", "Year", "GenreInt",
             "GenreString", "Comment", "Lyrics", "Composer", "Tracks",
             "Publisher", "OriginalArtist", "AlbumArtist", "Copyright",
-            "URL", "Encoder", "VBR", "Disc", "Discs"
+            "URL", "Encoder", "VBR", "Disc", "Discs", "PreviewText"
     }; // Known keys in ID3 data
 
     // Effects: creates an empty hashmap to place data
     public ID3Container() {
-        id3data = new HashMap();
+        id3data = new HashMap<>();
     }
 
     // Effects: gets the data at a specified key
@@ -61,15 +58,16 @@ public class ID3Container {
     // Effects: encodes data into string
     //          yes I'm making one of these myself
     public String toString() {
-        String out = "";
-        for (Object k : id3data.keySet()) {
-            String key = (String) k;
-            out += key;
-            out += RESERVED_CHARACTERS[1]; // Value separator
-            out += id3data.get(key);
-            out += RESERVED_CHARACTERS[0]; // Key separator
+        StringBuilder out = new StringBuilder();
+        for (String k : id3data.keySet()) {
+            out.append(k);
+            out.append(RESERVED_CHARACTERS[1]); // Value separator
+            out.append(id3data.get(k));
+            out.append(RESERVED_CHARACTERS[0]); // Key separator
         }
-        return out.substring(0, out.length() - RESERVED_CHARACTERS[0].length()); // Delete the last key separator
+        String outStr = out.toString();
+        // Delete the last key separator
+        return outStr.substring(0, outStr.length() - RESERVED_CHARACTERS[0].length());
     }
 
     // Requires: inputting valid input (from toString)
@@ -78,8 +76,8 @@ public class ID3Container {
     public static ID3Container fromString(String data) {
         ID3Container base = new ID3Container();
         String[] keys = data.split(RESERVED_CHARACTERS[0]); // Key separator
-        for (int i = 0; i < keys.length; i++) {
-            String[] value = keys[i].split(RESERVED_CHARACTERS[1]); // Value separator
+        for (String key : keys) {
+            String[] value = key.split(RESERVED_CHARACTERS[1]); // Value separator
             try { // We don't know if it's a number or not
                 long integerVal = Long.parseLong(value[1]);
                 base.setID3Data(value[0], integerVal);

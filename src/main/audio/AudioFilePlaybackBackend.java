@@ -14,7 +14,24 @@ public class AudioFilePlaybackBackend {
     // No other class needs to know this
     // This is the audio decoding thread
     private class DecodingThread extends Thread {
-        private boolean run = true;
+
+        // No other class needs to know this
+        // This quite literally just offloads the task of telling
+        // the main thread that this thread is done
+        private class FinishedSongThread extends Thread {
+            public void run() {
+                while (decoderThread != null) {
+                    try { // Wait for decoder thread to finish, in case we've got a music queue
+                        sleep(0, 1);
+                    } catch (InterruptedException e) {
+                        // LMAO just burn more time
+                    }
+                }
+                Main.finishedSong();
+            }
+        }
+
+        private volatile boolean run = true;
 
         // Modifies: this
         // Effects:  ends thread
@@ -27,7 +44,7 @@ public class AudioFilePlaybackBackend {
             try {
                 join();
             } catch (InterruptedException e) {
-                return;
+                // lol
             }
         }
 
@@ -36,7 +53,7 @@ public class AudioFilePlaybackBackend {
             try {
                 join(millis);
             } catch (InterruptedException e) {
-                return;
+                // lol
             }
         }
 
@@ -45,7 +62,7 @@ public class AudioFilePlaybackBackend {
             try {
                 join(millis, nanos);
             } catch (InterruptedException e) {
-                return;
+                // lol
             }
         }
 
@@ -60,8 +77,8 @@ public class AudioFilePlaybackBackend {
             line.stop();
             loadedFile.closeAudioFile();
             loadedFile = null;
-            Main.finishedSong();
             // This might be cursed, but whatever
+            (new FinishedSongThread()).start();
             decoderThread = null;
         }
     }
@@ -180,13 +197,6 @@ public class AudioFilePlaybackBackend {
         Main.CliInterface.updatePlaybackStatus();
     }
 
-    // Modifies: this
-    // Effects:  sets playback pointer to the beginning of the loaded file
-    public void restartAudio() {
-        loadedFile.goToTime(0);
-        Main.CliInterface.updatePlaybackStatus();
-    }
-
     // Requires: 0 <= time <= audio length
     // Modifies: this
     // Effects:  sets playback pointer to the specified time
@@ -205,6 +215,7 @@ public class AudioFilePlaybackBackend {
     public void cleanBackend() {
         if (decoderThread != null) {
             decoderThread.killThread();
+            playAudio(); // Safely resume thread
             decoderThread = null;
         }
         if (line != null) {
@@ -213,11 +224,6 @@ public class AudioFilePlaybackBackend {
         if (loadedFile != null) {
             loadedFile.closeAudioFile();
         }
-    }
-
-    // Effects: returns true if audio is playing
-    public boolean audioIsPlaying() {
-        return decoderThread != null && decoderThread.isAlive();
     }
 
     // Effects: returns true if audio is loaded
