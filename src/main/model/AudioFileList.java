@@ -49,16 +49,42 @@ public class AudioFileList {
     public void sanitizeDatabase() {
         Main.CliInterface.println("Sanitizing Database...");
         for (int i = 0; i < fileList.size(); i++) {
-            if (fileList.get(i) == null || fileList.get(i).isEmpty()) {
+            if (fileList.get(i) == null || fileList.get(i).isEmpty()
+                    || dbContainsMultipleOfFile(fileList.get(i).getFilename())) {
                 fileList.remove(i);
                 i--;
             }
         }
     }
 
+    // Effects: returns true if database contains file, false otherwise
+    private boolean dbContainsFile(String filename) {
+        for (AudioDataStructure data : fileList) {
+            if (data.getFilename().equals(filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Effects: returns true if database contains two of this file, false otherwise
+    private boolean dbContainsMultipleOfFile(String filename) {
+        int i = 0;
+        for (AudioDataStructure data : fileList) {
+            if (data.getFilename().equals(filename)) {
+                i++;
+            }
+        }
+        return i >= 2;
+    }
+
     // Modifies: this
     // Effects:  adds specified file to database
     public void addFileToDatabase(String filename) {
+        if (dbContainsFile(filename)) {
+            Main.CliInterface.println("File already in database, skipping.");
+            return;
+        }
         Main.CliInterface.println("Adding file " + filename + "...");
         AudioDataStructure data = new AudioDataStructure(filename);
         if (data.isEmpty()) {

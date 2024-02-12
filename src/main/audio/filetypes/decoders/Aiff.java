@@ -4,17 +4,27 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.tritonus.sampled.file.AiffAudioFileReader;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Map;
 
+import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
 
-// WAV file decoder class
-public class WAV implements AudioDecoder {
+// AIFF file decoder class
+// It physically hurts to camel case this but checkstyle gets upset if I use all caps
+public class Aiff implements AudioDecoder {
     private File file;
     private String filename;
     private AudioFormat format;
@@ -31,7 +41,7 @@ public class WAV implements AudioDecoder {
         return ready;
     }
 
-    public WAV(String filename) {
+    public Aiff(String filename) {
         this.filename = filename;
     }
 
@@ -40,14 +50,15 @@ public class WAV implements AudioDecoder {
     public void prepareToPlayAudio() {
         try {
             file = new File(filename);
-            in = AudioSystem.getAudioInputStream(file);
+            AudioFile f = AudioFileIO.read(file);
+            AiffAudioFileReader reader = new AiffAudioFileReader();
+            in = reader.getAudioInputStream(file);
             format = in.getFormat();
             double audioFrameRate = format.getFrameRate();
-            long audioFileLength = file.length();
             int frameSize = format.getFrameSize();
             bytesPerSecond = (frameSize * audioFrameRate);
-            duration = (audioFileLength / (frameSize * audioFrameRate));
-            System.out.println("WAV/PCM decoder ready!");
+            duration = f.getAudioHeader().getPreciseTrackLength();
+            System.out.println("AIFF decoder ready!");
             ready = true;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -62,8 +73,8 @@ public class WAV implements AudioDecoder {
         ready = false;
         try {
             in.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            //lmao
         }
     }
 
@@ -131,7 +142,26 @@ public class WAV implements AudioDecoder {
 
     // Effects: returns decoded ID3 data
     public ID3Container getID3() {
-        return null;
+        ID3Container base = new ID3Container();
+        base.setID3Data("VBR", "NO");
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(file);
+        } catch (Exception e) {
+            return base;
+        }
+        base.setID3Data("bitRate", f.getAudioHeader().getBitRateAsNumber());
+        base.setID3Data("sampleRate", f.getAudioHeader().getSampleRateAsNumber());
+        Tag tag = f.getTag();
+        for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
+            try {
+                Date d = Date.from(Instant.parse(tag.getFirst(entry.getKey())));
+                base.setID3Long(entry.getValue(), String.valueOf(1900 + d.getYear()));
+            } catch (Exception e) {
+                base.setID3Long(entry.getValue(), tag.getFirst(entry.getKey()));
+            }
+        }
+        return base;
     }
 
     // Effects: returns filename without directories
@@ -141,7 +171,7 @@ public class WAV implements AudioDecoder {
     }
 
     public AudioFileType getFileType() {
-        return AudioFileType.PCM_WAV;
+        return AudioFileType.AIFF;
     }
 
     // Effects: returns an audio input stream for encoding data

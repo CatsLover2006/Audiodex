@@ -2,6 +2,9 @@ package audio;
 
 import javax.sound.sampled.AudioFormat;
 
+import java.io.File;
+import java.io.IOException;
+
 import static java.io.File.separatorChar;
 
 // Audio data structure class
@@ -22,7 +25,11 @@ public class AudioDataStructure {
     // Modifies: this
     // Effects:  creates a data structure for the audio from a file
     public AudioDataStructure(String filename) {
-        this.filename = filename;
+        try {
+            this.filename = (new File(filename)).getCanonicalPath();
+        } catch (IOException e) {
+            this.filename = filename;
+        }
         AudioDecoder audioDecoder = AudioFileLoader.loadFile(filename);
         if (audioDecoder == null) {
             bitrate = -1;

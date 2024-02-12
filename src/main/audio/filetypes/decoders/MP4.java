@@ -18,15 +18,16 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
 
 // Audio decoder for the MP4 file type
@@ -34,16 +35,131 @@ import static java.io.File.separatorChar;
 // audio formats that use MP4 as a primary
 public class MP4 implements AudioDecoder {
     Frame frame;
-    private MP4Container container;
     private AudioTrack tracks;
     private AudioFormat audioFormat;
     private boolean ready = false;
     private String filename;
     private Decoder decoder;
-    private SampleBuffer buffer = new SampleBuffer();
+    private final SampleBuffer buffer = new SampleBuffer();
     private RandomAccessFile file;
     private double duration;
     private ID3Container cachedID3;
+
+    // AudioInputStream container for audio decoder
+    // done for easy handling of certain encoders
+    private class VirtualMP4AudioInputStream extends AudioInputStream {
+        private AudioSample sampleStor;
+        private int sampleInStor = 0;
+        private double timeToSkipTo = 0;
+        private int timeToResetMark = 0;
+        private int sampleStorReset = 0;
+
+        public VirtualMP4AudioInputStream() {
+            super(null, audioFormat, 0);
+        }
+
+        @Override
+        public int available() throws IOException {
+            return (int) ((audioFormat.getSampleSizeInBits() * audioFormat.getSampleRate()
+                            * (duration - getCurrentTime())) / 8);
+        }
+
+        @Override
+        public void close() {
+            return; // Does nothing, its pulling data from this object
+        }
+
+        @Override
+        public AudioFormat getFormat() {
+            return audioFormat;
+        }
+
+        @Override
+        public long getFrameLength() {
+            return (long) (audioFormat.getFrameSize() * duration);
+        }
+
+        @Override
+        public void mark(int readlimit) {
+            timeToResetMark = readlimit;
+            timeToSkipTo = getCurrentTime();
+            sampleStorReset = sampleInStor;
+        }
+
+        @Override
+        public boolean markSupported() {
+            return true;
+        }
+
+        @Override
+        public int read() {
+            if (moreSamples()) {
+                if (timeToResetMark == 0) {
+                    timeToSkipTo = 0;
+                } else {
+                    timeToResetMark--;
+                }
+                if (sampleInStor <= sampleStor.getLength()) {
+                    sampleInStor = 0;
+                    sampleStor = getNextSample();
+                }
+                int t = sampleStor.getData()[sampleInStor];
+                sampleInStor++;
+                return t;
+            }
+            return -1;
+        }
+
+        @Override
+        public int read(byte[] b) {
+            if (!moreSamples()) {
+                return -1;
+            }
+            for (int i = 0; i < Math.min(b.length, audioFormat.getFrameSize()); i++) {
+                b[i] = (byte)read();
+                if (b[i] == -1) {
+                    return i + 1;
+                }
+            }
+            return b.length;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) {
+            tracks.seek(0);
+            while (off != 0) {
+                off -= (int) skip(off);
+            }
+            if (!moreSamples()) {
+                return -1;
+            }
+            for (int i = 0; i < Math.min(b.length, Math.min(len, audioFormat.getFrameSize())); i++) {
+                b[i] = (byte)read();
+                if (b[i] == -1) {
+                    return i + 1;
+                }
+            }
+            return b.length;
+        }
+
+        @Override
+        public void reset() {
+            tracks.seek(timeToSkipTo);
+            sampleInStor = sampleStorReset;
+            sampleStorReset = 0;
+            timeToSkipTo = 0;
+        }
+
+        @Override
+        public long skip(long n) {
+            for (long i = 0; i < n; i++) {
+                if (read() == -1) {
+                    return i + 1;
+                }
+            }
+            return n;
+        }
+    }
 
     public boolean isReady() {
         return ready;
@@ -60,7 +176,7 @@ public class MP4 implements AudioDecoder {
         try {
             //cachedID3 = makeID3();
             file = new RandomAccessFile(filename, "r");
-            container = new MP4Container(file);
+            MP4Container container = new MP4Container(file);
             Movie movie = container.getMovie();
             duration = movie.getDuration();
             List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
@@ -159,28 +275,6 @@ public class MP4 implements AudioDecoder {
         return tracks.hasMoreFrames();
     }
 
-    private static final HashMap<FieldKey, String> keyConv;
-
-    static {
-        keyConv = new HashMap<FieldKey, String>();
-        keyConv.put(FieldKey.ARTIST, "Artist");
-        keyConv.put(FieldKey.ALBUM, "Album");
-        keyConv.put(FieldKey.ALBUM_ARTIST, "AlbumArtist");
-        keyConv.put(FieldKey.TITLE, "Title");
-        keyConv.put(FieldKey.TRACK, "Track");
-        keyConv.put(FieldKey.TRACK_TOTAL, "Tracks");
-        keyConv.put(FieldKey.DISC_NO, "Disc");
-        keyConv.put(FieldKey.DISC_TOTAL, "Discs");
-        keyConv.put(FieldKey.YEAR, "Year");
-        keyConv.put(FieldKey.GENRE, "GenreString");
-        keyConv.put(FieldKey.COMMENT, "Comment");
-        keyConv.put(FieldKey.LYRICS, "Lyrics");
-        keyConv.put(FieldKey.COMPOSER, "Composer");
-        keyConv.put(FieldKey.RECORD_LABEL, "Publisher");
-        keyConv.put(FieldKey.COPYRIGHT, "Copyright");
-        keyConv.put(FieldKey.ENCODER, "Encoder");
-    }
-
     // Effects: returns decoded ID3 data
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
@@ -214,5 +308,10 @@ public class MP4 implements AudioDecoder {
 
     public AudioFileType getFileType() {
         return AudioFileType.AAC_MP4;
+    }
+
+    // Effects: returns an audio input stream for encoding data
+    public AudioInputStream getAudioInputStream() {
+        return new VirtualMP4AudioInputStream();
     }
 }

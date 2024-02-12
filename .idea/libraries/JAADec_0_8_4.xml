@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="jansi-2.4.2-SNAPSHOT">
+  <library name="JAADec 0.8.4">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/jansi-2.4.2-SNAPSHOT.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jaad-0.8.4.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

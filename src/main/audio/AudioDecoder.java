@@ -1,6 +1,7 @@
 package audio;
 
 import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
 
 // Audio decoder interface
 // Most functions explain themselves
@@ -56,4 +57,7 @@ public interface AudioDecoder {
 
     // Effects: returns decoded ID3 data
     ID3Container getID3();
+
+    // Effects: returns an audio input stream for encoding data
+    AudioInputStream getAudioInputStream();
 }

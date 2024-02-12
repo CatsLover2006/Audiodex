@@ -7,7 +7,9 @@ import audio.AudioSample;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import audio.ID3Container;
 import com.mpatric.mp3agic.*;
@@ -16,15 +18,14 @@ import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
 
 import static java.io.File.separatorChar;
 
+// MPEG-type audio file decoder class
 public class MP3 implements AudioDecoder {
-    private MpegAudioFileReader fileReader;
-    private File file;
     private String filename;
     private AudioFormat format;
     private DecodedMpegAudioInputStream decoded;
     private AudioInputStream in;
     private boolean ready = false;
-    private byte[] data = new byte[4096]; // 4kb sample buffer, seems standard
+    private final byte[] data = new byte[4096]; // 4kb sample buffer, seems standard
     private int numberBytesRead = 0;
     private long duration;
     private double audioFrameRate;
@@ -42,9 +43,10 @@ public class MP3 implements AudioDecoder {
     // Effects:  loads audio and makes all other functions valid
     public void prepareToPlayAudio() {
         try {
-            file = new File(filename);
-            fileReader = new MpegAudioFileReader();
-            duration = (Long)(fileReader.getAudioFileFormat(file).properties().get("duration"));
+            File file = new File(filename);
+            InputStream input = new FileInputStream(file);
+            MpegAudioFileReader fileReader = new MpegAudioFileReader();
+            duration = (Long)(fileReader.getAudioFileFormat(input, file.length()).properties().get("duration"));
             in = fileReader.getAudioInputStream(file);
             AudioFormat baseFormat = in.getFormat();
             format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
@@ -207,5 +209,10 @@ public class MP3 implements AudioDecoder {
 
     public AudioFileType getFileType() {
         return AudioFileType.MP3;
+    }
+
+    // Effects: returns an audio input stream for encoding data
+    public AudioInputStream getAudioInputStream() {
+        return decoded;
     }
 }
