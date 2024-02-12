@@ -20,6 +20,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] ID3 tag management
   - [x] Read ID3 tags
   - [ ] Write ID3 tags
+    - Might work, haven't tested
   - [ ] (Maybe) Read album art
   - [ ] (Probably not) Write album art
 - [x] All this, preferably without requiring native binaries
@@ -41,16 +42,17 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Maybe) WMA
 
 ### Encode:
-- [ ] M4A: AAC
+- [ ] (Hopefully) M4A: AAC
   - MP4 and M4B are redundant formats
-- [ ] MP3
+- [ ] (Hopefully) MP3
   - MP2 and MP1 are irrelevant to encode to nowadays, and there are no Java libraries to do so
-- [ ] OGG: Vorbis
-- [ ] AAC
+- [ ] (Hopefully) OGG: Vorbis
+- [ ] (Hopefully) AAC
 - [x] WAV
 - [ ] AIFF
-- [ ] FLAC
-- [ ] (Hopefully) ALAC
+  - Would use the same code as WAV, I'd just need to add ID3 tag saving/cloning for me to be happy
+- [ ] (Maybe) FLAC
+- [ ] (Maybe) M4A: ALAC
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
 
