@@ -92,7 +92,15 @@ public class WAV implements AudioDecoder {
     public void goToTime(double time) {
         try {
             prepareToPlayAudio(); // Reset doesn't work
-            in.skip((long)(time * bytesPerSecond));
+            long toSkip = (long) (time * bytesPerSecond);
+            long skipped = 0;
+            while (toSkip != 0) {
+                skipped = in.skip(toSkip);
+                toSkip -= skipped;
+                if (skipped == 0) {
+                    return;
+                }
+            }
             bytesPlayed = (long)(time * bytesPerSecond);
         } catch (IOException e) {
             // RIP
@@ -131,7 +139,15 @@ public class WAV implements AudioDecoder {
 
     // Effects: returns decoded ID3 data
     public ID3Container getID3() {
-        return null;
+        ID3Container base = new ID3Container();
+        base.setID3Data("VBR", "NO");
+        return base; // Virtual stub
+    }
+
+    // Modifies: file on filesystem
+    // Effects:  updates ID3 data
+    public void setID3(ID3Container container) {
+        // Can't do shit here
     }
 
     // Effects: returns filename without directories

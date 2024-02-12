@@ -60,4 +60,8 @@ public interface AudioDecoder {
 
     // Effects: returns an audio input stream for encoding data
     AudioInputStream getAudioInputStream();
+
+    // Modifies: file on filesystem
+    // Effects:  returns decoded ID3 data
+    void setID3(ID3Container container);
 }

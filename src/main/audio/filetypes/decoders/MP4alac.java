@@ -3,9 +3,21 @@ package audio.filetypes.decoders;
 import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
+import audio.ID3Container;
+import audio.filetypes.TagConversion;
+import com.beatofthedrum.alacdecoder.Alac;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotWriteException;
+import org.jaudiotagger.tag.FieldDataInvalidException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import ui.Main;
+import vavi.sound.sampled.alac.AlacAudioFileReader;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -14,39 +26,29 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
-import audio.ID3Container;
-import audio.filetypes.TagConversion;
-import javazoom.spi.mpeg.sampled.convert.DecodedMpegAudioInputStream;
-import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
-import org.jaudiotagger.audio.AudioFile;
-import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotWriteException;
-import org.jaudiotagger.tag.FieldDataInvalidException;
-import org.jaudiotagger.tag.FieldKey;
-import org.jaudiotagger.tag.Tag;
-import ui.Main;
-
 import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
+import static java.lang.Thread.sleep;
 
-// MPEG-type audio file decoder class
-public class MP3 implements AudioDecoder {
+public class MP4alac implements AudioDecoder {
     private String filename;
     private AudioFormat format;
-    private DecodedMpegAudioInputStream decoded;
+    private double bytesPerSecond;
     private AudioInputStream in;
+    private AudioInputStream decoded;
     private boolean ready = false;
-    private final byte[] data = new byte[4096]; // 4kb sample buffer, seems standard
+    private final byte[] data = new byte[8192]; // 8kb sample buffer, lossless decoding might be expensive
     private int numberBytesRead = 0;
-    private long duration;
-    private double audioFrameRate;
+    private long totalSamples = 0;
+    private boolean allowSampleReads = true;
+    private long bytesPlayed = 0;
 
     // Effects: returns true if audio can be decoded currently
     public boolean isReady() {
         return ready;
     }
 
-    public MP3(String filename) {
+    public MP4alac(String filename) {
         this.filename = filename;
     }
 
@@ -56,8 +58,9 @@ public class MP3 implements AudioDecoder {
         try {
             File file = new File(filename);
             InputStream input = new FileInputStream(file);
-            MpegAudioFileReader fileReader = new MpegAudioFileReader();
-            duration = (Long)(fileReader.getAudioFileFormat(input, file.length()).properties().get("duration"));
+            AlacAudioFileReader fileReader = new AlacAudioFileReader();
+            Alac alac = new Alac(new FileInputStream(file));
+            totalSamples = alac.getNumSamples();
             in = fileReader.getAudioInputStream(file);
             AudioFormat baseFormat = in.getFormat();
             format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
@@ -67,9 +70,10 @@ public class MP3 implements AudioDecoder {
                     baseFormat.getChannels() * 2,
                     baseFormat.getSampleRate(),
                     false);
-            decoded = new DecodedMpegAudioInputStream(format, in);
-            audioFrameRate = baseFormat.getFrameRate();
-            System.out.println("MP3 decoder ready!");
+            decoded = AudioSystem.getAudioInputStream(format, in);
+            double audioFrameRate = baseFormat.getFrameRate();
+            bytesPerSecond = format.getSampleSizeInBits() * format.getChannels() * format.getSampleRate() / 8;
+            System.out.println("ALAC decoder ready!");
             ready = true;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -83,22 +87,34 @@ public class MP3 implements AudioDecoder {
     public void closeAudioFile() {
         ready = false;
         try {
-            decoded.close();
             in.close();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    // Effects: wait for a set time
+    private static void wait(int nanos) {
+        try {
+            sleep(0, nanos);
+        } catch (InterruptedException e) {
+            // Why?
+        }
+    }
+
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     public AudioSample getNextSample() {
+        while (!allowSampleReads) {
+            wait(1);
+        }
         while (moreSamples()) {
             try {
                 numberBytesRead = decoded.read(data, 0, data.length);
                 if (numberBytesRead == -1) {
                     break;
-                }
+                } // Yes I have to do this to track time
+                bytesPlayed += numberBytesRead;
                 return new AudioSample(data, numberBytesRead);
             } catch (IOException e) {
                 // Move along
@@ -112,27 +128,33 @@ public class MP3 implements AudioDecoder {
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
-        long toSkip = (long)(time * audioFrameRate) // Target frame
-                - (Long)decoded.properties().get("mp3.frame"); // Minus current frame
-        if (toSkip < 0) { // We can't skip backwards for some reason
-            try {
-                decoded.reset();
-            } catch (IOException e) {
-                prepareToPlayAudio(); // Backup
-            }
-            toSkip = (long)(time * audioFrameRate);
+        long toSkip = (long)(time * bytesPerSecond) - bytesPlayed;
+        allowSampleReads = false;
+        if (toSkip < 0) {
+            // Reset doesn't work
+            prepareToPlayAudio();
+            toSkip = (long)(time * bytesPerSecond);
+            bytesPlayed = 0;
         }
-        decoded.skipFrames(toSkip);
+        bytesPlayed += toSkip;
+        try {
+            while (toSkip != 0) { // It won't skip all the way
+                toSkip -= decoded.skip(toSkip);
+            }
+        } catch (IOException e) {
+            bytesPlayed -= toSkip;
+        }
+        allowSampleReads = true;
     }
 
     // Effects: returns the current time in the audio in seconds
     public double getCurrentTime() {
-        return (Long)decoded.properties().get("mp3.position.microseconds") * 0.000001;
+        return bytesPlayed / bytesPerSecond;
     }
 
     // Effects: returns the duration of the audio in seconds
     public double getFileDuration() {
-        return duration * 0.000001; // javax uses microseconds
+        return totalSamples / format.getSampleRate();
     }
 
     // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
@@ -158,14 +180,13 @@ public class MP3 implements AudioDecoder {
     // Effects: returns decoded ID3 data
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
-        base.setID3Data("VBR", "UNKNOWN");
+        base.setID3Data("VBR", "NO");
         AudioFile f = null;
         try {
             f = AudioFileIO.read(new File(filename));
         } catch (Exception e) {
             return base;
         }
-        base.setID3Data("VBR", f.getAudioHeader().isVariableBitRate() ? "YES" : "NO");
         base.setID3Data("bitRate", f.getAudioHeader().getBitRateAsNumber());
         base.setID3Data("sampleRate", f.getAudioHeader().getSampleRateAsNumber());
         Tag tag = f.getTag();
@@ -214,7 +235,7 @@ public class MP3 implements AudioDecoder {
     }
 
     public AudioFileType getFileType() {
-        return AudioFileType.MP3;
+        return AudioFileType.ALAC_MP4;
     }
 
     // Effects: returns an audio input stream for encoding data
