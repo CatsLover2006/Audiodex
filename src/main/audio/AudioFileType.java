@@ -6,6 +6,7 @@ public enum AudioFileType {
     MP3,
     PCM_WAV,
     AIFF,
+    VORBIS,
     EMPTY,
     UNKNOWN
 }

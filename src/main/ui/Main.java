@@ -14,6 +14,8 @@ import model.AudioConversion;
 import model.AudioFileList;
 import org.fusesource.jansi.*;
 
+import javax.swing.*;
+
 import static java.lang.Math.floor;
 import static java.lang.Thread.*;
 
@@ -145,6 +147,7 @@ public class Main {
     public static void main(String[] args) {
         if (strArrContains(args, "--gui")) {
             USE_CLI = false; // Prep
+            Gui.createLoadingThread();
         }
         played = new LinkedList<>();
         songQueue = new LinkedList<>();
@@ -153,9 +156,9 @@ public class Main {
         playbackManager = new AudioFilePlaybackBackend();
         audioConverterList = new ArrayList<>();
         if (USE_CLI) {
-            while (!end) {
-                Cli.cli(args);
-            }
+            Cli.cli(args);
+        } else {
+            Gui.doGui(args);
         }
     }
 
@@ -166,6 +169,114 @@ public class Main {
             playbackManager.playAudio();
         } else {
             playbackManager.pauseAudio();
+        }
+    }
+
+    // GUI mode
+    private static class Gui {
+        private static LoadingFrameThread loadingFrame = null;
+        private static JFrame mainWindow;
+
+        // Modifies: this
+        // Effects:  shows loading thread
+        public static void createLoadingThread() {
+            if (loadingFrame != null) {
+                return;
+            }
+            loadingFrame = new LoadingFrameThread();
+            loadingFrame.start();
+        }
+
+        // Modifies: this
+        // Effects:  hides loading thread
+        private static void closeLoadingThread() {
+            if (loadingFrame == null) {
+                return;
+            }
+            while (!loadingFrame.showing) {
+                Cli.wait(1);
+            }
+            loadingFrame.doneLoading();
+            loadingFrame.safeJoin(250);
+            loadingFrame = null;
+        }
+
+        // Modifies: this
+        // Effects:  displays main window
+        public static void doGui(String[] args) {
+            mainWindow = new JFrame("AudioDex");
+            mainWindow.setSize(500, 500);
+            mainWindow.setResizable(true);
+            mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            mainWindow.setVisible(true);
+            //closeLoadingThread();
+        }
+
+        // Modifies: this
+        // Effects:  updates the list
+        public static void updateGuiList() {
+
+        }
+
+        // No other class needs to know this
+        // class for the thread which displays the loading menu
+        private static class LoadingFrameThread extends Thread {
+            private volatile boolean showing = true;
+
+            public boolean isShowing() {
+                return showing;
+            }
+
+            // Modifies: this
+            // Effects:  closes loading window by setting showing to false
+            public void doneLoading() {
+                showing = false;
+            }
+
+            // Effects: join() but no try-catch
+            public void safeJoin() {
+                try {
+                    join();
+                } catch (InterruptedException e) {
+                    // lol
+                }
+            }
+
+            // Effects: join(long millis) but no try-catch
+            public void safeJoin(long millis) {
+                try {
+                    join(millis);
+                } catch (InterruptedException e) {
+                    // lol
+                }
+            }
+
+            // Effects: join(long millis, int nanos) but no try-catch
+            public void safeJoin(long millis, int nanos) {
+                try {
+                    join(millis, nanos);
+                } catch (InterruptedException e) {
+                    // lol
+                }
+            }
+
+            // Effects: shows loading indicator window
+            public void run() {
+                JFrame loadingFrame = new JFrame("Loading...");
+                loadingFrame.setSize(200, 150);
+                loadingFrame.setResizable(false);
+                loadingFrame.setUndecorated(true);
+                loadingFrame.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+                loadingFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                loadingFrame.add(new JLabel("Loading..."));
+                loadingFrame.setVisible(true);
+                while (showing) {
+                    Cli.wait(100);
+                }
+                loadingFrame.setVisible(false);
+                loadingFrame.dispose();
+                showing = false;
+            }
         }
     }
 
