@@ -3,14 +3,14 @@
     <output-path>$PROJECT_DIR$/out/artifacts/AudioDex_jar</output-path>
     <root id="archive" name="Project-Starter.jar">
       <element id="module-output" name="Project-Starter" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jaad-0.8.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/jansi-2.4.2-SNAPSHOT.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jaudiotagger-2.2.6-SNAPSHOT.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/mp3spi-1.9.5.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/jlayer-1.0.1.4.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jaudiotagger-2.2.6-SNAPSHOT.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jaad-0.8.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/tritonus-share-0.3.12.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/tritonus-remaining-0.3.12-aiffc.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/tritonus-aos-0.3.12.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/tritonus-share-0.3.12.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/vavi-sound-alac-0.3.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/vavi-sound/vavi-commons-sandbox-0.3.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/vavi-sound/commons-beanutils-1.8.0.jar" path-in-jar="/" />
@@ -26,6 +26,7 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/vavi-sound/vavi-util-codec-sandbox-1.0.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/vavi-sound/vavi-sound-nda-1.0.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/vavi-sound/vavi-sound-1.0.15.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/java-vorbis-support-1.2.1.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

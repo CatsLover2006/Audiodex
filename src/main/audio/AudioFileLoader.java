@@ -22,10 +22,13 @@ public class AudioFileLoader {
                 return new MP4AAC(filename);
             case ALAC_MP4:
                 return new MP4alac(filename);
+            case VORBIS:
+                return new Vorbis(filename);
         }
         return null;
     }
 
+    @SuppressWarnings("methodlength") // Large switch/case
     // No documentation needed, effectively a getter
     public static AudioFileType getAudioFiletype(String filename) {
         String filetype = filename.substring(filename.length() - 4);
@@ -41,6 +44,10 @@ public class AudioFileLoader {
             case ".mp2":
             case ".mp3":
                 return AudioFileType.MP3;
+            case ".ogg":
+            case ".oga":
+            case "mogg":
+                return AudioFileType.VORBIS;
             case ".mp4":
             case ".m4b":
             case ".m4a":
