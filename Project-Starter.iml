@@ -31,7 +31,7 @@
     </orderEntry>
     <orderEntry type="library" name="mp3spi 1.9.5.4" level="project" />
     <orderEntry type="library" name="JAADec 0.8.4" level="project" />
-    <orderEntry type="library" name="Jansi 2.4.2 (Self-Compiled" level="project" />
+    <orderEntry type="library" name="Jansi 2.4.2 (Self-Compiled)" level="project" />
     <orderEntry type="library" name="jaudiotagger 2.2.6 (Self-Compiled w/ padding warning removal)" level="project" />
     <orderEntry type="library" name="mp3agic 0.9.2 (Self-Compiled)" level="project" />
     <orderEntry type="library" name="tritonus 0.3.12 (Self-Compiled w/ AIFF-C support mod)" level="project" />
