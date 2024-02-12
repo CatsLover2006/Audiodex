@@ -98,6 +98,10 @@ public class AudioConversion {
                 helper = new WAV();
                 break;
             }
+            case AIFF: {
+                helper = new Aiff();
+                break;
+            }
             default: { // We done here
                 error = true;
                 done = true;

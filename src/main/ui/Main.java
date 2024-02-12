@@ -4,7 +4,9 @@ import audio.AudioDataStructure;
 import audio.AudioFileLoader;
 import audio.AudioFilePlaybackBackend;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import audio.ID3Container;
@@ -25,6 +27,7 @@ public class Main {
     private static List<AudioConversion> audioConverterList;
     private static LinkedList<AudioDataStructure> played;
     private static AudioDataStructure nowPlaying;
+    private static boolean loop = false;
 
     // Effects: shuffles the database
     private static void shuffleDatabase() {
@@ -126,6 +129,16 @@ public class Main {
             Cli.finishedEncode();
         } else {
             // Do GUI stuff
+        }
+    }
+
+    static { // Disable jaudiotagger (library) logging
+        java.util.logging.LogManager manager = java.util.logging.LogManager.getLogManager();
+        try {
+            manager.readConfiguration(new ByteArrayInputStream(("handlers=java.util.logging.ConsoleHandler\n"
+                    + "org.jaudiotagger.level=OFF").getBytes()));
+        } catch (IOException e) {
+            // Oops
         }
     }
 
@@ -279,7 +292,10 @@ public class Main {
         // Modifies: this
         // Effects:  finishedSong() extension for CLI
         private static void finishedSong() {
-            if (!songQueue.isEmpty()) {
+            if (loop) {
+                playDbFile(played.getFirst());
+                played.removeFirst();
+            } else if (!songQueue.isEmpty()) {
                 playDbFile(songQueue.getFirst());
                 songQueue.removeFirst();
             }
@@ -375,7 +391,11 @@ public class Main {
                     shuffleDatabase();
                     break;
                 }
-                case "}": {
+                case "l": {
+                    loop = !loop;
+                    break;
+                }
+                /*case "}": {
                     debug(inputScanner);
                     return;
                 } //*///
@@ -601,12 +621,12 @@ public class Main {
                 w += Ansi.ansi().fgBrightRed().toString().length() + Ansi.ansi().fgBrightMagenta().toString().length();
             }
             String fileDuration = formatTime((long) floor(playbackManager.getFileDuration()));
-            w -= burstWrite.length() + fileDuration.length();
+            w -= burstWrite.length() + fileDuration.length() + (loop ? " LOOP".length() : 0);
             burstWrite += getPlaybackBar(time, w);
             AnsiConsole.out().print(Ansi.ansi().saveCursorPosition().toString()
                     + Ansi.ansi().fgBrightMagenta().toString() + Ansi.ansi().cursor(1, 1).toString()
-                    + burstWrite + "] " + fileDuration + Ansi.ansi().restoreCursorPosition().toString()
-                    + Ansi.ansi().fgDefault().toString());
+                    + burstWrite + "] " + fileDuration + (loop ? " LOOP" : "")
+                    + Ansi.ansi().restoreCursorPosition().toString() + Ansi.ansi().fgDefault().toString());
         }
 
         // Effects: gets the playback bar for writePlaybackState()
@@ -678,8 +698,9 @@ public class Main {
             AnsiConsole.out().println("3. Scan directory into database");
             AnsiConsole.out().println("4. Browse database");
             AnsiConsole.out().println("5. Save database");
-            AnsiConsole.out().println("R. Shuffle and play database");
             AnsiConsole.out().println("6. Re-encode file");
+            AnsiConsole.out().println("R. Shuffle and play database");
+            AnsiConsole.out().println("L. Toggle loop");
             AnsiConsole.out().println("Q. Exit");
             AnsiConsole.out().println("M. Enter database backup manager");
         }
@@ -867,9 +888,10 @@ public class Main {
         private static void printDbMenu() {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
             doPlaybackStatusWrite();
-            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
             AnsiConsole.out().print(Ansi.ansi().fgBrightRed());
+            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
             AnsiConsole.out().println("Here be dragons...");
+            AnsiConsole.out().println("You have been warned.");
             AnsiConsole.out().println("1. Revert to previous database version");
             AnsiConsole.out().println("2. Clean database files (enter *.audiodex.basedb file on next line)");
             AnsiConsole.out().println("3. Clean all old database files");

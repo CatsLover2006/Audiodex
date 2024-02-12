@@ -19,21 +19,23 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - [x] Queue files from music list for playback
 - [x] ID3 tag management
   - [x] Read ID3 tags
-  - [ ] Write ID3 tags
-    - Might work, haven't tested
+  - [x] Write ID3 tags
+    - Tested using AIFF re-encoding
+    - Will add full editing capability during GUI stage
   - [ ] (Maybe) Read album art
+    - Won't touch this with a ten foot pole until GUI time
   - [ ] (Probably not) Write album art
 - [x] All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding
   
 ## Filetype Support
-### Decode:
+### Decode (Library-dependent):
 - [x] MP4, M4A, M4B: AAC
   - M4B needs verification (I have none of these files)
 - [x] MP3, MP2
   - MP1 is probably decodable as well, but quite literally nobody uses this format so I can't test
 - [ ] OGG, OGA, MOGG: Vorbis
-- [ ] AAC
+- [ ] (Probably) AAC
 - [x] WAV
 - [x] AIFF
 - [ ] FLAC
@@ -41,7 +43,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
 
-### Encode:
+### Encode (Library-dependent):
 - [ ] (Hopefully) M4A: AAC
   - MP4 and M4B are redundant formats
 - [ ] (Hopefully) MP3
@@ -49,8 +51,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Hopefully) OGG: Vorbis
 - [ ] (Hopefully) AAC
 - [x] WAV
-- [ ] AIFF
-  - Would use the same code as WAV, I'd just need to add ID3 tag saving/cloning for me to be happy
+- [x] AIFF
+  - Doesn't copy album artwork (I'll have to handle that differently)
 - [ ] (Maybe) FLAC
 - [ ] (Maybe) M4A: ALAC
 - [ ] (Maybe) APE
@@ -60,6 +62,10 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
+- ALAC vs AAC detection is weird since they share their container
+- No way to loop songs (I'll implement in GUI, CLI doesn't have enough avaliable stuff to do that)
+- Sometimes seeking to the very last second of an MP3 file will cause an ArrayIndexOutOfBoundsException, which causes the main thread to die
+  - Will fix by performing a bounds check, but I'm too tired rn
 
 ## User Stories
 - As a user, I want to play my music
