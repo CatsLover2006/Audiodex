@@ -70,7 +70,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 
 ## Lucky Breaks
 - jaudiotagger handles most of the ID3 metadata I care about
-  - jaudiotagger header returns encoding type for *.m4a files
+  - jaudiotagger header returns encoding type for *.m4a and *.ogg files
   - jaudiotagger can **write** ID3 metadata
 - `InputStream.read(bytes[] b)` returns the number of bytes actually read
 - viva-sound-alac existing
