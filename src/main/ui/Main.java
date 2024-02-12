@@ -523,7 +523,9 @@ public class Main {
                 AnsiConsole.out().println("No previous song to play!");
                 return;
             }
-            songQueue.addFirst(nowPlaying);
+            if (nowPlaying != null) {
+                songQueue.addFirst(nowPlaying);
+            }
             playDbFile(played.getFirst());
             played.removeFirst();
         }
@@ -535,6 +537,7 @@ public class Main {
                 AnsiConsole.out().println("No song in queue to play!");
                 return;
             }
+            // If song queue isn't empty we're playing SOMETHING
             played.addFirst(nowPlaying);
             playDbFile(songQueue.getFirst());
             songQueue.removeFirst();
@@ -725,19 +728,20 @@ public class Main {
         private static void writePlaybackState() {
             double time = playbackManager.getPercentPlayed();
             int w = AnsiConsole.getTerminalWidth() - 2;
+            String color = playbackManager.audioIsSkipping() ? Ansi.ansi().fgBrightBlack().toString()
+                    : Ansi.ansi().fgBrightMagenta().toString();
             String burstWrite = formatTime((long) floor(playbackManager.getCurrentTime())) + " [";
             if (playbackManager.paused()) {
-                burstWrite = Ansi.ansi().fgBrightRed().toString() + "PAUSED"
-                        + Ansi.ansi().fgBrightMagenta().toString() + " " + burstWrite;
+                burstWrite = Ansi.ansi().fgBrightRed().toString() + "PAUSED" + color + " " + burstWrite;
                 w += Ansi.ansi().fgBrightRed().toString().length() + Ansi.ansi().fgBrightMagenta().toString().length();
             }
             String fileDuration = formatTime((long) floor(playbackManager.getFileDuration()));
             w -= burstWrite.length() + fileDuration.length() + (loop ? " LOOP".length() : 0);
             burstWrite += getPlaybackBar(time, w);
-            AnsiConsole.out().print(Ansi.ansi().saveCursorPosition().toString()
-                    + Ansi.ansi().fgBrightMagenta().toString() + Ansi.ansi().cursor(1, 1).toString()
-                    + burstWrite + "] " + fileDuration + (loop ? " LOOP" : "")
-                    + Ansi.ansi().restoreCursorPosition().toString() + Ansi.ansi().fgDefault().toString());
+            AnsiConsole.out().print(Ansi.ansi().saveCursorPosition().toString() + color
+                    + Ansi.ansi().cursor(1, 1).toString() + burstWrite + "] " + fileDuration
+                    + (loop ? " LOOP" : "") + Ansi.ansi().restoreCursorPosition().toString()
+                    + Ansi.ansi().fgDefault().toString());
         }
 
         // Effects: gets the playback bar for writePlaybackState()

@@ -5,6 +5,7 @@
 ***NOTE 3***: This project saves data at an absolute location in the user's home directory, and it saves filenames as absolute references within the database. The former could be changed, but the latter is required for the database to function if the program is launched from a different location on the filesystem.
 
 ## AudioDex
+![CLI Preview](./previewcli.png)<br>
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
 
 ### Plans
@@ -34,7 +35,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - M4B needs verification (I have none of these files)
 - [x] MP3, MP2
   - MP1 is probably decodable as well, but quite literally nobody uses this format so I can't test
-- [ ] OGG, OGA, MOGG: Vorbis
+- [x] OGG, OGA, MOGG: Vorbis
 - [ ] (Probably) AAC
 - [x] WAV
 - [x] AIFF
@@ -59,6 +60,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Maybe) WMA
 
 ## Known Issues
+- You can't remove audio files from the database (will be fixed soon)
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
@@ -73,9 +75,11 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - `InputStream.read(bytes[] b)` returns the number of bytes actually read
 - viva-sound-alac existing
 - Tritonus being open-source so I could add in AIFF `swot` support (little endian vs the standard big endian)
+  - My code was merged into the only active branch! [See this commit](https://github.com/umjammer/tritonus/commit/37d9111a01c4ee6a8fa505627b4934d19c7e753d)
 - JAADec playback example being easy to read so I could figure out what's going on
 - mp3spi existing
 - Tritonus `AudioOutputStream` supports AIFF out of the box
+- java-vorbis-support existing
 
 _I'm a really lucky person ain't I?_
 

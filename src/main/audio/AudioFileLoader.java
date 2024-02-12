@@ -3,6 +3,7 @@ package audio;
 import audio.filetypes.decoders.*;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import ui.Main;
 
 import java.io.File;
 
@@ -47,7 +48,7 @@ public class AudioFileLoader {
             case ".ogg":
             case ".oga":
             case "mogg":
-                return AudioFileType.VORBIS;
+                return oggAudioType(filename);
             case ".mp4":
             case ".m4b":
             case ".m4a":
@@ -69,7 +70,23 @@ public class AudioFileLoader {
                 case "alac":
                     return AudioFileType.ALAC_MP4;
             }
-            return AudioFileType.EMPTY;
+            return AudioFileType.UNKNOWN;
+        } catch (Exception e) {
+            return AudioFileType.UNKNOWN;
+        }
+    }
+
+    // Effects: detects encoding of a .ogg-like file
+    private static AudioFileType oggAudioType(String filename) {
+        File file = null;
+        try {
+            file = new File(filename);
+            AudioFile audio = AudioFileIO.read(file);
+            switch (audio.getAudioHeader().getEncodingType().toLowerCase()) {
+                case "ogg vorbis v1":
+                    return AudioFileType.VORBIS;
+            }
+            return AudioFileType.UNKNOWN;
         } catch (Exception e) {
             return AudioFileType.UNKNOWN;
         }

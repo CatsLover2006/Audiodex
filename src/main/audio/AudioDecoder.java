@@ -64,4 +64,8 @@ public interface AudioDecoder {
     // Modifies: file on filesystem
     // Effects:  returns decoded ID3 data
     void setID3(ID3Container container);
+
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    boolean skipInProgress();
 }

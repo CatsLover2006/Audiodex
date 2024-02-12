@@ -25,6 +25,7 @@ public class WAV implements AudioDecoder {
     private double bytesPerSecond;
     private long bytesPlayed = 0;
     private double duration;
+    private boolean skipping = false;
 
     // Effects: returns true if audio can be decoded currently
     public boolean isReady() {
@@ -85,11 +86,18 @@ public class WAV implements AudioDecoder {
         return new AudioSample();
     }
 
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    public boolean skipInProgress() {
+        return skipping;
+    }
+
     // Requires: prepareToPlayAudio() called
     //           0 <= time <= audio length
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
+        skipping = true;
         try {
             prepareToPlayAudio(); // Reset doesn't work
             long toSkip = (long) (time * bytesPerSecond);
@@ -98,6 +106,7 @@ public class WAV implements AudioDecoder {
                 skipped = in.skip(toSkip);
                 toSkip -= skipped;
                 if (skipped == 0) {
+                    skipping = false;
                     return;
                 }
             }
@@ -105,6 +114,7 @@ public class WAV implements AudioDecoder {
         } catch (IOException e) {
             // RIP
         }
+        skipping = false;
     }
 
     // Effects: returns the current time in the audio in seconds
