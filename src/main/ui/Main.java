@@ -4,12 +4,10 @@ import audio.AudioDataStructure;
 import audio.AudioFilePlaybackBackend;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import audio.ID3Container;
+import model.AudioConversion;
 import model.AudioFileList;
 import org.fusesource.jansi.*;
 
@@ -23,12 +21,61 @@ public class Main {
     private static boolean end = false;
     private static String filename = "";
     private static AudioFileList database;
+    private static List<AudioConversion> audioConverterList;
+    private static LinkedList<AudioDataStructure> played;
+    private static AudioDataStructure nowPlaying;
+
+    // Effects: shuffles the database
+    private static void shuffleDatabase() {
+        LinkedList<AudioDataStructure> databaseClone = new LinkedList<>();
+        for (int i = 0; i < database.listSize(); i++) {
+            databaseClone.addLast(database.get(i));
+        }
+        Random rng = new Random();
+        while (!databaseClone.isEmpty()) {
+            int randNumb = (int)Math.min(Math.floor(rng.nextDouble() * databaseClone.size()),
+                    databaseClone.size() - 1);
+            songQueue.addLast(databaseClone.get(randNumb));
+            databaseClone.remove(randNumb);
+        }
+        Cli.playDbFile(songQueue.getFirst());
+        songQueue.removeFirst();
+    }
+
+    // Effects: Counts currently converting audio files
+    private static int activeAudioConversions() {
+        int i = 0;
+        for (AudioConversion converter : audioConverterList) {
+            if (converter.isFinished()) {
+                continue;
+            }
+            if (converter.errorOccurred()) {
+                continue;
+            }
+            i++;
+        }
+        return i;
+    }
+
+    // Effects: Counts failed audio file conversions
+    private static int deadAudioConversions() {
+        int i = 0;
+        for (AudioConversion converter : audioConverterList) {
+            if (converter.isFinished()) {
+                continue;
+            }
+            if (converter.errorOccurred()) {
+                i++;
+            }
+        }
+        return i;
+    }
 
 
     // This is probably the lowest-level I still consider UI-level;
     // we're still not interacting with actual data on the filesystem
     // and this program basically is a file management program
-    private static List<AudioDataStructure> songQueue;
+    private static LinkedList<AudioDataStructure> songQueue;
 
     // Effects: returns true if arr contains item, false otherwise
     //          this function is null-safe
@@ -42,24 +89,63 @@ public class Main {
     }
 
     // Modifies: this
-    // Effects:  Checks when song is finished and redraws screen if necessary.
+    // Effects:  Is run when song is finished and redraws screen if necessary
+    //           also adds previously playing song to previously played list
     public static void finishedSong() {
+        if (end) {
+            return;
+        }
+        played.addFirst(nowPlaying);
+        nowPlaying = null;
+        maxBoundPlayedList();
         if (USE_CLI) {
             Cli.finishedSong();
         } else {
             if (!songQueue.isEmpty()) {
-                // Run the playDbFile() function for
+                // Run the playDbFile() function for GUI
             }
         }
     }
 
+    // Modifies: this
+    // Effects:  Keeps previously played list to a reasonable size
+    public static void maxBoundPlayedList() {
+        while (played.size() > 100) {
+            played.remove(played.size() - 1);
+        }
+    }
+
+    // Modifies: this
+    // Effects:  Is run when encode is finished and redraws screen if necessary.
+    public static void finishedEncode() {
+        if (end) {
+            return;
+        }
+        if (USE_CLI) {
+            Cli.finishedEncode();
+        } else {
+            // Do GUI stuff
+        }
+    }
+
     public static void main(String[] args) {
-        songQueue = new ArrayList<>();
+        if (strArrContains(args, "--gui")) {
+            USE_CLI = false; // Prep
+        }
+        played = new LinkedList<>();
+        songQueue = new LinkedList<>();
         database = new AudioFileList();
         database.loadDatabase();
         playbackManager = new AudioFilePlaybackBackend();
+        audioConverterList = new ArrayList<>();
         if (USE_CLI) {
-            Cli.main(args);
+            while (!end) {
+                try {
+                    Cli.cli(args);
+                } catch (Exception e) {
+                    System.out.println("Sorry, an error occurred!");
+                } // Now we can't crash!
+            }
         }
     }
 
@@ -142,11 +228,7 @@ public class Main {
                     return;
                 }
                 while (run) {
-                    try {
-                        sleep(100);
-                    } catch (InterruptedException e) {
-                        return;
-                    }
+                    Cli.wait(20);
                     if (playbackManager == null) {
                         return;
                     }
@@ -156,7 +238,7 @@ public class Main {
         }
 
         // main function for the CLI
-        private static void main(String[] args) {
+        private static void cli(String[] args) {
             AnsiConsole.systemInstall();
             if (AnsiConsole.getTerminalWidth() == 0) {
                 AnsiConsole.out().println("This application works better in a regular java console.");
@@ -170,18 +252,39 @@ public class Main {
                 doPlaybackStatusWrite();
                 cliMain(inputScanner, inputScanner.nextLine());
                 if (end) {
+                    state = MenuState.CLI_OTHER;
+                    waitForEncoders();
                     AnsiConsole.out().println("Goodbye!");
                     return;
                 }
             }
         }
 
+        // Effects: waits for all audio encoding threads to finish
+        private static void waitForEncoders() {
+            if (audioConverterList.isEmpty()) {
+                return;
+            }
+            AnsiConsole.out().println("Waiting for audio converter threads to finish...");
+            while (!audioConverterList.isEmpty()) {
+                waitForFirstEncoder();
+            }
+        }
+
+        // Effects: waits for first audio encoding thread to finish
+        private static void waitForFirstEncoder() {
+            if (audioConverterList.isEmpty()) {
+                return;
+            }
+            audioConverterList.get(0).waitForEncoderFinish();
+        }
+
         // Modifies: this
         // Effects:  finishedSong() extension for CLI
         private static void finishedSong() {
             if (!songQueue.isEmpty()) {
-                playDbFile(songQueue.get(0));
-                songQueue.remove(0);
+                playDbFile(songQueue.getFirst());
+                songQueue.removeFirst();
             }
             switch (Cli.state) {
                 case CLI_BROWSEMENU: {
@@ -194,6 +297,19 @@ public class Main {
                 }
             }
             Cli.doPlaybackStatusWrite();
+        }
+
+        // Modifies: this
+        // Effects:  finishedEncode() extension for CLI
+        private static void finishedEncode() {
+            for (int i = audioConverterList.size() - 1; i >= 0; i--) {
+                if (audioConverterList.get(i).isFinished() && !audioConverterList.get(i).errorOccurred()) {
+                    audioConverterList.remove(i); // No need to update index, we're decrementing
+                }
+            }
+            if (Objects.requireNonNull(Cli.state) == MenuState.CLI_MAINMENU) {
+                Cli.printMenu();
+            }
         }
 
         @SuppressWarnings("methodlength") // Large switch/case
@@ -222,6 +338,10 @@ public class Main {
                     database.saveDatabaseFile();
                     break;
                 }
+                case "6": {
+                    startEncoder(inputScanner);
+                    break;
+                }
                 case "c": {
                     playbackManager.playAudio();
                     break;
@@ -238,6 +358,14 @@ public class Main {
                     seekAudio(inputScanner);
                     break;
                 }
+                case "<": {
+                    playPrevious();
+                    break;
+                }
+                case ">": {
+                    playNext();
+                    break;
+                }
                 case "q": {
                     cleanup();
                     return;
@@ -246,6 +374,10 @@ public class Main {
                     database.addFileToDatabase((new File(filename)).getAbsolutePath());
                     return;
                 }
+                case "r": {
+                    shuffleDatabase();
+                    break;
+                }
                 /*case "}": {
                     debug(inputScanner);
                     return;
@@ -253,6 +385,90 @@ public class Main {
                 default: {
                     unknownCommandError();
                 }
+            }
+        }
+
+        // Modifies: this
+        // Effects:  plays most recently played song, if possible
+        private static void playPrevious() {
+            if (played.isEmpty()) {
+                AnsiConsole.out().println("No previous song to play!");
+                return;
+            }
+            songQueue.addFirst(nowPlaying);
+            playDbFile(played.getFirst());
+            played.removeFirst();
+        }
+
+        // Modifies: this
+        // Effects:  plays next song, if possible
+        private static void playNext() {
+            if (songQueue.isEmpty()) {
+                AnsiConsole.out().println("No song in queue to play!");
+                return;
+            }
+            played.addFirst(nowPlaying);
+            playDbFile(songQueue.getFirst());
+            songQueue.removeFirst();
+        }
+
+        // Modifies: a lot:
+        //           - filesystem
+        //           - console
+        //           - audio converter list
+        // Effects:  Starts an audio converter thread
+        private static void startEncoder(Scanner scanner) {
+            AnsiConsole.out().print(Ansi.ansi().eraseScreen());
+            AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
+            AnsiConsole.out().println("Please enter the source filename:");
+            doPlaybackStatusWrite();
+            // Fix whitespace errors
+            filename = scanner.nextLine().trim();
+            // Check if file exists
+            File f = new File(filename);
+            if (f.isFile()) {
+                AudioConversion converter = makeAudioConverter(new AudioDataStructure(f.getAbsolutePath()), scanner);
+                audioConverterList.add(converter);
+                converter.start();
+            } else {
+                AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
+            }
+        }
+
+        // Modifies: a lot:
+        //           - filesystem
+        //           - console
+        //           - audio converter list
+        // Effects:  Starts an audio converter thread using a database file
+        private static void encodeDatabaseFile(AudioDataStructure audioDataStructure, Scanner scanner) {
+            File f = new File(audioDataStructure.getFilename());
+            if (f.isFile()) {
+                AudioConversion converter = makeAudioConverter(audioDataStructure, scanner);
+                audioConverterList.add(converter);
+                converter.start();
+            } else {
+                AnsiConsole.out().println("File no longer exists, or is currently inaccessible.");
+                wait(1000);
+            }
+        }
+
+        // Effects: returns an audio converter object with user-selected settings
+        private static AudioConversion makeAudioConverter(AudioDataStructure source, Scanner scanner) {
+            AnsiConsole.out().println("Please enter the target filename:");
+            AudioConversion base = new AudioConversion(source, scanner.nextLine().trim());
+            HashMap<String, List<String>> options = base.getOptions();
+            if (options == null) {
+                AnsiConsole.out().println("Encoder does not have any selectable options.");
+            }
+            return base;
+        }
+
+        // Effects: wait for a set time
+        private static void wait(int millis) {
+            try {
+                sleep(millis);
+            } catch (InterruptedException e) {
+                // Why?
             }
         }
 
@@ -282,11 +498,7 @@ public class Main {
                 database.addFileToDatabase(f.getAbsolutePath());
             } else {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    // Why?
-                }
+                wait(1000);
             }
         }
 
@@ -302,13 +514,10 @@ public class Main {
             File f = new File(filename);
             if (f.isDirectory()) { // Database uses absolute file paths, otherwise it would fail to load audio
                 database.addDirToDatabase(f.getAbsolutePath());
+                database.sanitizeDatabase();
             } else {
                 AnsiConsole.out().println("Directory doesn't exist, is a file, or is inaccessible.");
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    // Why?
-                }
+                wait(1000);
             }
         }
 
@@ -316,22 +525,18 @@ public class Main {
         private static void unknownCommandError() {
             AnsiConsole.out().println("Invalid option.");
             AnsiConsole.out().println("Either you mistyped something, or it hasn't been implemented yet.");
-            try {
-                sleep(1000);
-            } catch (InterruptedException e) {
-                // This is main thread
-            }
+            wait(1000);
         }
 
         // Modifies: this, playbackManager
         // Effects:  Cleans up extra threads
         private static void cleanup() {
+            end = true;
             visualizerThread.killThread();
             visualizerThread.interrupt();
             playbackManager.cleanBackend();
             visualizerThread = null;
             playbackManager = null;
-            end = true;
         }
 
         // Modifies: playbackManager and its decoding thread
@@ -346,7 +551,6 @@ public class Main {
             // Check if file exists
             File f = new File(filename);
             if (f.isFile()) {
-                songQueue.clear();
                 visualizerThread.killThread();
                 visualizerThread.safeJoin();
                 playbackManager.loadAudio(f.getAbsolutePath());
@@ -355,13 +559,10 @@ public class Main {
                 id3 = playbackManager.getID3();
                 visualizerThread = new PlaybackThread();
                 visualizerThread.start();
+                nowPlaying = new AudioDataStructure(f.getAbsolutePath());
             } else {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    // Why?
-                }
+                wait(1000);
             }
         }
 
@@ -457,6 +658,26 @@ public class Main {
         private static void printMenu() {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
             doPlaybackStatusWrite();
+            printMenuBlock();
+            if (playbackManager.audioIsLoaded()) {
+                printLoadedAudioStatus();
+            }
+            if (!audioConverterList.isEmpty()) {
+                printReencodeStatus();
+            }
+            if (!played.isEmpty() || !songQueue.isEmpty()) {
+                horizonalBar();
+            }
+            if (!played.isEmpty()) {
+                AnsiConsole.out().println("<. Play previous song");
+            }
+            if (!songQueue.isEmpty()) {
+                AnsiConsole.out().println(">. Skip to next song");
+            }
+        }
+
+        // Effects: prints main menu static text
+        private static void printMenuBlock() {
             AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
             AnsiConsole.out().println("What would you like to do?");
             AnsiConsole.out().println("1. Play a file");
@@ -464,16 +685,34 @@ public class Main {
             AnsiConsole.out().println("3. Scan directory into database");
             AnsiConsole.out().println("4. Browse database");
             AnsiConsole.out().println("5. Save database");
+            AnsiConsole.out().println("R. Shuffle and play database");
+            AnsiConsole.out().println("6. Re-encode file");
             AnsiConsole.out().println("Q. Exit");
             AnsiConsole.out().println("M. Enter database backup manager");
-            if (playbackManager.audioIsLoaded()) {
-                horizonalBar();
-                AnsiConsole.out().println(Ansi.ansi().fgBrightCyan().toString() + "Now Playing: "
-                        + playbackManager.getPlaybackString() + Ansi.ansi().fgDefault().toString());
-                AnsiConsole.out().println("P. Pause");
-                AnsiConsole.out().println("C. Play");
-                AnsiConsole.out().println("S. Seek");
-                AnsiConsole.out().println("D. Add playing file to database");
+        }
+
+        // Modifies: console
+        // Effects:  prints the now playing text and menu
+        private static void printLoadedAudioStatus() {
+            horizonalBar();
+            AnsiConsole.out().println(Ansi.ansi().fgBrightCyan().toString() + "Now Playing: "
+                    + playbackManager.getPlaybackString() + Ansi.ansi().fgDefault().toString());
+            AnsiConsole.out().println("P. Pause");
+            AnsiConsole.out().println("C. Play");
+            AnsiConsole.out().println("S. Seek");
+            AnsiConsole.out().println("D. Add playing file to database");
+        }
+
+        // Modifies: console
+        // Effects:  prints the status of encoders
+        private static void printReencodeStatus() {
+            horizonalBar();
+            AnsiConsole.out().println(Ansi.ansi().fgBrightYellow().toString() + "Converting "
+                    + activeAudioConversions() + " audio files..." + Ansi.ansi().fgDefault().toString());
+            int dead = deadAudioConversions();
+            if (dead != 0) {
+                AnsiConsole.out().println(Ansi.ansi().fgBrightRed().toString() + dead
+                        + " audio conversions failed." + Ansi.ansi().fgDefault().toString());
             }
         }
 
@@ -486,8 +725,8 @@ public class Main {
             String selected;
             do {
                 if (!songQueue.isEmpty() && !playbackManager.audioIsLoaded()) {
-                    playDbFile(songQueue.get(0));
-                    songQueue.remove(0);
+                    playDbFile(songQueue.getFirst());
+                    songQueue.removeFirst();
                 }
                 if (songID < 0) {
                     songID += database.listSize();
@@ -497,7 +736,7 @@ public class Main {
                 }
                 printBrowseMenu();
                 selected = inputScanner.nextLine();
-                int l = browseSwitch(selected, songID);
+                int l = browseSwitch(selected, songID, inputScanner);
                 if (l == 7000) {
                     return;
                 }
@@ -508,7 +747,7 @@ public class Main {
         @SuppressWarnings("methodlength") // Large switch/case
         // Modifies: this
         // Effects:  handles the switch case for browseMenu()
-        private static int browseSwitch(String in, int idx) {
+        private static int browseSwitch(String in, int idx, Scanner scanner) {
             switch (in.toLowerCase()) {
                 case "1": {
                     return -1;
@@ -532,6 +771,10 @@ public class Main {
                     songQueue.add(database.get(idx));
                     break;
                 }
+                case "e": {
+                    encodeDatabaseFile(database.get(idx), scanner);
+                    break;
+                }
             }
             return 0;
         }
@@ -546,33 +789,27 @@ public class Main {
                 playbackManager.loadAudio(f.getAbsolutePath());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
+                nowPlaying = audioDataStructure;
                 id3 = playbackManager.getID3();
                 audioDataStructure.updateID3(id3); // Update on file load
                 visualizerThread = new PlaybackThread();
                 visualizerThread.start();
             } else {
                 AnsiConsole.out().println("File no longer exists, or is currently inaccessible.");
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    // Why?
-                }
+                wait(1000);
             }
         }
 
         // Effects: prints browse menu
         private static void printBrowseMenu() {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
-            doPlaybackStatusWrite();
-            String playMessage = "R. Pause song";
+            doPlaybackStatusWrite(); // Checkstyle made me do this
+            String playMessage = playbackManager.paused() ? "R. Resume song" : "R. Pause song";
             AnsiConsole.out().print(Ansi.ansi().cursor(2, 1));
             if (playbackManager.audioIsLoaded()) {
                 AnsiConsole.out().println(Ansi.ansi().fgBrightCyan().toString() + "Now Playing: "
                         + playbackManager.getPlaybackString() + Ansi.ansi().fgDefault().toString());
                 horizonalBar();
-                if (playbackManager.paused()) {
-                    playMessage = "R. Resume song";
-                }
             }
             AnsiConsole.out().println(Ansi.ansi().fgBrightGreen().toString()
                     + database.get(songID).getPlaybackString() + Ansi.ansi().fgDefault().toString());
@@ -580,6 +817,7 @@ public class Main {
             AnsiConsole.out().println("What would you like to do?");
             AnsiConsole.out().println("1. Browse to previous song in database");
             AnsiConsole.out().println("2. Browse to next song in database");
+            AnsiConsole.out().println("E. Re-encode song");
             printIfAudioLoaded(playMessage + "\n");
             AnsiConsole.out().println("P. Play song");
             printIfAudioLoaded("L. Queue song\n");

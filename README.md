@@ -11,8 +11,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] Decode and play audio
   - [x] On a seperate thread so audio playback doesn't kill the main thread if something goes horribly wrong
   - [x] Uses a `getNextSample()` method for all codecs
-- [ ] Modify and reencode audio
-  - [ ] Also on a seperate thread
+- [x] Modify and reencode audio
+  - [x] Also on a seperate thread
 - [x] Manage a list of music files
   - [x] Includes ID3-based music titles
   - [x] Notes filetype, bitrate, codec and other useful information about the file (cache)
@@ -34,7 +34,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] OGG, OGA, MOGG: Vorbis
 - [ ] AAC
 - [x] WAV
-- [ ] AIFF
+- [x] AIFF
 - [ ] FLAC
 - [ ] (Hopefully) ALAC
 - [ ] (Maybe) APE
@@ -47,7 +47,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - MP2 and MP1 are irrelevant to encode to nowadays, and there are no Java libraries to do so
 - [ ] OGG: Vorbis
 - [ ] AAC
-- [ ] WAV
+- [x] WAV
 - [ ] AIFF
 - [ ] FLAC
 - [ ] (Hopefully) ALAC
