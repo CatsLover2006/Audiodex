@@ -4,6 +4,7 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
+import audio.filetypes.TagConversion;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.SampleBuffer;
@@ -14,8 +15,11 @@ import net.sourceforge.jaad.mp4.api.Movie;
 import net.sourceforge.jaad.mp4.api.Track;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotWriteException;
+import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import ui.Main;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -33,7 +37,7 @@ import static java.io.File.separatorChar;
 // Audio decoder for the MP4 file type
 // Only supports AAC MP4 files but to my knowledge there are no other
 // audio formats that use MP4 as a primary
-public class MP4 implements AudioDecoder {
+public class MP4AAC implements AudioDecoder {
     Frame frame;
     private AudioTrack tracks;
     private AudioFormat audioFormat;
@@ -43,7 +47,6 @@ public class MP4 implements AudioDecoder {
     private final SampleBuffer buffer = new SampleBuffer();
     private RandomAccessFile file;
     private double duration;
-    private ID3Container cachedID3;
 
     // AudioInputStream container for audio decoder
     // done for easy handling of certain encoders
@@ -59,7 +62,7 @@ public class MP4 implements AudioDecoder {
         }
 
         @Override
-        public int available() throws IOException {
+        public int available() {
             return (int) ((audioFormat.getSampleSizeInBits() * audioFormat.getSampleRate()
                             * (duration - getCurrentTime())) / 8);
         }
@@ -166,7 +169,7 @@ public class MP4 implements AudioDecoder {
     }
 
     // Effects: it's a constructor
-    public MP4(String filename) {
+    public MP4AAC(String filename) {
         this.filename = filename;
     }
 
@@ -288,6 +291,7 @@ public class MP4 implements AudioDecoder {
         } catch (Exception e) {
             return base;
         }
+        base.setID3Data("VBR", f.getAudioHeader().isVariableBitRate() ? "YES" : "NO");
         Tag tag = f.getTag();
         for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
             try {
@@ -298,6 +302,33 @@ public class MP4 implements AudioDecoder {
             }
         }
         return base;
+    }
+
+    // Modifies: file on filesystem
+    // Effects:  updates ID3 data
+    public void setID3(ID3Container container) {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+        } catch (Exception e) {
+            return;
+        }
+        Tag tag = f.getTag();
+        for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
+            String data = container.getID3Data(entry.getKey()).toString();
+            if (data != null) {
+                try {
+                    tag.setField(entry.getValue(), data);
+                } catch (FieldDataInvalidException e) {
+                    Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
+                }
+            }
+        }
+        try {
+            f.commit();
+        } catch (CannotWriteException e) {
+            Main.CliInterface.println("Failed to write to file.");
+        }
     }
 
     // Effects: returns filename without directories

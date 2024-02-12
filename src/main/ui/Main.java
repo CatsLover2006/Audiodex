@@ -1,6 +1,7 @@
 package ui;
 
 import audio.AudioDataStructure;
+import audio.AudioFileLoader;
 import audio.AudioFilePlaybackBackend;
 
 import java.io.File;
@@ -140,11 +141,7 @@ public class Main {
         audioConverterList = new ArrayList<>();
         if (USE_CLI) {
             while (!end) {
-                try {
-                    Cli.cli(args);
-                } catch (Exception e) {
-                    System.out.println("Sorry, an error occurred!");
-                } // Now we can't crash!
+                Cli.cli(args);
             }
         }
     }
@@ -378,10 +375,10 @@ public class Main {
                     shuffleDatabase();
                     break;
                 }
-                /*case "}": {
+                case "}": {
                     debug(inputScanner);
                     return;
-                }//*///
+                } //*///
                 default: {
                     unknownCommandError();
                 }
@@ -472,17 +469,13 @@ public class Main {
             }
         }
 
-        /*private static void debug(Scanner scanner) {
+        private static void debug(Scanner scanner) {
             AnsiConsole.out().println(Ansi.ansi().fgBrightGreen() + "Debugging now!");
-            AnsiConsole.out().println("AudioDataStructure toString Data:");
-            AudioDataStructure ads = new AudioDataStructure(filename);
-            String str = ads.toString();
-            AnsiConsole.out().println(str);
-            AudioDataStructure adsFrom = AudioDataStructure.fromString(str);
-            AnsiConsole.out().println("AudioDataStructure fromString Decode Data:");
-            AnsiConsole.out().println(adsFrom.toString());
+            String file = scanner.nextLine().trim();
+            AnsiConsole.out().println(AudioFileLoader.getAudioFiletype(file));
+            wait(10000);
             AnsiConsole.out().print(Ansi.ansi().fgDefault());
-        }//*/// Debugging
+        } //*/// Debugging
 
         private static void addDatabaseFile(Scanner scanner) {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());

@@ -4,12 +4,16 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
+import audio.filetypes.TagConversion;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 
+import org.jaudiotagger.audio.exceptions.CannotWriteException;
+import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.tritonus.sampled.file.AiffAudioFileReader;
+import ui.Main;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -103,7 +107,15 @@ public class Aiff implements AudioDecoder {
     public void goToTime(double time) {
         try {
             prepareToPlayAudio(); // Reset doesn't work
-            in.skip((long)(time * bytesPerSecond));
+            long toSkip = (long) (time * bytesPerSecond);
+            long skipped = 0;
+            while (toSkip != 0) {
+                skipped = in.skip(toSkip);
+                toSkip -= skipped;
+                if (skipped == 0) {
+                    return;
+                }
+            }
             bytesPlayed = (long)(time * bytesPerSecond);
         } catch (IOException e) {
             // RIP
@@ -162,6 +174,33 @@ public class Aiff implements AudioDecoder {
             }
         }
         return base;
+    }
+
+    // Modifies: file on filesystem
+    // Effects:  updates ID3 data
+    public void setID3(ID3Container container) {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+        } catch (Exception e) {
+            return;
+        }
+        Tag tag = f.getTag();
+        for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
+            String data = container.getID3Data(entry.getKey()).toString();
+            if (data != null) {
+                try {
+                    tag.setField(entry.getValue(), data);
+                } catch (FieldDataInvalidException e) {
+                    Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
+                }
+            }
+        }
+        try {
+            f.commit();
+        } catch (CannotWriteException e) {
+            Main.CliInterface.println("Failed to write to file.");
+        }
     }
 
     // Effects: returns filename without directories

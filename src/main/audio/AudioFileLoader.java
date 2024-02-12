@@ -1,6 +1,10 @@
 package audio;
 
 import audio.filetypes.decoders.*;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+
+import java.io.File;
 
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler
@@ -15,7 +19,9 @@ public class AudioFileLoader {
             case MP3:
                 return new MP3(filename);
             case AAC_MP4:
-                return new MP4(filename);
+                return new MP4AAC(filename);
+            case ALAC_MP4:
+                return new MP4alac(filename);
         }
         return null;
     }
@@ -36,11 +42,29 @@ public class AudioFileLoader {
             case ".mp3":
                 return AudioFileType.MP3;
             case ".mp4":
-            case ".m4a":
             case ".m4b":
-                return AudioFileType.AAC_MP4;
+            case ".m4a":
+                return m4aAudioType(filename);
             default:
                 return AudioFileType.EMPTY;
+        }
+    }
+
+    // Effects: detects if a .m4a file is ALAC or AAC
+    private static AudioFileType m4aAudioType(String filename) {
+        File file = null;
+        try {
+            file = new File(filename);
+            AudioFile audio = AudioFileIO.read(file);
+            switch (audio.getAudioHeader().getEncodingType().toLowerCase()) {
+                case "aac":
+                    return AudioFileType.AAC_MP4;
+                case "alac":
+                    return AudioFileType.ALAC_MP4;
+            }
+            return AudioFileType.EMPTY;
+        } catch (Exception e) {
+            return AudioFileType.UNKNOWN;
         }
     }
 }

@@ -11,7 +11,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] Decode and play audio
   - [x] On a seperate thread so audio playback doesn't kill the main thread if something goes horribly wrong
   - [x] Uses a `getNextSample()` method for all codecs
-- [x] Modify and reencode audio
+- [x] Re-encode audio
   - [x] Also on a seperate thread
 - [x] Manage a list of music files
   - [x] Includes ID3-based music titles
@@ -36,7 +36,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] WAV
 - [x] AIFF
 - [ ] FLAC
-- [ ] (Hopefully) ALAC
+- [x] M4A: ALAC
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
 
