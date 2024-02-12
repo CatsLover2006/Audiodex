@@ -63,7 +63,6 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 - ALAC vs AAC detection is weird since they share their container
-- No way to loop songs (I'll implement in GUI, CLI doesn't have enough avaliable stuff to do that)
 - Sometimes seeking to the very last second of an MP3 file will cause an ArrayIndexOutOfBoundsException, which causes the main thread to die
   - Will fix by performing a bounds check, but I'm too tired rn
 
