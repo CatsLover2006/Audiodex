@@ -22,14 +22,14 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - [x] Write ID3 tags
     - Tested using AIFF re-encoding
     - Will add full editing capability during GUI stage
-  - [ ] (Maybe) Read album art
+  - [ ] (Hopefully) Read album art
     - Won't touch this with a ten foot pole until GUI time
-  - [ ] (Probably not) Write album art
+  - [ ] (Maybe) Write album art
 - [x] All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding
   
 ## Filetype Support
-### Decode (Library-dependent):
+### Decode (Library-dependent)
 - [x] MP4, M4A, M4B: AAC
   - M4B needs verification (I have none of these files)
 - [x] MP3, MP2
@@ -43,7 +43,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
 
-### Encode (Library-dependent):
+### Encode (Library-dependent)
 - [ ] (Hopefully) M4A: AAC
   - MP4 and M4B are redundant formats
 - [ ] (Hopefully) MP3
@@ -58,13 +58,26 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
 
-## Known Issues:
+## Known Issues
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 - ALAC vs AAC detection is weird since they share their container, there's no fix for this
 - Sometimes seeking to the very last second of an MP3 file will cause an ArrayIndexOutOfBoundsException, which causes the main thread to die
   - Will fix by performing a bounds check, but I'm too tired rn
+
+## Lucky Breaks
+- jaudiotagger handles most of the ID3 metadata I care about
+  - jaudiotagger header returns encoding type for *.m4a files
+  - jaudiotagger can **write** ID3 metadata
+- `InputStream.read(bytes[] b)` returns the number of bytes actually read
+- viva-sound-alac existing
+- Tritonus being open-source so I could add in AIFF `swot` support (little endian vs the standard big endian)
+- JAADec playback example being easy to read so I could figure out what's going on
+- mp3spi existing
+- Tritonus `AudioOutputStream` supports AIFF out of the box
+
+_I'm a really lucky person ain't I?_
 
 ## User Stories
 - As a user, I want to play my music
