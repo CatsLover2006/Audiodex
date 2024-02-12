@@ -83,6 +83,13 @@ public class AudioFilePlaybackBackend {
         }
     }
 
+    public boolean audioIsSkipping() {
+        if (loadedFile == null) {
+            return true;
+        }
+        return loadedFile.skipInProgress();
+    }
+
     private AudioDecoder loadedFile;
     private AudioFormat audioFormat;
     private SourceDataLine line = null;

@@ -18,17 +18,16 @@ import ui.Main;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
 import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
+import static java.lang.Thread.sleep;
 
-// MPEG-type audio file decoder class
+// Vorbis-type audio file decoder class
 public class Vorbis implements AudioDecoder {
     private String filename;
     private AudioFormat format;
@@ -37,8 +36,10 @@ public class Vorbis implements AudioDecoder {
     private boolean ready = false;
     private final byte[] data = new byte[4096]; // 4kb sample buffer, seems standard
     private int numberBytesRead = 0;
-    private long duration;
-    private double audioFrameRate;
+    private long bytesPlayed = 0;
+    private boolean allowSampleReads = true;
+    private double bytesPerSecond;
+    private double duration;
 
     // Effects: returns true if audio can be decoded currently
     public boolean isReady() {
@@ -54,9 +55,7 @@ public class Vorbis implements AudioDecoder {
     public void prepareToPlayAudio() {
         try {
             File file = new File(filename);
-            InputStream input = new FileInputStream(file);
             VorbisAudioFileReader fileReader = new VorbisAudioFileReader();
-            duration = (Long)(fileReader.getAudioFileFormat(input, file.length()).properties().get("duration"));
             in = fileReader.getAudioInputStream(file);
             AudioFormat baseFormat = in.getFormat();
             format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
@@ -67,8 +66,10 @@ public class Vorbis implements AudioDecoder {
                     baseFormat.getSampleRate(),
                     false);
             decoded = new DecodedVorbisAudioInputStream(format, in);
-            audioFrameRate = baseFormat.getFrameRate();
-            System.out.println("MP3 decoder ready!");
+            AudioFile f = AudioFileIO.read(file);
+            duration = f.getAudioHeader().getPreciseTrackLength();
+            bytesPerSecond = format.getSampleSizeInBits() * format.getChannels() * format.getSampleRate() / 8;
+            System.out.println("Vorbis decoder ready!");
             ready = true;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -89,15 +90,34 @@ public class Vorbis implements AudioDecoder {
         }
     }
 
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    public boolean skipInProgress() {
+        return !allowSampleReads;
+    }
+
+    // Effects: wait for a set time
+    private static void wait(int nanos) {
+        try {
+            sleep(0, nanos);
+        } catch (InterruptedException e) {
+            // Why?
+        }
+    }
+
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     public AudioSample getNextSample() {
+        while (!allowSampleReads) {
+            wait(1);
+        }
         while (moreSamples()) {
             try {
                 numberBytesRead = decoded.read(data, 0, data.length);
                 if (numberBytesRead == -1) {
                     break;
-                }
+                } // Yes I have to do this to track time
+                bytesPlayed += numberBytesRead;
                 return new AudioSample(data, numberBytesRead);
             } catch (IOException e) {
                 // Move along
@@ -111,17 +131,40 @@ public class Vorbis implements AudioDecoder {
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
-        // Not implemented
+        try {
+            long toSkip = (long) (time * bytesPerSecond) - bytesPlayed;
+            if (toSkip < 0) {
+                allowSampleReads = false;
+                toSkip += bytesPlayed;
+                bytesPlayed = 0;
+                prepareToPlayAudio();
+            }
+            allowSampleReads = false;
+            long skipped;
+            while (toSkip != 0) {
+                skipped = decoded.skip(toSkip);
+                bytesPlayed += skipped;
+                toSkip -= skipped;
+                if (skipped == 0) {
+                    allowSampleReads = true;
+                    return;
+                }
+            }
+            allowSampleReads = true;
+        } catch (IOException e) {
+            // RIP
+        }
+        allowSampleReads = true;
     }
 
     // Effects: returns the current time in the audio in seconds
     public double getCurrentTime() {
-        return 0;
+        return bytesPlayed / bytesPerSecond;
     }
 
     // Effects: returns the duration of the audio in seconds
     public double getFileDuration() {
-        return duration * 0.000001; // javax uses microseconds
+        return duration;
     }
 
     // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
@@ -148,7 +191,7 @@ public class Vorbis implements AudioDecoder {
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
         } catch (Exception e) {
@@ -172,7 +215,7 @@ public class Vorbis implements AudioDecoder {
     // Modifies: file on filesystem
     // Effects:  updates ID3 data
     public void setID3(ID3Container container) {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
         } catch (Exception e) {
@@ -203,7 +246,7 @@ public class Vorbis implements AudioDecoder {
     }
 
     public AudioFileType getFileType() {
-        return AudioFileType.MP3;
+        return AudioFileType.VORBIS;
     }
 
     // Effects: returns an audio input stream for encoding data

@@ -47,6 +47,7 @@ public class MP4AAC implements AudioDecoder {
     private final SampleBuffer buffer = new SampleBuffer();
     private RandomAccessFile file;
     private double duration;
+    private boolean skipping = false;
 
     // AudioInputStream container for audio decoder
     // done for easy handling of certain encoders
@@ -217,6 +218,12 @@ public class MP4AAC implements AudioDecoder {
         }
     }
 
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    public boolean skipInProgress() {
+        return skipping;
+    }
+
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     public AudioSample getNextSample() {
@@ -240,7 +247,9 @@ public class MP4AAC implements AudioDecoder {
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
+        skipping = true;
         tracks.seek(time);
+        skipping = false;
     }
 
     // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once

@@ -40,6 +40,7 @@ public class MP3 implements AudioDecoder {
     private int numberBytesRead = 0;
     private long duration;
     private double audioFrameRate;
+    private boolean skipping = false;
 
     // Effects: returns true if audio can be decoded currently
     public boolean isReady() {
@@ -90,6 +91,12 @@ public class MP3 implements AudioDecoder {
         }
     }
 
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    public boolean skipInProgress() {
+        return skipping;
+    }
+
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     public AudioSample getNextSample() {
@@ -112,6 +119,7 @@ public class MP3 implements AudioDecoder {
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
+        skipping = true;
         long toSkip = (long)(time * audioFrameRate) // Target frame
                 - (Long)decoded.properties().get("mp3.frame"); // Minus current frame
         if (toSkip < 0) { // We can't skip backwards for some reason
@@ -123,6 +131,7 @@ public class MP3 implements AudioDecoder {
             toSkip = (long)(time * audioFrameRate);
         }
         decoded.skipFrames(toSkip);
+        skipping = false;
     }
 
     // Effects: returns the current time in the audio in seconds

@@ -49,7 +49,7 @@ public class AudioDataStructure {
 
     // Effects: returns true if audio data file type is empty
     public boolean isEmpty() {
-        return audioFileType == AudioFileType.EMPTY;
+        return audioFileType == AudioFileType.EMPTY || audioFileType == AudioFileType.UNKNOWN;
     }
 
     // Modifies: this

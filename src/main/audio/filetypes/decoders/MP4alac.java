@@ -71,7 +71,6 @@ public class MP4alac implements AudioDecoder {
                     baseFormat.getSampleRate(),
                     false);
             decoded = AudioSystem.getAudioInputStream(format, in);
-            double audioFrameRate = baseFormat.getFrameRate();
             bytesPerSecond = format.getSampleSizeInBits() * format.getChannels() * format.getSampleRate() / 8;
             System.out.println("ALAC decoder ready!");
             ready = true;
@@ -121,6 +120,12 @@ public class MP4alac implements AudioDecoder {
             }
         }
         return new AudioSample();
+    }
+
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    public boolean skipInProgress() {
+        return !allowSampleReads;
     }
 
     // Requires: prepareToPlayAudio() called
