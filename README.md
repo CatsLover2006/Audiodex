@@ -47,7 +47,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ### Encode (Library-dependent)
 - [ ] (Hopefully) M4A: AAC
   - MP4 and M4B are redundant formats
-- [ ] (Hopefully) MP3
+- [ ] (Hopefully) MP3 
+  - [_Found library!_](https://github.com/nwaldispuehl/java-lame?tab=readme-ov-file)
   - MP2 and MP1 are irrelevant to encode to nowadays, and there are no Java libraries to do so
 - [ ] (Hopefully) OGG: Vorbis
 - [ ] (Hopefully) AAC
@@ -55,6 +56,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] AIFF
   - Doesn't copy album artwork (I'll have to handle that differently)
 - [ ] (Maybe) FLAC
+  - [_Found library!_](https://sourceforge.net/projects/javaflacencoder/)
 - [ ] (Maybe) M4A: ALAC
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
