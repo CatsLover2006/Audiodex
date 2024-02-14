@@ -1,8 +1,11 @@
 package audio;
 
+// Represents an audio sample
+// This class only exists so that different audio decoders
+// can cooperate better with each other
 public class AudioSample {
-    private byte[] data;
-    private int length;
+    private final byte[] data;
+    private final int length;
 
     public AudioSample() {
         data = new byte[] {};

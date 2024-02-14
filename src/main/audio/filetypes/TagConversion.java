@@ -5,8 +5,9 @@ import org.jaudiotagger.tag.FieldKey;
 import java.util.HashMap;
 import java.util.Map;
 
+// Static class to assist with tag conversion
 public class TagConversion {
-
+    // Effects: returns true if arr contains item
     private static boolean arrContains(FieldKey[] arr, FieldKey item) {
         for (FieldKey arrI : arr) {
             if (arrI == item) {

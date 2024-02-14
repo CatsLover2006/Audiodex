@@ -4,7 +4,6 @@ import audio.AudioDecoder;
 import audio.AudioEncoder;
 import audio.AudioSample;
 import org.tritonus.sampled.file.AiffAudioOutputStream;
-import org.tritonus.sampled.file.WaveAudioOutputStream;
 import org.tritonus.share.sampled.file.TDataOutputStream;
 import org.tritonus.share.sampled.file.TNonSeekableDataOutputStream;
 import ui.Main;
@@ -51,6 +50,7 @@ public class Aiff implements AudioEncoder {
             }
             out.close();
             audio.filetypes.decoders.Aiff id3Updater = new audio.filetypes.decoders.Aiff(to);
+            id3Updater.prepareToPlayAudio(); // Whoops
             id3Updater.setID3(decoder.getID3());
             return true;
         } catch (Exception e) {
