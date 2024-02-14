@@ -1,8 +1,7 @@
 # Chance's CPSC 210 Personal Project
 
-~~***NOTE***: This project cannot properly run within the IntelliJ IDE shell environment. This is due to it not properly supporting ANSI terminal commands, which I use extensively to assist with indicators. I will publish a JAR file release before I submit it to mark for Phase 1.~~ No longer an issue, I added a secondary mode that sort of fixes it under IntelliJ, enough to where it's usable.<br>
-***NOTE 2***: This project expects you have music files to play. Due to copyright law, I have not included any; as such, there is no way to do automatic testing of the audio encoding and decoding functions.<br>
-***NOTE 3***: This project saves data at an absolute location in the user's home directory, and it saves filenames as absolute references within the database. The former could be changed, but the latter is required for the database to function if the program is launched from a different location on the filesystem.
+***NOTE 1***: This project expects you have music files to play. Thanks to non-copyright songs, I am able to include a full song for tests; that said, since lossy codecs aren't going to 100% match their lossless counterparts, I'm going to have to add one additional *.wav file for every codec. For just MP3, Vorbis, ALAC, AIFF and WAV this has totaled to >130MB. No doubt by the time I finish up with tests (meaning MP2 and AAC) it'll be even larger. Additionally, due to the audio encoders expecting to dump a file to the filesystem, I will not include automatic testing of the encoders.<br>
+***NOTE 2***: This project saves data at an absolute location in the user's home directory, and it saves filenames as absolute references within the database. The former could be changed, but the latter is required for the database to function if the program is launched from a different location on the filesystem.
 
 ## AudioDex
 ![CLI Preview](./previewcli.png)<br>
@@ -24,7 +23,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
     - Tested using AIFF re-encoding
     - Will add full editing capability during GUI stage
   - [ ] (Hopefully) Read album art
-    - Won't touch this with a ten foot pole until GUI time
+    - ~~Won't touch this with a ten foot pole until GUI time~~<br>Turns out I jumped the gun and added a function to load a `BufferedImage` in the `AudioDecoder` interface. It's still not very useful without a GUI, but I might use it to clone album art while encoding.
   - [ ] (Maybe) Write album art
 - [x] All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding
@@ -65,6 +64,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 - ALAC vs AAC detection is weird since they share their container, there's no fix for this
+  - Similar situation for detection in the OGG container, but there's only one supported playback mode within this container so it's just to avoid throwing errors
 - Sometimes seeking to the very last second of an MP3 file will cause an ArrayIndexOutOfBoundsException, which causes the main thread to die
   - Will fix by performing a bounds check, but I'm too tired rn
 
