@@ -40,6 +40,10 @@ public class TagConversion {
         keyConv.put(FieldKey.RECORD_LABEL, "Publisher");
         keyConv.put(FieldKey.COPYRIGHT, "Copyright");
         keyConv.put(FieldKey.ENCODER, "Encoder");
+        keyConv.put(FieldKey.TITLE_SORT, "Title-Sort");
+        keyConv.put(FieldKey.ARTIST_SORT, "Artist-Sort");
+        keyConv.put(FieldKey.ALBUM_SORT, "Album-Sort");
+        keyConv.put(FieldKey.ALBUM_ARTIST_SORT, "AlbumArtist-Sort");
         valConv = new HashMap<>();
         for (Map.Entry<FieldKey, String> entry : keyConv.entrySet()) {
             if (!arrContains(ignoreList, entry.getKey())) {

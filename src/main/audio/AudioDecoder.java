@@ -2,6 +2,7 @@ package audio;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
+import java.awt.image.BufferedImage;
 
 // Audio decoder interface
 // Most functions explain themselves
@@ -64,6 +65,9 @@ public interface AudioDecoder {
     // Modifies: file on filesystem
     // Effects:  returns decoded ID3 data
     void setID3(ID3Container container);
+
+    // Effects: returns album artwork if possible
+    BufferedImage getArtwork();
 
     // Effects: returns true if goToTime() is running
     //          only exists due to having multiple threads

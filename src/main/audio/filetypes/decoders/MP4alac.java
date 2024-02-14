@@ -12,12 +12,14 @@ import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.images.Artwork;
 import ui.Main;
 import vavi.sound.sampled.alac.AlacAudioFileReader;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -246,5 +248,20 @@ public class MP4alac implements AudioDecoder {
     // Effects: returns an audio input stream for encoding data
     public AudioInputStream getAudioInputStream() {
         return decoded;
+    }
+
+    // Effects: returns album artwork if possible
+    public BufferedImage getArtwork() {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+        } catch (Exception e) {
+            return null;
+        }
+        Tag tag = f.getTag();
+        for (Artwork art : tag.getArtworkList()) {
+            Main.CliInterface.println(art.getPictureType());
+        }
+        return null;
     }
 }
