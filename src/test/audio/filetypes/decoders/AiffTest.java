@@ -25,6 +25,7 @@ public class AiffTest {
         assertTrue(aiffDecoder.isReady());
         aiffDecoder.closeAudioFile();
         assertFalse(aiffDecoder.isReady());
+        assertEquals("scarlet.aif", aiffDecoder.getFileName());
     }
 
     @Test

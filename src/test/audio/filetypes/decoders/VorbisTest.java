@@ -25,6 +25,7 @@ public class VorbisTest {
         assertTrue(vorbisDecoder.isReady());
         vorbisDecoder.closeAudioFile();
         assertFalse(vorbisDecoder.isReady());
+        assertEquals("scarlet.vorbis.ogg", vorbisDecoder.getFileName());
     }
 
     @Test

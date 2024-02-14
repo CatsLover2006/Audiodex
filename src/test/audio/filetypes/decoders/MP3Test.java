@@ -25,6 +25,7 @@ public class MP3Test {
         assertTrue(mp3Decoder.isReady());
         mp3Decoder.closeAudioFile();
         assertFalse(mp3Decoder.isReady());
+        assertEquals("scarlet.mp3", mp3Decoder.getFileName());
     }
 
     @Test

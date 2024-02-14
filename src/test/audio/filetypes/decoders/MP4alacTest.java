@@ -25,6 +25,7 @@ public class MP4alacTest {
         assertTrue(alacDecoder.isReady());
         alacDecoder.closeAudioFile();
         assertFalse(alacDecoder.isReady());
+        assertEquals("scarlet.alac.m4a", alacDecoder.getFileName());
     }
 
     @Test
