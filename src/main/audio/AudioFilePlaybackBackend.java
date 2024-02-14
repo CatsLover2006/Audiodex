@@ -9,6 +9,7 @@ import javax.sound.sampled.SourceDataLine;
 
 // Backend for allowing interactions between the UI and filesystem
 // Specific to decoding audio
+// This class is beyond automated testing: multithreading
 public class AudioFilePlaybackBackend {
 
     // No other class needs to know this
@@ -17,7 +18,7 @@ public class AudioFilePlaybackBackend {
 
         // No other class needs to know this
         // This quite literally just offloads the task of telling
-        // the main thread that this thread is done
+        // the main thread that this thread is done so I can kill this thread
         private class FinishedSongThread extends Thread {
             public void run() {
                 while (decoderThread != null) {

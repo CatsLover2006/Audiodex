@@ -26,6 +26,7 @@ public class WAVTest {
         assertTrue(wavDecoder.isReady());
         wavDecoder.closeAudioFile();
         assertFalse(wavDecoder.isReady());
+        assertEquals("scarlet.wav", wavDecoder.getFileName());
     }
 
     @Test
