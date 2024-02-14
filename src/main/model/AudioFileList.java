@@ -1,6 +1,7 @@
 package model;
 
 import audio.AudioDataStructure;
+import audio.ID3Container;
 import ui.Main;
 
 import java.io.File;
@@ -42,6 +43,86 @@ public class AudioFileList {
             return null;
         }
         return fileList.get(i);
+    }
+
+    public enum SortingTypes {
+        Title,
+        Artist,
+        Album,
+        AlbumArtist,
+        Album_Title,
+        Filesize
+    }
+
+    // Modifies: this
+    // Effects:  sorts music list
+    public void sortList(String type) {
+        SortingTypes sortBy;
+        try {
+            sortBy = SortingTypes.valueOf(type);
+        } catch (Exception e) {
+            return;
+        }
+        Main.CliInterface.println("Sorting database by " + type + "...");
+        bubble(sortBy, 0, fileList.size());
+    }
+
+    // Modifies: this
+    // Effects:  sorts music list (uses the bubble sort algorithm)
+    private void bubble(SortingTypes sortBy, int start, int end) {
+        for (int i = end - 1; i > 0; i--) {
+            for (int j = start; j < i; j++) {
+                if (outOfOrder(sortBy, fileList.get(j), fileList.get(j + 1))) {
+                    swap(j, j + 1);
+                }
+            }
+        }
+    }
+
+    // Modifies: this
+    // Effects:  swaps two elements in file list
+    private void swap(int first, int second) {
+        AudioDataStructure firstValue = fileList.get(first);
+        fileList.set(first, fileList.get(second));
+        fileList.set(second, firstValue);
+    }
+
+    // Effects: returns true if audio files are out of order
+    private boolean outOfOrder(SortingTypes sortBy, AudioDataStructure a, AudioDataStructure b) {
+        switch (sortBy) {
+            case Album_Title: {
+                int albumSort = getSortingValue("Album", a).compareTo(getSortingValue("Album", b));
+                if (albumSort == 0) {
+                    return getSortingValue("Title", a)
+                            .compareTo(getSortingValue("Title", b)) > 0;
+                }
+                return albumSort > 0;
+            }
+            case AlbumArtist:
+            case Artist:
+            case Title:
+            case Album: {
+                return getSortingValue(sortBy.toString(), a)
+                        .compareTo(getSortingValue(sortBy.toString(), b)) > 0;
+            }
+            case Filesize: {
+                return a.getFileSize() > b.getFileSize();
+            }
+        }
+        return false;
+    }
+
+    // Effects: gets album value for sorting
+    private String getSortingValue(String type, AudioDataStructure file) {
+        ID3Container id3 = file.getId3Data();
+        Object s = id3.getID3Data(type + "-Sort");
+        if (s == null || s.toString().equals("null") || s.toString().isEmpty()) {
+            s = id3.getID3Data(type);
+            if (s == null || s.toString().equals("null") || s.toString().isEmpty()) {
+                s = "";
+            }
+        }
+        return s.toString().toLowerCase();
     }
 
     // Modifies: this
@@ -105,7 +186,11 @@ public class AudioFileList {
                 return;
             }
             for (File file : fileList) { // Database uses absolute file paths, otherwise it would fail to load audio
-                addFileToDatabase(file.getAbsolutePath());
+                if (file.isFile()) {
+                    addFileToDatabase(file.getAbsolutePath());
+                } else if (file.isDirectory()) {
+                    addDirToDatabase(file.getAbsolutePath());
+                }
             }
         }
     }
@@ -226,6 +311,9 @@ public class AudioFileList {
             return;
         }
         for (File f : fileList) {
+            if (f.isDirectory()) {
+                continue;
+            }
             try {
                 String filename = f.getAbsolutePath();
                 delete(f.toPath());

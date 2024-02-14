@@ -153,6 +153,7 @@ public class Main {
         songQueue = new LinkedList<>();
         database = new AudioFileList();
         database.loadDatabase();
+        database.sortList("Album_Title");
         playbackManager = new AudioFilePlaybackBackend();
         audioConverterList = new ArrayList<>();
         if (USE_CLI) {
@@ -623,6 +624,8 @@ public class Main {
             File f = new File(filename);
             if (f.isFile()) { // Database uses absolute file paths, otherwise it would fail to load audio
                 database.addFileToDatabase(f.getAbsolutePath());
+                database.sanitizeDatabase();
+                database.sortList("Album_Title");
             } else {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
                 wait(1000);
@@ -642,6 +645,7 @@ public class Main {
             if (f.isDirectory()) { // Database uses absolute file paths, otherwise it would fail to load audio
                 database.addDirToDatabase(f.getAbsolutePath());
                 database.sanitizeDatabase();
+                database.sortList("Album_Title");
             } else {
                 AnsiConsole.out().println("Directory doesn't exist, is a file, or is inaccessible.");
                 wait(1000);
@@ -850,9 +854,11 @@ public class Main {
         // Modifies: this
         // Effects:  browses menu (duh)
         private static void browseMenu(Scanner inputScanner) {
+            if (database.listSize() == 0) {
+                return;
+            }
             state = MenuState.CLI_BROWSEMENU;
-            String selected;
-            do {
+            while (true) {
                 if (!songQueue.isEmpty() && !playbackManager.audioIsLoaded()) {
                     playDbFile(songQueue.getFirst());
                     songQueue.removeFirst();
@@ -864,13 +870,12 @@ public class Main {
                     songID -= database.listSize();
                 }
                 printBrowseMenu();
-                selected = inputScanner.nextLine();
-                int l = browseSwitch(selected, songID, inputScanner);
+                int l = browseSwitch(inputScanner.nextLine(), songID, inputScanner);
                 if (l == 7000) {
                     return;
                 }
                 songID += l;
-            } while (!selected.equalsIgnoreCase("q"));
+            }
         }
 
         @SuppressWarnings("methodlength") // Large switch/case
@@ -888,10 +893,10 @@ public class Main {
                     playDbFile(database.get(idx));
                     break;
                 }
-                case "c": {
+                case "c":
                     playDbFile(database.get(idx));
+                case "q":
                     return 7000;
-                }
                 case "r": {
                     togglePlayback();
                     break;

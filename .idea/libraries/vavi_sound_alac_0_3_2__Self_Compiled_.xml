@@ -1,21 +1,21 @@
 <component name="libraryTable">
   <library name="vavi-sound-alac 0.3.2 (Self-Compiled)">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound-alac-0.3.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/vavi-commons-sandbox-0.3.4.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/commons-beanutils-1.8.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/javassist-3.8.0.GA.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/ant-1.10.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/ant-launcher-1.10.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/jacob-1.14.3.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/vavi-commons-1.1.8.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/vavi-instrumentation-1.1.8.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/klab-commons-cli-1.3.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/commons-cli-1.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/commons-logging-1.1.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/vavi-util-codec-sandbox-1.0.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/vavi-sound-nda-1.0.13.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/vavi-sound/vavi-sound-1.0.15.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound-alac-0.3.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/vavi-commons-sandbox-0.3.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/commons-beanutils-1.8.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/javassist-3.8.0.GA.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/ant-1.10.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/ant-launcher-1.10.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/jacob-1.14.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/vavi-commons-1.1.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/vavi-instrumentation-1.1.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/klab-commons-cli-1.3.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/commons-cli-1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/commons-logging-1.1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/vavi-util-codec-sandbox-1.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/vavi-sound-nda-1.0.13.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/vavi-sound/vavi-sound-1.0.15.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

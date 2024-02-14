@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="Jansi 2.4.2 (Self-Compiled)">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/jansi-2.4.2-SNAPSHOT.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/jansi-2.4.2-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

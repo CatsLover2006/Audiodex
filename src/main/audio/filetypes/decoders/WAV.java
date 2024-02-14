@@ -8,6 +8,7 @@ import audio.ID3Container;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -164,6 +165,12 @@ public class WAV implements AudioDecoder {
     public String getFileName() {
         String[] dirList = filename.split(String.valueOf(separatorChar));
         return dirList[dirList.length - 1];
+    }
+
+    // Effects: returns album artwork if possible
+    public BufferedImage getArtwork() {
+        return null;
+        // LMAO what artwork
     }
 
     public AudioFileType getFileType() {

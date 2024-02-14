@@ -60,6 +60,10 @@ public class ID3Container {
     public String toString() {
         StringBuilder out = new StringBuilder();
         for (String k : id3data.keySet()) {
+            if (id3data.get(k) == null || id3data.get(k).toString().isEmpty()
+                    || id3data.get(k).toString().equals("null")) {
+                continue;
+            }
             out.append(k);
             out.append(RESERVED_CHARACTERS[1]); // Value separator
             out.append(id3data.get(k));

@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="tritonus 0.3.12 (Self-Compiled w/ AIFF-C support mod)">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/tritonus-remaining-0.3.12-aiffc.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/tritonus-aos-0.3.12.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/tritonus-share-0.3.12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/tritonus-remaining-0.3.12-aiffc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/tritonus-aos-0.3.12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/spec/tritonus-share-0.3.12.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

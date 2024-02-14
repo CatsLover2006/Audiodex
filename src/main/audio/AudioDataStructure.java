@@ -20,6 +20,7 @@ public class AudioDataStructure {
     private int sampleSize;
     private AudioFileType audioFileType;
     private ID3Container id3Data;
+    private long fileSize;
 
     // Requires: filename points to a file (obviously)
     // Modifies: this
@@ -34,10 +35,12 @@ public class AudioDataStructure {
         if (audioDecoder == null) {
             bitrate = -1;
             sampleSize = -1;
+            fileSize = -1;
             audioFileType = AudioFileType.EMPTY;
             id3Data = null;
             return;
         }
+        fileSize = (new File(filename)).length(); // Will exist
         audioDecoder.prepareToPlayAudio();
         audioFileType = audioDecoder.getFileType();
         AudioFormat format = audioDecoder.getAudioOutputFormat();
@@ -55,10 +58,11 @@ public class AudioDataStructure {
     // Modifies: this
     // Effects:  creates a data structure for the audio from known data (loading from database)
     //           ID3 string variant
-    public AudioDataStructure(String filename, long bitrate,
+    public AudioDataStructure(String filename, long fileSize, long bitrate,
                               int sampleSize, AudioFileType fileType,
                               String id3Data) {
         this.filename = filename;
+        this.fileSize = fileSize;
         this.bitrate = bitrate;
         this.sampleSize = sampleSize;
         audioFileType = fileType;
@@ -90,6 +94,11 @@ public class AudioDataStructure {
         return audioFileType;
     }
 
+    // Effects: gets filesize
+    public long getFileSize() {
+        return fileSize;
+    }
+
     @Override
     // Effects: encodes data into string
     //          yes I'm making one of these myself
@@ -100,6 +109,7 @@ public class AudioDataStructure {
         out += "id3" + RESERVED_CHARACTERS[1] + id3Data + RESERVED_CHARACTERS[0];
         out += "br" + RESERVED_CHARACTERS[1] + bitrate + RESERVED_CHARACTERS[0];
         out += "ss" + RESERVED_CHARACTERS[1] + sampleSize + RESERVED_CHARACTERS[0];
+        out += "fs" + RESERVED_CHARACTERS[1] + fileSize + RESERVED_CHARACTERS[0];
         return out.substring(0, out.length() - RESERVED_CHARACTERS[0].length()); // Delete the last key separator
     }
 
@@ -115,6 +125,7 @@ public class AudioDataStructure {
         String id3 = "";
         long bitrate = 0;
         int sampleSize = 0;
+        long filesize = -1;
         AudioFileType fileType = null;
         for (String key : keys) {
             String[] dat = key.split(RESERVED_CHARACTERS[1]); // Value separator
@@ -140,12 +151,19 @@ public class AudioDataStructure {
                         fileType = AudioFileType.valueOf(dat[1]);
                         break;
                     }
+                    case "fs": {
+                        filesize = Long.parseLong(dat[1]);
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 // Lol bye
             }
         }
-        return new AudioDataStructure(filename, bitrate, sampleSize, fileType, id3);
+        if (filesize == -1) { // No filesize found
+            filesize = (new File(filename)).length();
+        }
+        return new AudioDataStructure(filename, filesize, bitrate, sampleSize, fileType, id3);
     }
 
     // Effects: returns playback string for display
