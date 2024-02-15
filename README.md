@@ -62,6 +62,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ## Known Issues
 - You can't remove audio files from the database (will be fixed soon)
 - Encoded audio has a comment of "0"
+  - I know the cause and it will be fixed in the next commit
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
