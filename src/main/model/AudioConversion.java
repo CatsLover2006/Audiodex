@@ -86,7 +86,16 @@ public class AudioConversion {
         }
         this.targetFile = (new File(targetFile)).getAbsolutePath();
         setHelper(this.targetFile);
+        if (helper == null) {
+            return;
+        }
         helper.setSource(source);
+    }
+
+    // Modifies: this
+    // Effects:  sets audio encoder settings, if relevant
+    public void setAudioSettings(HashMap<String, String> settings) {
+        helper.setAudioFormat(source.getAudioOutputFormat(), settings);
     }
 
     // Modifies: this
@@ -100,6 +109,10 @@ public class AudioConversion {
             }
             case AIFF: {
                 helper = new Aiff();
+                break;
+            }
+            case MP3: {
+                helper = new MP3();
                 break;
             }
             default: { // We done here
@@ -131,6 +144,9 @@ public class AudioConversion {
     }
 
     public HashMap<String, List<String>> getOptions() {
+        if (helper == null) {
+            return null;
+        }
         return helper.getEncoderSpecificSelectors();
     }
 }

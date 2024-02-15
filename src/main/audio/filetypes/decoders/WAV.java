@@ -4,11 +4,11 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
+import org.jaudiotagger.tag.images.Artwork;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
@@ -168,9 +168,14 @@ public class WAV implements AudioDecoder {
     }
 
     // Effects: returns album artwork if possible
-    public BufferedImage getArtwork() {
+    public Artwork getArtwork() {
         return null;
         // LMAO what artwork
+    }
+
+    // Effects: sets the album artwork if possible
+    public void setArtwork(Artwork image) {
+        // lol wat
     }
 
     public AudioFileType getFileType() {

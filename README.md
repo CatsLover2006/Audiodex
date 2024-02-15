@@ -23,9 +23,9 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - [x] Write ID3 tags
     - Tested using AIFF re-encoding
     - Will add full editing capability during GUI stage
-  - [ ] (Hopefully) Read album art
-    - ~~Won't touch this with a ten foot pole until GUI time~~<br>Turns out I jumped the gun and added a function to load a `BufferedImage` in the `AudioDecoder` interface. It's still not very useful without a GUI, but I might use it to clone album art while encoding.
-  - [ ] (Maybe) Write album art
+  - [x] Read album art
+    - ~~Won't touch this with a ten foot pole until GUI time~~<br>~~Turns out I jumped the gun and added a function to load a `BufferedImage` in the `AudioDecoder` interface. It's still not very useful without a GUI, but I might use it to clone album art while encoding.~~<br>Yep I started using it to clone album artwork.
+  - [x] Write album art
 - [x] All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding
   
@@ -47,14 +47,12 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ### Encode (Library-dependent)
 - [ ] (Hopefully) M4A: AAC
   - MP4 and M4B are redundant formats
-- [ ] (Hopefully) MP3 
-  - [_Found library!_](https://github.com/nwaldispuehl/java-lame?tab=readme-ov-file)
+- [x] MP3
   - MP2 and MP1 are irrelevant to encode to nowadays, and there are no Java libraries to do so
 - [ ] (Hopefully) OGG: Vorbis
 - [ ] (Hopefully) AAC
 - [x] WAV
 - [x] AIFF
-  - Doesn't copy album artwork (I'll have to handle that differently)
 - [ ] (Maybe) FLAC
   - [_Found library!_](https://sourceforge.net/projects/javaflacencoder/)
 - [ ] (Maybe) M4A: ALAC
@@ -63,6 +61,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 
 ## Known Issues
 - You can't remove audio files from the database (will be fixed soon)
+- Encoded audio has a comment of "0"
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
@@ -74,7 +73,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ## Lucky Breaks
 - jaudiotagger handles most of the ID3 metadata I care about
   - jaudiotagger header returns encoding type for *.m4a and *.ogg files
-  - jaudiotagger can **write** ID3 metadata
+  - jaudiotagger can ***write*** ID3 metadata
+    - <big>jaudiotagger can ***write*** album artwork</big>
 - `InputStream.read(bytes[] b)` returns the number of bytes actually read
 - viva-sound-alac existing
 - Tritonus being open-source so I could add in AIFF `swot` support (little endian vs the standard big endian)
@@ -83,6 +83,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - mp3spi existing
 - Tritonus `AudioOutputStream` supports AIFF out of the box
 - java-vorbis-support existing
+- The Java port of LAME existing
+  - I genuinely didn't think I'd get lossy audio decoding due to library support so that was an insane find
 
 _I'm a really lucky person ain't I?_
 

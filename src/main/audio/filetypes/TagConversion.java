@@ -41,6 +41,11 @@ public class TagConversion {
         keyConv.put(FieldKey.RECORD_LABEL, "Publisher");
         keyConv.put(FieldKey.COPYRIGHT, "Copyright");
         keyConv.put(FieldKey.ENCODER, "Encoder");
+        keyConv.put(FieldKey.PRODUCER, "Producer");
+        keyConv.put(FieldKey.BPM, "BPM");
+        keyConv.put(FieldKey.ARRANGER, "Arranger");
+        keyConv.put(FieldKey.IS_COMPILATION, "IsCompilation");
+        keyConv.put(FieldKey.ARRANGER_SORT, "Arranger-Sort");
         keyConv.put(FieldKey.TITLE_SORT, "Title-Sort");
         keyConv.put(FieldKey.ARTIST_SORT, "Artist-Sort");
         keyConv.put(FieldKey.ALBUM_SORT, "Album-Sort");

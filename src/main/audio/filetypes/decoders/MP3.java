@@ -6,7 +6,6 @@ import audio.AudioSample;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -170,16 +169,17 @@ public class MP3 implements AudioDecoder {
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
-        AudioFile f = null;
-        try {
-            f = AudioFileIO.read(new File(filename));
-        } catch (Exception e) {
-            return base;
+        AudioFile f = getAudioFile(filename);
+        if (f == null) {
+            return null;
         }
         base.setID3Data("VBR", f.getAudioHeader().isVariableBitRate() ? "YES" : "NO");
         base.setID3Data("bitRate", f.getAudioHeader().getBitRateAsNumber());
         base.setID3Data("sampleRate", f.getAudioHeader().getSampleRateAsNumber());
         Tag tag = f.getTag();
+        if (tag == null) {
+            return null;
+        }
         for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
             try {
                 Date d = Date.from(Instant.parse(tag.getFirst(entry.getKey())));
@@ -191,6 +191,15 @@ public class MP3 implements AudioDecoder {
         return base;
     }
 
+    // Effects: returns AudioFile class
+    private AudioFile getAudioFile(String filename) {
+        try {
+            return AudioFileIO.read(new File(filename));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     // Modifies: file on filesystem
     // Effects:  updates ID3 data
     public void setID3(ID3Container container) {
@@ -200,7 +209,7 @@ public class MP3 implements AudioDecoder {
         } catch (Exception e) {
             return;
         }
-        Tag tag = f.getTag();
+        Tag tag = f.getTagOrCreateAndSetDefault();
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
             String data = container.getID3Data(entry.getKey()).toString();
             if (data != null) {
@@ -234,17 +243,31 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: returns album artwork if possible
-    public BufferedImage getArtwork() {
+    public Artwork getArtwork() {
         AudioFile f = null;
         try {
             f = AudioFileIO.read(new File(filename));
+            Tag tag = f.getTag();
+            for (Artwork art : tag.getArtworkList()) {
+                if (art.getPictureType() == 0) {
+                    return art;
+                }
+            }
+            return tag.getFirstArtwork();
         } catch (Exception e) {
             return null;
         }
-        Tag tag = f.getTag();
-        for (Artwork art : tag.getArtworkList()) {
-            Main.CliInterface.println(art.getPictureType());
+    }
+
+    // Effects: sets the album artwork if possible
+    public void setArtwork(Artwork image) {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+            f.getTag().setField(image);
+            f.commit();
+        } catch (Exception e) {
+            // Why?
         }
-        return null;
     }
 }
