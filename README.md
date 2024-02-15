@@ -1,7 +1,7 @@
 # Chance's CPSC 210 Personal Project
 
 ***NOTE 1***: This project expects you have music files to play. Thanks to non-copyright songs, I am able to include a full song for tests; that said, since lossy codecs aren't going to 100% match their lossless counterparts, I'm going to have to add one additional *.wav file for every codec. For just MP3, Vorbis, ALAC, AIFF and WAV this has totaled to >130MB. No doubt by the time I finish up with tests (meaning MP2 and AAC) it'll be even larger. Additionally, due to the audio encoders expecting to dump a file to the filesystem, I will not include automatic testing of the encoders.<br>
-***NOTE 2***: Some seemingly arbitrary classes within non-ui packages won't have tests. The common theme with these classes is that they involve multithreading; I do not know if it is possible to properly test multithreading within CPSC 210 knowledge and as such I cannot test these classes.<br>
+***NOTE 2***: Some seemingly arbitrary classes within non-ui packages won't have fully automated tests. The common theme with these classes is that they involve multithreading; I do not know if it is possible to properly test multithreading within CPSC 210 knowledge and as such I cannot test these classes.<br>
 ***NOTE 3***: This project saves data at an absolute location in the user's home directory, and it saves filenames as absolute references within the database. The former could be changed, but the latter is required for the database to function if the program is launched from a different location on the filesystem.
 
 ## AudioDex
