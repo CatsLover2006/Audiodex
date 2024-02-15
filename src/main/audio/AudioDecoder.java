@@ -1,8 +1,9 @@
 package audio;
 
+import org.jaudiotagger.tag.images.Artwork;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import java.awt.image.BufferedImage;
 
 // Audio decoder interface
 // Most functions explain themselves
@@ -67,7 +68,10 @@ public interface AudioDecoder {
     void setID3(ID3Container container);
 
     // Effects: returns album artwork if possible
-    BufferedImage getArtwork();
+    Artwork getArtwork();
+
+    // Effects: sets album artwork if possible
+    void setArtwork(Artwork image);
 
     // Effects: returns true if goToTime() is running
     //          only exists due to having multiple threads

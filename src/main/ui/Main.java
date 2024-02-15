@@ -20,6 +20,7 @@ import static java.lang.Math.floor;
 import static java.lang.Thread.*;
 
 public class Main {
+    private static boolean notMain = true;
     private static ID3Container id3;
     private static AudioFilePlaybackBackend playbackManager;
     private static boolean USE_CLI = true;
@@ -98,7 +99,7 @@ public class Main {
     // Effects:  Is run when song is finished and redraws screen if necessary
     //           also adds previously playing song to previously played list
     public static void finishedSong() {
-        if (end) {
+        if (end || notMain) {
             return;
         }
         played.addFirst(nowPlaying);
@@ -124,7 +125,7 @@ public class Main {
     // Modifies: this
     // Effects:  Is run when encode is finished and redraws screen if necessary.
     public static void finishedEncode() {
-        if (end) {
+        if (end || notMain) {
             return;
         }
         if (USE_CLI) {
@@ -145,6 +146,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
+        notMain = false;
         if (strArrContains(args, "--gui")) {
             USE_CLI = false; // Prep
             Gui.createLoadingThread();
@@ -284,6 +286,9 @@ public class Main {
     // public interface to the private CLI class
     public static class CliInterface {
         public static void updatePlaybackStatus() {
+            if (notMain) {
+                return;
+            }
             Cli.doPlaybackStatusWrite();
         }
 
@@ -560,6 +565,10 @@ public class Main {
             File f = new File(filename);
             if (f.isFile()) {
                 AudioConversion converter = makeAudioConverter(new AudioDataStructure(f.getAbsolutePath()), scanner);
+                if (converter.errorOccurred()) {
+                    AnsiConsole.out().println("An error has occurred.");
+                    return;
+                }
                 audioConverterList.add(converter);
                 converter.start();
             } else {
@@ -576,6 +585,10 @@ public class Main {
             File f = new File(audioDataStructure.getFilename());
             if (f.isFile()) {
                 AudioConversion converter = makeAudioConverter(audioDataStructure, scanner);
+                if (converter.errorOccurred()) {
+                    AnsiConsole.out().println("An error has occurred.");
+                    return;
+                }
                 audioConverterList.add(converter);
                 converter.start();
             } else {
@@ -591,8 +604,37 @@ public class Main {
             HashMap<String, List<String>> options = base.getOptions();
             if (options == null) {
                 AnsiConsole.out().println("Encoder does not have any selectable options.");
+            } else {
+                HashMap<String, String> selectedOptions = new HashMap<>();
+                for (Map.Entry<String, List<String>> option : options.entrySet()) {
+                    AnsiConsole.out().println("Options for " + option.getKey() + ":");
+                    for (int i = 0; i < option.getValue().size(); i++) {
+                        AnsiConsole.out().println(i + ". " + option.getValue().get(i));
+                    }
+                    AnsiConsole.out().println("Please select an option.");
+                    selectedOptions.put(option.getKey(),
+                            option.getValue().get(getUserIntToValue(option.getValue().size(), scanner)));
+                }
+                base.setAudioSettings(selectedOptions);
             }
             return base;
+        }
+
+        // Effects: returns a valid number between 0 and a specified value
+        private static int getUserIntToValue(int max, Scanner scanner) {
+            int out;
+            while (true) {
+                try {
+                    String read = scanner.nextLine();
+                    out = Integer.parseInt(read);
+                    if (out > max) {
+                        throw new NumberFormatException();
+                    }
+                    return out;
+                } catch (NumberFormatException e) {
+                    AnsiConsole.out().println("Invalid number, please pick again.");
+                }
+            }
         }
 
         // Effects: wait for a set time

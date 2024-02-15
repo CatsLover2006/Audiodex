@@ -24,7 +24,6 @@ import ui.Main;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -324,7 +323,7 @@ public class MP4AAC implements AudioDecoder {
         } catch (Exception e) {
             return;
         }
-        Tag tag = f.getTag();
+        Tag tag = f.getTagOrCreateAndSetDefault();
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
             String data = container.getID3Data(entry.getKey()).toString();
             if (data != null) {
@@ -358,17 +357,31 @@ public class MP4AAC implements AudioDecoder {
     }
 
     // Effects: returns album artwork if possible
-    public BufferedImage getArtwork() {
+    public Artwork getArtwork() {
         AudioFile f = null;
         try {
             f = AudioFileIO.read(new File(filename));
+            Tag tag = f.getTag();
+            for (Artwork art : tag.getArtworkList()) {
+                if (art.getPictureType() == 0) {
+                    return art;
+                }
+            }
+            return tag.getFirstArtwork();
         } catch (Exception e) {
             return null;
         }
-        Tag tag = f.getTag();
-        for (Artwork art : tag.getArtworkList()) {
-            Main.CliInterface.println(art.getPictureType());
+    }
+
+    // Effects: sets the album artwork if possible
+    public void setArtwork(Artwork image) {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+            f.getTag().setField(image);
+            f.commit();
+        } catch (Exception e) {
+            // Why?
         }
-        return null;
     }
 }

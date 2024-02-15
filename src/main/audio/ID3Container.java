@@ -6,13 +6,6 @@ import java.util.HashMap;
 public class ID3Container {
     private final HashMap<String, Object> id3data;
 
-    public static final String[] knownKeys = {
-            "Artist", "Title", "Album", "Track", "Year", "GenreInt",
-            "GenreString", "Comment", "Lyrics", "Composer", "Tracks",
-            "Publisher", "OriginalArtist", "AlbumArtist", "Copyright",
-            "URL", "Encoder", "VBR", "Disc", "Discs", "PreviewText"
-    }; // Known keys in ID3 data
-
     // Effects: creates an empty hashmap to place data
     public ID3Container() {
         id3data = new HashMap<>();

@@ -9,7 +9,7 @@ import javax.sound.sampled.SourceDataLine;
 
 // Backend for allowing interactions between the UI and filesystem
 // Specific to decoding audio
-// This class is beyond automated testing: multithreading
+// This class is incapable of automated testing: multithreading over several
 public class AudioFilePlaybackBackend {
 
     // No other class needs to know this
