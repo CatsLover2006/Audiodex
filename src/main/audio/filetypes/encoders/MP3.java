@@ -93,6 +93,9 @@ public class MP3 implements AudioEncoder {
     // Effects: gets an approximate percent for how far along the encoding is
     //          output ranges from 0.0 to 1.0
     public double encodedPercent() {
+        if (decoder == null || !decoder.isReady()) {
+            return 0;
+        }
         return decoder.getCurrentTime() / decoder.getFileDuration();
     }
 

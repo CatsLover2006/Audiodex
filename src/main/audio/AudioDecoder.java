@@ -47,12 +47,6 @@ public interface AudioDecoder {
     // Effects:  returns the audio format of the file
     AudioFormat getAudioOutputFormat();
 
-    // Requires: prepareToPlayAudio() has never been called
-    //           won't crash but is pointless
-    // Modifies: this
-    // Effects:  sets the audio format of the file
-    void setAudioOutputFormat(AudioFormat format);
-
     // Effects: returns true if there are more samples to be played
     //          will return false is no file is loaded
     boolean moreSamples();

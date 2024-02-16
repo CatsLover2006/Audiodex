@@ -20,7 +20,15 @@ public class AudioFileLoaderTest {
         assertEquals(AudioFileType.AAC_MP4, getAudioFiletype("data/scarlet.aac.m4a"));
         assertEquals(AudioFileType.ALAC_MP4, getAudioFiletype("data/scarlet.alac.m4a"));
         assertEquals(AudioFileType.ALAC_MP4, getAudioFiletype("data/scarlet.lmao.m4a"));
+        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/video.mp4"));
         assertEquals(AudioFileType.VORBIS, getAudioFiletype("data/scarlet.vorbis.ogg"));
+    }
+
+    @Test
+    public void edgeCaseTests() {
+        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.mp4"));
+        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.ogg"));
+        assertEquals(AudioFileType.MP3, getAudioFiletype("data/null.mp3"));
     }
 
     @Test

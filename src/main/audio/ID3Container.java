@@ -2,6 +2,7 @@ package audio;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 // Container for ID3 data
 public class ID3Container {
@@ -29,15 +30,22 @@ public class ID3Container {
 
     // Modifies: this
     // Effects:  sets specified key to specified value
+    //           specific definition for long fixes issues with integers
+    public void setID3Data(String key, long value) {
+        id3data.put(key, value);
+    }
+
+    // Modifies: this
+    // Effects:  sets specified key to specified value
     public void setID3Data(String key, Object value) {
         if (value == null || value.toString().isEmpty()) {
             return;
         }
-        id3data.put(key,  value);
+        id3data.put(key, value);
     }
 
     // Modifies: this
-    // Effects:  sets specified key to specified long
+    // Effects:  sets specified key to specified long (parsed from String)
     public void setID3Long(String key, String value) {
         if (value == null || value.isEmpty()) {
             return;
@@ -45,7 +53,7 @@ public class ID3Container {
         try {
             id3data.put(key, Long.parseLong(value));
         } catch (NumberFormatException e) {
-            id3data.put(key,  value);
+            id3data.put(key, value);
         }
     }
 
