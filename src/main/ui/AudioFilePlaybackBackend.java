@@ -1,6 +1,9 @@
-package audio;
+package ui;
 
-import ui.Main;
+import audio.AudioDecoder;
+import audio.AudioFileLoader;
+import audio.AudioSample;
+import audio.ID3Container;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
