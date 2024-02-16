@@ -1,17 +1,18 @@
 package ui;
 
-import model.AudioDataStructure;
-import model.AudioFileLoader;
+import audio.AudioDataStructure;
+import audio.AudioFileLoader;
+import audio.AudioFilePlaybackBackend;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import model.ID3Container;
+import audio.ID3Container;
+import model.AudioConversion;
 import model.AudioFileList;
 import org.fusesource.jansi.*;
-import ui.audio.AudioConversion;
 
 import javax.swing.*;
 
