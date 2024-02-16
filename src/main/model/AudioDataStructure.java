@@ -14,6 +14,11 @@ import ui.audio.filetypes.AudioDecoder;
 // Audio data structure class
 // Will be used for the database
 public class AudioDataStructure {
+    public static final String[] RESERVED_CHARACTERS = {
+            "🜁", // Key separator
+            "🜃" // Value separator
+    };
+
     private String filename;
     private long bitrate;
     private long sampleSize;
