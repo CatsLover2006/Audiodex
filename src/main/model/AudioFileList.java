@@ -262,7 +262,7 @@ public class AudioFileList {
     // Effects:  reverts to previous database, if avaliable
     public void revertDb() {
         dbIndex--;
-        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.db";
+        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         if ((new File(filename)).exists()) {
             loadDatabaseFile();
             saveDatabaseIndex();
@@ -291,7 +291,7 @@ public class AudioFileList {
     // Modifies: database files
     // Effects:  cleans (deletes all files for) database for index
     public void cleanDb(long index) {
-        cleanDb(userDir + Long.toString(index, 36) + ".audiodex.db");
+        cleanDb(userDir + Long.toString(index, 36) + ".audiodex.json");
     }
 
     // Modifies: database files
