@@ -28,6 +28,7 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound/vavi-sound-1.0.15.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/java-vorbis-support-1.2.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/net.sourceforge.lame-3.98.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/json_simple-1.1.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

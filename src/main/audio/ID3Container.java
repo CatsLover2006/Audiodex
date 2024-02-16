@@ -1,14 +1,20 @@
 package audio;
 
-import java.util.HashMap;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 // Container for ID3 data
 public class ID3Container {
-    private final HashMap<String, Object> id3data;
+    private final JSONObject id3data;
 
-    // Effects: creates an empty hashmap to place data
+    // Effects: creates an empty JSON object to place data
     public ID3Container() {
-        id3data = new HashMap<>();
+        id3data = new JSONObject();
+    }
+
+    // Effects: uses an existing JSON object
+    public ID3Container(JSONObject obj) {
+        id3data = obj;
     }
 
     // Effects: gets the data at a specified key
@@ -24,71 +30,28 @@ public class ID3Container {
     // Modifies: this
     // Effects:  sets specified key to specified value
     public void setID3Data(String key, Object value) {
-        if (value == null) {
+        if (value == null || value.toString().isEmpty()) {
             return;
         }
-        if (id3data.containsKey(key)) {
-            id3data.replace(key, value);
-        } else {
-            id3data.put(key, value);
-        }
+        id3data.put(key,  value);
     }
 
     // Modifies: this
     // Effects:  sets specified key to specified long
     public void setID3Long(String key, String value) {
-        if (value == null) {
+        if (value == null || value.isEmpty()) {
             return;
         }
         try {
-            setID3Data(key, Long.parseLong(value));
+            id3data.put(key, Long.parseLong(value));
         } catch (NumberFormatException e) {
-            setID3Data(key, value);
+            id3data.put(key,  value);
         }
     }
 
-    @Override
     // Effects: encodes data into string
     //          yes I'm making one of these myself
-    public String toString() {
-        StringBuilder out = new StringBuilder();
-        for (String k : id3data.keySet()) {
-            if (id3data.get(k) == null || id3data.get(k).toString().isEmpty()
-                    || id3data.get(k).toString().equals("null")) {
-                continue;
-            }
-            out.append(k);
-            out.append(RESERVED_CHARACTERS[1]); // Value separator
-            out.append(id3data.get(k));
-            out.append(RESERVED_CHARACTERS[0]); // Key separator
-        }
-        String outStr = out.toString();
-        // Delete the last key separator
-        return outStr.substring(0, outStr.length() - RESERVED_CHARACTERS[0].length());
+    public JSONObject encode() {
+        return id3data;
     }
-
-    // Requires: inputting valid input (from toString)
-    // Effects:  returns a *VALID* ID3 container object
-    //           with all ID3 data decoded from string
-    public static ID3Container fromString(String data) {
-        ID3Container base = new ID3Container();
-        String[] keys = data.split(RESERVED_CHARACTERS[0]); // Key separator
-        for (String key : keys) {
-            String[] value = key.split(RESERVED_CHARACTERS[1]); // Value separator
-            try { // We don't know if it's a number or not
-                long integerVal = Long.parseLong(value[1]);
-                base.setID3Data(value[0], integerVal);
-            } catch (NumberFormatException e) {
-                base.setID3Data(value[0], value[1]);
-            } catch (IndexOutOfBoundsException e) {
-                // LMAO its a null value
-            }
-        }
-        return base;
-    }
-
-    public static final String[] RESERVED_CHARACTERS = {
-            "🜔", // Key separator
-            "🜕"  // Value separator
-    };
 }

@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import static java.io.File.separatorChar;
 
+import org.json.simple.*;
+
 // Audio data structure class
 // Will be used for the database
 public class AudioDataStructure {
@@ -17,7 +19,7 @@ public class AudioDataStructure {
 
     private String filename;
     private long bitrate;
-    private int sampleSize;
+    private long sampleSize;
     private AudioFileType audioFileType;
     private ID3Container id3Data;
     private long fileSize;
@@ -59,14 +61,14 @@ public class AudioDataStructure {
     // Effects:  creates a data structure for the audio from known data (loading from database)
     //           ID3 string variant
     public AudioDataStructure(String filename, long fileSize, long bitrate,
-                              int sampleSize, AudioFileType fileType,
-                              String id3Data) {
+                              long sampleSize, AudioFileType fileType,
+                              JSONObject id3Data) {
         this.filename = filename;
         this.fileSize = fileSize;
         this.bitrate = bitrate;
         this.sampleSize = sampleSize;
         audioFileType = fileType;
-        this.id3Data = ID3Container.fromString(id3Data);
+        this.id3Data = new ID3Container(id3Data);
     }
 
     // Effects: gets ID3Container
@@ -75,7 +77,7 @@ public class AudioDataStructure {
     }
 
     // Effects: gets sample size in bits
-    public int getSampleSize() {
+    public long getSampleSize() {
         return sampleSize;
     }
 
@@ -99,71 +101,29 @@ public class AudioDataStructure {
         return fileSize;
     }
 
-    @Override
-    // Effects: encodes data into string
-    //          yes I'm making one of these myself
-    public String toString() {
-        String out = "";
-        out += "fn" + RESERVED_CHARACTERS[1] + filename + RESERVED_CHARACTERS[0];
-        out += "t" + RESERVED_CHARACTERS[1] + audioFileType.toString() + RESERVED_CHARACTERS[0];
-        out += "id3" + RESERVED_CHARACTERS[1] + id3Data + RESERVED_CHARACTERS[0];
-        out += "br" + RESERVED_CHARACTERS[1] + bitrate + RESERVED_CHARACTERS[0];
-        out += "ss" + RESERVED_CHARACTERS[1] + sampleSize + RESERVED_CHARACTERS[0];
-        out += "fs" + RESERVED_CHARACTERS[1] + fileSize + RESERVED_CHARACTERS[0];
-        return out.substring(0, out.length() - RESERVED_CHARACTERS[0].length()); // Delete the last key separator
+    // Effects: encodes data
+    public JSONObject encode() {
+        JSONObject out = new JSONObject();
+        out.put("filename", filename);
+        out.put("filetype", audioFileType.toString());
+        out.put("ID3data", id3Data.encode());
+        out.put("bitrate", bitrate);
+        out.put("samplesize", sampleSize);
+        out.put("filesize", fileSize);
+        return out;
     }
 
-    // Using method length warning suppression due to switch/case for
-    // datatype decompression
-    @SuppressWarnings("methodlength")
     // Requires: inputting valid input (from toString)
     // Effects:  returns a *VALID* Audio Data Structure object
     //           with all audio data and ID3 data decoded from string
-    public static AudioDataStructure fromString(String data) {
-        String[] keys = data.split(RESERVED_CHARACTERS[0]); // Key separator
-        String filename = "";
-        String id3 = "";
-        long bitrate = 0;
-        int sampleSize = 0;
-        long filesize = -1;
-        AudioFileType fileType = null;
-        for (String key : keys) {
-            String[] dat = key.split(RESERVED_CHARACTERS[1]); // Value separator
-            try {
-                switch (dat[0]) {
-                    case "fn": {
-                        filename = dat[1];
-                        break;
-                    }
-                    case "id3": {
-                        id3 = dat[1];
-                        break;
-                    }
-                    case "br": {
-                        bitrate = Long.parseLong(dat[1]);
-                        break;
-                    }
-                    case "ss": {
-                        sampleSize = Integer.parseInt(dat[1]);
-                        break;
-                    }
-                    case "t": {
-                        fileType = AudioFileType.valueOf(dat[1]);
-                        break;
-                    }
-                    case "fs": {
-                        filesize = Long.parseLong(dat[1]);
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                // Lol bye
-            }
-        }
-        if (filesize == -1) { // No filesize found
-            filesize = (new File(filename)).length();
-        }
-        return new AudioDataStructure(filename, filesize, bitrate, sampleSize, fileType, id3);
+    public static AudioDataStructure decode(JSONObject data) {
+        String filename = (String) data.get("filename");
+        AudioFileType filetype = AudioFileType.valueOf((String) data.get("filetype"));
+        long bitrate = (Long) data.get("bitrate");
+        long filesize = (Long) data.get("filesize");
+        long samplesize = (Long) data.get("samplesize");
+        JSONObject id3 = (JSONObject) data.get("ID3data");
+        return new AudioDataStructure(filename, filesize, bitrate, samplesize, filetype, id3);
     }
 
     // Effects: returns playback string for display
