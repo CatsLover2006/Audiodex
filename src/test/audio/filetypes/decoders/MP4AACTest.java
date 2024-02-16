@@ -15,7 +15,7 @@ public class MP4AACTest {
 
     @BeforeEach
     public void prepare() {
-        aacDecoder = new MP4AAC("./data/scarlet.aac.m4a");
+        aacDecoder = new MP4AAC("data/scarlet.aac.m4a");
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work
@@ -44,7 +44,7 @@ public class MP4AACTest {
 
     @Test // Test if decoding works
     public void decodeTest() {
-        AudioDecoder wavDecoder = new WAV("./data/scarlet.aac.wav");
+        AudioDecoder wavDecoder = new WAV("data/scarlet.aac.wav");
         assertFalse(aacDecoder.isReady());
         aacDecoder.prepareToPlayAudio();
         assertTrue(aacDecoder.isReady());

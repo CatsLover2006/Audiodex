@@ -15,7 +15,7 @@ public class MP3Test {
 
     @BeforeEach
     public void prepare() {
-        mp3Decoder = new MP3("./data/scarlet.mp3");
+        mp3Decoder = new MP3("data/scarlet.mp3");
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work
@@ -44,7 +44,7 @@ public class MP3Test {
 
     @Test // Test if decoding works
     public void decodeTest() {
-        AudioDecoder wavDecoder = new WAV("./data/scarlet.mp3.wav");
+        AudioDecoder wavDecoder = new WAV("data/scarlet.mp3.wav");
         assertFalse(mp3Decoder.isReady());
         mp3Decoder.prepareToPlayAudio();
         assertTrue(mp3Decoder.isReady());

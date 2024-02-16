@@ -11,7 +11,7 @@ public class AudioFilePlaybackBackendTest {
     @BeforeEach
     public void prepare() {
         handler = new AudioFilePlaybackBackend();
-        handler.loadAudio("./data/scarlet.mp3");
+        handler.loadAudio("data/scarlet.mp3");
     }
 
     @Test

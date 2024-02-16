@@ -15,7 +15,7 @@ public class AiffTest {
 
     @BeforeEach
     public void prepare() {
-        aiffDecoder = new Aiff("./data/scarlet.aif");
+        aiffDecoder = new Aiff("data/scarlet.aif");
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work
@@ -40,7 +40,7 @@ public class AiffTest {
 
     @Test // Test if decoding works
     public void decodeTest() {
-        AudioDecoder wavDecoder = new WAV("./data/scarlet.wav");
+        AudioDecoder wavDecoder = new WAV("data/scarlet.wav");
         assertFalse(aiffDecoder.isReady());
         aiffDecoder.prepareToPlayAudio();
         assertTrue(aiffDecoder.isReady());
