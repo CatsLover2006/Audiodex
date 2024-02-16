@@ -182,8 +182,4 @@ public class WAV implements AudioDecoder {
         return AudioFileType.PCM_WAV;
     }
 
-    // Effects: returns an audio input stream for encoding data
-    public AudioInputStream getAudioInputStream() {
-        return in;
-    }
 }

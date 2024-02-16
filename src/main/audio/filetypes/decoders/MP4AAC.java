@@ -50,122 +50,6 @@ public class MP4AAC implements AudioDecoder {
     private double duration;
     private boolean skipping = false;
 
-    // AudioInputStream container for audio decoder
-    // done for easy handling of certain encoders
-    private class VirtualMP4AudioInputStream extends AudioInputStream {
-        private AudioSample sampleStor;
-        private int sampleInStor = 0;
-        private double timeToSkipTo = 0;
-        private int timeToResetMark = 0;
-        private int sampleStorReset = 0;
-
-        public VirtualMP4AudioInputStream() {
-            super(null, audioFormat, 0);
-        }
-
-        @Override
-        public int available() {
-            return (int) ((audioFormat.getSampleSizeInBits() * audioFormat.getSampleRate()
-                            * (duration - getCurrentTime())) / 8);
-        }
-
-        @Override
-        public void close() {
-            return; // Does nothing, its pulling data from this object
-        }
-
-        @Override
-        public AudioFormat getFormat() {
-            return audioFormat;
-        }
-
-        @Override
-        public long getFrameLength() {
-            return (long) (audioFormat.getFrameSize() * duration);
-        }
-
-        @Override
-        public void mark(int readlimit) {
-            timeToResetMark = readlimit;
-            timeToSkipTo = getCurrentTime();
-            sampleStorReset = sampleInStor;
-        }
-
-        @Override
-        public boolean markSupported() {
-            return true;
-        }
-
-        @Override
-        public int read() {
-            if (moreSamples()) {
-                if (timeToResetMark == 0) {
-                    timeToSkipTo = 0;
-                } else {
-                    timeToResetMark--;
-                }
-                if (sampleInStor <= sampleStor.getLength()) {
-                    sampleInStor = 0;
-                    sampleStor = getNextSample();
-                }
-                int t = sampleStor.getData()[sampleInStor];
-                sampleInStor++;
-                return t;
-            }
-            return -1;
-        }
-
-        @Override
-        public int read(byte[] b) {
-            if (!moreSamples()) {
-                return -1;
-            }
-            for (int i = 0; i < Math.min(b.length, audioFormat.getFrameSize()); i++) {
-                b[i] = (byte)read();
-                if (b[i] == -1) {
-                    return i + 1;
-                }
-            }
-            return b.length;
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) {
-            tracks.seek(0);
-            while (off != 0) {
-                off -= (int) skip(off);
-            }
-            if (!moreSamples()) {
-                return -1;
-            }
-            for (int i = 0; i < Math.min(b.length, Math.min(len, audioFormat.getFrameSize())); i++) {
-                b[i] = (byte)read();
-                if (b[i] == -1) {
-                    return i + 1;
-                }
-            }
-            return b.length;
-        }
-
-        @Override
-        public void reset() {
-            tracks.seek(timeToSkipTo);
-            sampleInStor = sampleStorReset;
-            sampleStorReset = 0;
-            timeToSkipTo = 0;
-        }
-
-        @Override
-        public long skip(long n) {
-            for (long i = 0; i < n; i++) {
-                if (read() == -1) {
-                    return i + 1;
-                }
-            }
-            return n;
-        }
-    }
-
     public boolean isReady() {
         return ready;
     }
@@ -349,11 +233,6 @@ public class MP4AAC implements AudioDecoder {
 
     public AudioFileType getFileType() {
         return AudioFileType.AAC_MP4;
-    }
-
-    // Effects: returns an audio input stream for encoding data
-    public AudioInputStream getAudioInputStream() {
-        return new VirtualMP4AudioInputStream();
     }
 
     // Effects: returns album artwork if possible
