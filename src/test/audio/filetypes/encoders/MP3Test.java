@@ -70,6 +70,6 @@ public class MP3Test {
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertEquals(0, encoder.encodedPercent());
         assertNull(encoder.getEncoderSpecificSelectors()); // Japanese directory name
-        assertFalse(encoder.encodeAudio("./data/お/scarlet.mp3"));
+        assertFalse(encoder.encodeAudio("./data/\u3042/scarlet.mp3"));
     }
 }
