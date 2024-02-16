@@ -42,7 +42,7 @@ public class AudioDataStructure {
         audioDecoder.prepareToPlayAudio();
         audioFileType = audioDecoder.getFileType();
         AudioFormat format = audioDecoder.getAudioOutputFormat();
-        bitrate = (long) (format.getSampleSizeInBits() / format.getSampleRate());
+        bitrate = (long) (format.getSampleSizeInBits() * format.getSampleRate() * format.getChannels());
         sampleSize = format.getSampleSizeInBits();
         id3Data = audioDecoder.getID3();
         audioDecoder.closeAudioFile();
@@ -73,7 +73,7 @@ public class AudioDataStructure {
     }
 
     // Effects: gets sample size in bits
-    public long getSampleSize() {
+    public long getSamplesize() {
         return sampleSize;
     }
 
@@ -93,7 +93,7 @@ public class AudioDataStructure {
     }
 
     // Effects: gets filesize
-    public long getFileSize() {
+    public long getFilesize() {
         return fileSize;
     }
 

@@ -70,9 +70,9 @@ public class AudioFileLoader {
                 case "alac":
                     return AudioFileType.ALAC_MP4;
             }
-            return AudioFileType.UNKNOWN;
+            return AudioFileType.EMPTY;
         } catch (Exception e) {
-            return AudioFileType.UNKNOWN;
+            return AudioFileType.EMPTY;
         }
     }
 
@@ -86,9 +86,9 @@ public class AudioFileLoader {
                 case "ogg vorbis v1":
                     return AudioFileType.VORBIS;
             }
-            return AudioFileType.UNKNOWN;
+            return AudioFileType.EMPTY;
         } catch (Exception e) {
-            return AudioFileType.UNKNOWN;
+            return AudioFileType.EMPTY;
         }
     }
 }

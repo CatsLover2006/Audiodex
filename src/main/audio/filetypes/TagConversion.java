@@ -22,8 +22,8 @@ public class TagConversion {
 
     static {
         FieldKey[] ignoreList = {
-
-        };
+                FieldKey.COPYRIGHT
+        }; // Don't overwrite these
         keyConv = new HashMap<>();
         keyConv.put(FieldKey.ARTIST, "Artist");
         keyConv.put(FieldKey.ALBUM, "Album");

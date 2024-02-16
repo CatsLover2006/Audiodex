@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,8 @@ public class  WAVTest {
         wavDecoder.closeAudioFile();
         assertFalse(wavDecoder.isReady());
         assertEquals("scarlet.wav", wavDecoder.getFileName());
+        assertEquals(142, Math.floor(wavDecoder.getFileDuration()));
+        assertEquals(AudioFileType.PCM_WAV, wavDecoder.getFileType());
     }
 
     @Test
@@ -37,6 +40,9 @@ public class  WAVTest {
         assertEquals(0, wavDecoder.getCurrentTime());
         wavDecoder.goToTime(100);
         assertEquals(100, wavDecoder.getCurrentTime());
+        wavDecoder.goToTime(10);
+        assertEquals(10, wavDecoder.getCurrentTime());
+        assertFalse(wavDecoder.skipInProgress());
     }
 
     @Test // Test if decoding works
@@ -58,5 +64,7 @@ public class  WAVTest {
     public void id3Test() {
         ID3Container id3 = wavDecoder.getID3();
         assertEquals("NO", id3.getID3Data("VBR"));
+        wavDecoder.setID3(id3);
+        wavDecoder.setArtwork(wavDecoder.getArtwork());
     }
 }

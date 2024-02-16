@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +12,19 @@ import javax.sound.sampled.AudioFormat;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class VorbisTest {
-    AudioDecoder vorbisDecoder;
+    Vorbis vorbisDecoder;
+
+    private class ForcePauseThread extends Thread {
+        public void run() {
+            vorbisDecoder.forceDisableDecoding();
+            try {
+                sleep(0,100);
+            } catch (InterruptedException e) {
+                // no
+            }
+            vorbisDecoder.forceEnableDecoding();
+        }
+    }
 
     @BeforeEach
     public void prepare() {
@@ -26,6 +39,8 @@ public class VorbisTest {
         vorbisDecoder.closeAudioFile();
         assertFalse(vorbisDecoder.isReady());
         assertEquals("scarlet.vorbis.ogg", vorbisDecoder.getFileName());
+        assertEquals(142, Math.floor(vorbisDecoder.getFileDuration()));
+        assertEquals(AudioFileType.VORBIS, vorbisDecoder.getFileType());
     }
 
     @Test
@@ -37,9 +52,13 @@ public class VorbisTest {
         vorbisDecoder.getNextSample(); // Crash fix
         vorbisDecoder.goToTime(100);
         vorbisDecoder.getNextSample(); // Timer update
-
         // Error range due to timing math
         assertTrue(Math.abs(100 - vorbisDecoder.getCurrentTime()) < 0.05);
+        vorbisDecoder.goToTime(10);
+        vorbisDecoder.getNextSample(); // Timer update
+        // Error range due to timing math
+        assertTrue(Math.abs(10 - vorbisDecoder.getCurrentTime()) < 0.05);
+        assertFalse(vorbisDecoder.skipInProgress());
     }
 
     @Test // Test if decoding works
@@ -68,6 +87,9 @@ public class VorbisTest {
                 if (sample.getData()[i] != wavSample.getData()[i + wavOffset]) {
                     faults++;
                 }
+                if (i == wavOffset) {
+                    (new ForcePauseThread()).start();
+                }
             }
             wavOffset += sample.getLength();
             sample = vorbisDecoder.getNextSample();
@@ -84,5 +106,8 @@ public class VorbisTest {
         assertEquals("Scarlet Fire", id3.getID3Data("Title"));
         assertEquals("Otis McDonald", id3.getID3Data("Artist"));
         assertEquals("YouTube Audio Library", id3.getID3Data("Album"));
+        id3.setID3Data("Encoder", "Audiodex");
+        vorbisDecoder.setID3(id3);
+        vorbisDecoder.setArtwork(vorbisDecoder.getArtwork());
     }
 }

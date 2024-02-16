@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,8 @@ public class MP3Test {
         mp3Decoder.closeAudioFile();
         assertFalse(mp3Decoder.isReady());
         assertEquals("scarlet.mp3", mp3Decoder.getFileName());
+        assertEquals(143, Math.floor(mp3Decoder.getFileDuration()));
+        assertEquals(AudioFileType.MP3, mp3Decoder.getFileType());
     }
 
     @Test
@@ -33,13 +36,19 @@ public class MP3Test {
         assertFalse(mp3Decoder.isReady());
         mp3Decoder.prepareToPlayAudio();
         assertTrue(mp3Decoder.isReady());
+        assertFalse(mp3Decoder.skipInProgress());
         assertEquals(0, mp3Decoder.getCurrentTime());
         mp3Decoder.getNextSample(); // Crash fix
         mp3Decoder.goToTime(100);
         mp3Decoder.getNextSample(); // Timer update
-
         // Error range due to timing math
         assertTrue(Math.abs(100 - mp3Decoder.getCurrentTime()) < 0.05);
+        mp3Decoder.getNextSample(); // Crash fix
+        mp3Decoder.goToTime(10);
+        mp3Decoder.getNextSample(); // Timer update
+        // Error range due to timing math
+        assertTrue(Math.abs(10 - mp3Decoder.getCurrentTime()) < 0.05);
+        assertFalse(mp3Decoder.skipInProgress());
     }
 
     @Test // Test if decoding works
@@ -76,5 +85,8 @@ public class MP3Test {
         assertEquals("Otis McDonald", id3.getID3Data("Artist"));
         assertEquals("YouTube Audio Library", id3.getID3Data("Album"));
         assertEquals(2015L, id3.getID3Data("Year"));
+        id3.setID3Data("Encoder", "Audiodex");
+        mp3Decoder.setID3(id3);
+        mp3Decoder.setArtwork(mp3Decoder.getArtwork());
     }
 }

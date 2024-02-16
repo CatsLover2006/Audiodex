@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static java.nio.file.Files.delete;
@@ -109,7 +108,7 @@ public class AudioFileList {
                         .compareTo(getSortingValue(sortBy.toString(), b)) > 0;
             }
             case Filesize: {
-                return a.getFileSize() > b.getFileSize();
+                return a.getFilesize() > b.getFilesize();
             }
         }
         return false;
@@ -325,5 +324,11 @@ public class AudioFileList {
         }
         saveDatabaseFile();
         saveDatabaseIndex();
+    }
+
+    // Modifies: this
+    // Effects:  sets user directory
+    public void setUserDir(String nuDir) {
+        userDir = nuDir;
     }
 }

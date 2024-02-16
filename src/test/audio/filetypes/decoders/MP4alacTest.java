@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +12,19 @@ import javax.sound.sampled.AudioFormat;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MP4alacTest {
-    AudioDecoder alacDecoder;
+    MP4alac alacDecoder;
+
+    private class ForcePauseThread extends Thread {
+        public void run() {
+            alacDecoder.forceDisableDecoding();
+            try {
+                sleep(10);
+            } catch (InterruptedException e) {
+                // no
+            }
+            alacDecoder.forceEnableDecoding();
+        }
+    }
 
     @BeforeEach
     public void prepare() {
@@ -26,6 +39,8 @@ public class MP4alacTest {
         alacDecoder.closeAudioFile();
         assertFalse(alacDecoder.isReady());
         assertEquals("scarlet.alac.m4a", alacDecoder.getFileName());
+        assertEquals(142, Math.floor(alacDecoder.getFileDuration()));
+        assertEquals(AudioFileType.ALAC_MP4, alacDecoder.getFileType());
     }
 
     @Test
@@ -36,6 +51,9 @@ public class MP4alacTest {
         assertEquals(0, alacDecoder.getCurrentTime());
         alacDecoder.goToTime(100);
         assertEquals(100, alacDecoder.getCurrentTime());
+        alacDecoder.goToTime(10);
+        assertEquals(10, alacDecoder.getCurrentTime());
+        assertFalse(alacDecoder.skipInProgress());
     }
 
     @Test // Test if decoding works
@@ -62,6 +80,9 @@ public class MP4alacTest {
                     wavOffset = -i; // this works, trust me
                 }
                 assertEquals(sample.getData()[i], wavSample.getData()[i + wavOffset]);
+                if (i == wavOffset) {
+                    (new MP4alacTest.ForcePauseThread()).start();
+                }
             }
             wavOffset += sample.getLength();
             sample = alacDecoder.getNextSample();
@@ -78,5 +99,8 @@ public class MP4alacTest {
         assertEquals("Otis McDonald", id3.getID3Data("Artist"));
         assertEquals("YouTube Audio Library", id3.getID3Data("Album"));
         assertEquals(2015L, id3.getID3Data("Year"));
+        id3.setID3Data("Encoder", "Audiodex");
+        alacDecoder.setID3(id3);
+        alacDecoder.setArtwork(alacDecoder.getArtwork());
     }
 }

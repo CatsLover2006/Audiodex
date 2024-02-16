@@ -21,13 +21,13 @@ public class AudioConversion {
         // the main thread that this thread is done
         private class FinishedEncodeThread extends Thread {
             public void run() {
-                while (converterThread != null) {
+                do {
                     try { // Wait for decoder thread to finish, in case we've got a music queue
                         sleep(0, 1);
                     } catch (InterruptedException e) {
                         // LMAO just burn more time
                     }
-                }
+                } while (converterThread != null);
                 Main.finishedEncode();
             }
         }
@@ -41,26 +41,11 @@ public class AudioConversion {
             }
         }
 
-        // Effects: join(long millis) but no try-catch
-        public void safeJoin(long millis) {
-            try {
-                join(millis);
-            } catch (InterruptedException e) {
-                // lol
-            }
-        }
-
-        // Effects: join(long millis, int nanos) but no try-catch
-        public void safeJoin(long millis, int nanos) {
-            try {
-                join(millis, nanos);
-            } catch (InterruptedException e) {
-                // lol
-            }
-        }
-
         // Effects: plays audio in file loadedFile
         public void run() {
+            if (isFinished()) {
+                return;
+            }
             error = !helper.encodeAudio(targetFile);
             done = true;
             source.closeAudioFile();
@@ -83,10 +68,14 @@ public class AudioConversion {
         if (source == null) {
             error = true;
             done = true;
+            this.targetFile = "";
+            return;
         }
         this.targetFile = (new File(targetFile)).getAbsolutePath();
         setHelper(this.targetFile);
         if (helper == null) {
+            error = true;
+            done = true;
             return;
         }
         helper.setSource(source);

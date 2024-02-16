@@ -1,8 +1,10 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
+import org.jaudiotagger.tag.images.Artwork;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +28,8 @@ public class AiffTest {
         aiffDecoder.closeAudioFile();
         assertFalse(aiffDecoder.isReady());
         assertEquals("scarlet.aif", aiffDecoder.getFileName());
+        assertEquals(142, Math.floor(aiffDecoder.getFileDuration()));
+        assertEquals(AudioFileType.AIFF, aiffDecoder.getFileType());
     }
 
     @Test
@@ -36,6 +40,9 @@ public class AiffTest {
         assertEquals(0, aiffDecoder.getCurrentTime());
         aiffDecoder.goToTime(100);
         assertEquals(100, aiffDecoder.getCurrentTime());
+        aiffDecoder.goToTime(10);
+        assertEquals(10, aiffDecoder.getCurrentTime());
+        assertFalse(aiffDecoder.skipInProgress());
     }
 
     @Test // Test if decoding works
@@ -77,5 +84,8 @@ public class AiffTest {
         assertEquals("Otis McDonald", id3.getID3Data("Artist"));
         assertEquals("YouTube Audio Library", id3.getID3Data("Album"));
         assertEquals(2015L, id3.getID3Data("Year"));
+        id3.setID3Data("Encoder", "Audiodex");
+        aiffDecoder.setID3(id3);
+        aiffDecoder.setArtwork(aiffDecoder.getArtwork());
     }
 }

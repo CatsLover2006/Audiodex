@@ -1,6 +1,7 @@
 package audio.filetypes.decoders;
 
 import audio.AudioDecoder;
+import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +27,8 @@ public class MP4AACTest {
         aacDecoder.closeAudioFile();
         assertFalse(aacDecoder.isReady());
         assertEquals("scarlet.aac.m4a", aacDecoder.getFileName());
+        assertEquals(142, Math.floor(aacDecoder.getFileDuration()));
+        assertEquals(AudioFileType.AAC_MP4, aacDecoder.getFileType());
     }
 
     @Test
@@ -40,6 +43,11 @@ public class MP4AACTest {
         aacDecoder.getNextSample();
         // Error range due to timing math
         assertTrue(Math.abs(100 - aacDecoder.getCurrentTime()) < 0.06);
+        aacDecoder.goToTime(10);
+        aacDecoder.getNextSample();
+        // Error range due to timing math
+        assertTrue(Math.abs(10 - aacDecoder.getCurrentTime()) < 0.06);
+        assertFalse(aacDecoder.skipInProgress());
     }
 
     @Test // Test if decoding works
@@ -82,5 +90,9 @@ public class MP4AACTest {
         assertEquals("Otis McDonald", id3.getID3Data("Artist"));
         assertEquals("YouTube Audio Library", id3.getID3Data("Album"));
         assertEquals(2015L, id3.getID3Data("Year"));
+        id3.setID3Data("Encoder", "Audiodex");
+        System.out.println(id3.encode().toString());
+        aacDecoder.setID3(id3);
+        aacDecoder.setArtwork(aacDecoder.getArtwork());
     }
 }

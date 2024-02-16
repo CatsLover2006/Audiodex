@@ -137,18 +137,10 @@ public class MP4AAC implements AudioDecoder {
         skipping = false;
     }
 
-    // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
+    // Requires: prepareToPlayAudio() called once
     // Effects:  returns the audio format of the file
     public AudioFormat getAudioOutputFormat() {
         return audioFormat;
-    }
-
-    // Requires: prepareToPlayAudio() has never been called
-    //           won't crash but is pointless
-    // Modifies: this
-    // Effects:  sets the audio format of the file
-    public void setAudioOutputFormat(AudioFormat format) {
-        audioFormat = format;
     }
 
     // Effects: returns the current time in the audio in seconds
@@ -209,11 +201,11 @@ public class MP4AAC implements AudioDecoder {
         }
         Tag tag = f.getTagOrCreateAndSetDefault();
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
-            String data = container.getID3Data(entry.getKey()).toString();
+            Object data = container.getID3Data(entry.getKey());
             if (data != null) {
                 try {
-                    tag.setField(entry.getValue(), data);
-                } catch (FieldDataInvalidException e) {
+                    tag.setField(entry.getValue(), data.toString());
+                } catch (Exception e) {
                     Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
                 }
             }

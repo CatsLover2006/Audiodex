@@ -163,18 +163,10 @@ public class MP4alac implements AudioDecoder {
         return totalSamples / format.getSampleRate();
     }
 
-    // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
+    // Requires: prepareToPlayAudio() called once
     // Effects:  returns the audio format of the file
     public AudioFormat getAudioOutputFormat() {
         return format;
-    }
-
-    // Requires: prepareToPlayAudio() has never been called
-    //           won't crash but is pointless
-    // Modifies: this
-    // Effects:  sets the audio format of the file
-    public void setAudioOutputFormat(AudioFormat format) {
-        this.format = format;
     }
 
     // Effects:  returns true if there are more samples to be played
@@ -218,10 +210,10 @@ public class MP4alac implements AudioDecoder {
         }
         Tag tag = f.getTagOrCreateAndSetDefault();
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
-            String data = container.getID3Data(entry.getKey()).toString();
+            Object data = container.getID3Data(entry.getKey());
             if (data != null) {
                 try {
-                    tag.setField(entry.getValue(), data);
+                    tag.setField(entry.getValue(), data.toString());
                 } catch (FieldDataInvalidException e) {
                     Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
                 }
@@ -271,5 +263,19 @@ public class MP4alac implements AudioDecoder {
         } catch (Exception e) {
             // Why?
         }
+    }
+
+    // Modifies: this
+    // Effects:  force disables decoding
+    //           for use in tests only
+    public void forceDisableDecoding() {
+        allowSampleReads = false;
+    }
+
+    // Modifies: this
+    // Effects:  force enables decoding
+    //           for use in tests only
+    public void forceEnableDecoding() {
+        allowSampleReads = true;
     }
 }

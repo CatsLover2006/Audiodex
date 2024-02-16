@@ -128,18 +128,10 @@ public class WAV implements AudioDecoder {
         return duration;
     }
 
-    // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
+    // Requires: prepareToPlayAudio() called once
     // Effects:  returns the audio format of the file
     public AudioFormat getAudioOutputFormat() {
         return format;
-    }
-
-    // Requires: prepareToPlayAudio() has never been called
-    //           won't crash but is pointless
-    // Modifies: this
-    // Effects:  sets the audio format of the file
-    public void setAudioOutputFormat(AudioFormat format) {
-        this.format = format;
     }
 
     // Effects:  returns true if there are more samples to be played
