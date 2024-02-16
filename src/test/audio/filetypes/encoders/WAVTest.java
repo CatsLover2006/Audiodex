@@ -64,6 +64,6 @@ public class WAVTest {
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertEquals(0, encoder.encodedPercent());
         assertNull(encoder.getEncoderSpecificSelectors()); // Japanese directory name
-        assertFalse(encoder.encodeAudio("./data/お/scarlet.wav"));
+        assertFalse(encoder.encodeAudio("./data/\u3042/scarlet.wav"));
     }
 }

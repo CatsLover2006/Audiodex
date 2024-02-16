@@ -53,7 +53,7 @@ public class AudioConversionTest {
     @Test
     public void invalidDirectoryTest() {
         converter = new AudioConversion(new AudioDataStructure("data/scarlet.mp3"),
-                "data/お/scarlet.wav");
+                "data/\u3042/scarlet.wav");
         converter.start();
         converter.waitForEncoderFinish();
         assertTrue(converter.errorOccurred());

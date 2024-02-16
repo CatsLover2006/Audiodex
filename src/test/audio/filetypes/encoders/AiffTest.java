@@ -65,6 +65,6 @@ public class AiffTest {
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertEquals(0, encoder.encodedPercent());
         assertNull(encoder.getEncoderSpecificSelectors()); // Japanese directory name
-        assertFalse(encoder.encodeAudio("./data/お/scarlet.aif"));
+        assertFalse(encoder.encodeAudio("./data/\u3042/scarlet.aif"));
     }
 }

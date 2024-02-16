@@ -67,8 +67,6 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 - ALAC vs AAC detection is weird since they share their container, there's no fix for this
   - Similar situation for detection in the OGG container, but there's only one supported playback mode within this container so it's just to avoid throwing errors
-- Sometimes seeking to the very last second of an MP3 file will cause an ArrayIndexOutOfBoundsException, which causes the main thread to die
-  - Will fix by performing a bounds check, but I'm too tired rn
 
 ## Lucky Breaks
 - jaudiotagger handles most of the ID3 metadata I care about
