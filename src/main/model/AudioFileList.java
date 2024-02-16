@@ -2,9 +2,13 @@ package model;
 
 import audio.AudioDataStructure;
 import audio.ID3Container;
+import org.json.simple.*;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import ui.Main;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -13,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static java.nio.file.Files.delete;
-import static model.ListFileHandler.*;
 
 // Instantiable class to handle the file list
 public class AudioFileList {
@@ -198,7 +201,7 @@ public class AudioFileList {
     // Modifies: this
     // Effects:  loads database index from (userDir)/audiodex.dbindex and reloads database
     public void loadDatabase() {
-        String filename = userDir + "audiodex.dbindex";
+        String filename = userDir + "index.audiodex.db";
         try {
             dbIndex = Long.parseLong(Files.readString(Paths.get(filename)), 36);
         } catch (Exception e) {
@@ -213,12 +216,21 @@ public class AudioFileList {
     // Modifies: this
     // Effects:  replaces file list with described data file
     public void loadDatabaseFile() {
-        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.basedb";
-        Main.CliInterface.println("Loading database from " + filename + "...");
-        fileList.clear();
-        AudioDataStructure[] data = decodeList(filename);
-        Collections.addAll(fileList, data);
-        sanitizeDatabase();
+        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
+        JSONArray array = new JSONArray();
+        JSONParser jsonParser = new JSONParser();
+        try {
+            array = (JSONArray) jsonParser.parse(new FileReader(filename));
+        } catch (IOException e) {
+            Main.CliInterface.println("Couldn't find database file...");
+            return;
+        } catch (ParseException e) {
+            Main.CliInterface.println("Error in parsing database...");
+            return;
+        }
+        for (Object object : array) {
+            fileList.add(AudioDataStructure.decode((JSONObject) object));
+        }
     }
 
     // Modifies: this
@@ -230,28 +242,27 @@ public class AudioFileList {
             return true;
         }
         dbIndex++;
-        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.basedb";
-        List<AudioDataStructure> copyList = new ArrayList<>(fileList);
-        Main.CliInterface.println("Saving database to " + filename + "...");
-        try {
-            encodeList(copyList, filename);
-            return saveDatabaseIndex();
-        } catch (IOException e) {
-            return false;
+        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
+        JSONArray array = new JSONArray();
+        for (AudioDataStructure structure : fileList) {
+            array.add(structure.encode());
         }
+        String toSave = JSONArray.toJSONString(array);
+        FileManager.writeToFile(filename, toSave);
+        return saveDatabaseIndex();
     }
 
     // Modifies: database files, specifically audiodex.dbindex
     // Effects:  saves current database pointer
     private boolean saveDatabaseIndex() {
-        return FileManager.writeToFile(userDir + "audiodex.dbindex", Long.toString(dbIndex, 36));
+        return FileManager.writeToFile(userDir + "index.audiodex.db", Long.toString(dbIndex, 36));
     }
 
     // Modifies: database files
     // Effects:  reverts to previous database, if avaliable
     public void revertDb() {
         dbIndex--;
-        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.basedb";
+        String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.db";
         if ((new File(filename)).exists()) {
             loadDatabaseFile();
             saveDatabaseIndex();
@@ -268,19 +279,9 @@ public class AudioFileList {
         if ((new File(filename)).exists()) {
             Main.CliInterface.println("Cleaning database at " + filename + "...");
             try {
-                String f = new String(Files.readAllBytes(Paths.get(filename)));
-                String[] fs = f.split(ListFileHandler.RESERVED_CHARACTERS[0]);
-                if (fs.length >= 2) {
-                    cleanDb(fs[1]);
-                }
-                try {
-                    delete(Paths.get(filename));
-                } catch (Exception e) {
-                    // lol
-                }
-                Main.CliInterface.println("Cleaned database at " + filename + "!");
-            } catch (IOException e) {
-                // RIP
+                delete(Paths.get(filename));
+            } catch (Exception e) {
+                // lol
             }
         } else {
             Main.CliInterface.println("No database to clean!");
@@ -290,7 +291,7 @@ public class AudioFileList {
     // Modifies: database files
     // Effects:  cleans (deletes all files for) database for index
     public void cleanDb(long index) {
-        cleanDb(userDir + Long.toString(index, 36) + ".audiodex.basedb");
+        cleanDb(userDir + Long.toString(index, 36) + ".audiodex.db");
     }
 
     // Modifies: database files
