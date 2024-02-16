@@ -4,7 +4,7 @@
 ***NOTE 2***: Some seemingly arbitrary classes within non-ui packages won't have tests. The common theme with these classes is that they involve multithreading; I do not know if it is possible to properly test multithreading within CPSC 210 knowledge and as such I cannot test these classes.<br>
 ***NOTE 3***: This project saves data at an absolute location in the user's home directory, and it saves filenames as absolute references within the database. The former could be changed, but the latter is required for the database to function if the program is launched from a different location on the filesystem.
 
-## AudioDex
+## AudioDex 
 ![CLI Preview](./previewcli.png)<br>
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
 
