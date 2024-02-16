@@ -237,11 +237,6 @@ public class MP3 implements AudioDecoder {
         return AudioFileType.MP3;
     }
 
-    // Effects: returns an audio input stream for encoding data
-    public AudioInputStream getAudioInputStream() {
-        return decoded;
-    }
-
     // Effects: returns album artwork if possible
     public Artwork getArtwork() {
         AudioFile f = null;

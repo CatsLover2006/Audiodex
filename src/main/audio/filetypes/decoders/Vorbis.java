@@ -250,11 +250,6 @@ public class Vorbis implements AudioDecoder {
         return AudioFileType.VORBIS;
     }
 
-    // Effects: returns an audio input stream for encoding data
-    public AudioInputStream getAudioInputStream() {
-        return decoded;
-    }
-
     // Effects: returns album artwork if possible
     public Artwork getArtwork() {
         AudioFile f = null;

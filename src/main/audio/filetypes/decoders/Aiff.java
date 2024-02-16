@@ -224,11 +224,6 @@ public class Aiff implements AudioDecoder {
         return AudioFileType.AIFF;
     }
 
-    // Effects: returns an audio input stream for encoding data
-    public AudioInputStream getAudioInputStream() {
-        return in;
-    }
-
     // Effects: returns album artwork if possible
     public Artwork getArtwork() {
         AudioFile f = null;
