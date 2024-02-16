@@ -15,7 +15,7 @@ public class MP4alacTest {
 
     @BeforeEach
     public void prepare() {
-        alacDecoder = new MP4alac("./data/scarlet.alac.m4a");
+        alacDecoder = new MP4alac("data/scarlet.alac.m4a");
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work
@@ -40,7 +40,7 @@ public class MP4alacTest {
 
     @Test // Test if decoding works
     public void decodeTest() {
-        AudioDecoder wavDecoder = new WAV("./data/scarlet.wav");
+        AudioDecoder wavDecoder = new WAV("data/scarlet.wav");
         assertFalse(alacDecoder.isReady());
         alacDecoder.prepareToPlayAudio();
         assertTrue(alacDecoder.isReady());

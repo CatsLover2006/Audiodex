@@ -11,12 +11,12 @@ import javax.sound.sampled.AudioFormat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class WAVTest {
+public class  WAVTest {
     AudioDecoder wavDecoder;
 
     @BeforeEach
     public void prepare() {
-        wavDecoder = new WAV("./data/scarlet.wav");
+        wavDecoder = new WAV("data/scarlet.wav");
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work

@@ -15,7 +15,7 @@ public class VorbisTest {
 
     @BeforeEach
     public void prepare() {
-        vorbisDecoder = new Vorbis("./data/scarlet.vorbis.ogg");
+        vorbisDecoder = new Vorbis("data/scarlet.vorbis.ogg");
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work
@@ -44,7 +44,7 @@ public class VorbisTest {
 
     @Test // Test if decoding works
     public void decodeTest() {
-        AudioDecoder wavDecoder = new WAV("./data/scarlet.vorbis.wav");
+        AudioDecoder wavDecoder = new WAV("data/scarlet.vorbis.wav");
         assertFalse(vorbisDecoder.isReady());
         vorbisDecoder.prepareToPlayAudio();
         assertTrue(vorbisDecoder.isReady());
