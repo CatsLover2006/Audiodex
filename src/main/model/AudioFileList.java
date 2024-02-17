@@ -28,10 +28,6 @@ public class AudioFileList {
     public AudioFileList() {
         fileList = new ArrayList<>();
         userDir = System.getProperty("user.home") + "/audiodex/";
-        File userDirFile = new File(userDir);
-        if (!userDirFile.exists()) {
-            userDirFile.mkdirs();
-        }
     }
 
     // Effects: gets list size
@@ -164,8 +160,13 @@ public class AudioFileList {
     // Modifies: this
     // Effects:  adds specified file to database
     public void addFileToDatabase(String filename) {
-        if (dbContainsFile(filename)) {
-            Main.CliInterface.println("File already in database, skipping.");
+        try {
+            if (dbContainsFile((new File(filename)).getCanonicalPath())) {
+                Main.CliInterface.println("File already in database, skipping.");
+                return;
+            }
+        } catch (IOException e) {
+            Main.CliInterface.println("Error while trying to get absolute path of file.");
             return;
         }
         Main.CliInterface.println("Adding file " + filename + "...");
@@ -236,6 +237,10 @@ public class AudioFileList {
     // Effects:  replaces file list with described data file
     //           returns true on success, false on failure
     public boolean saveDatabaseFile() {
+        File userDirFile = new File(userDir);
+        if (!userDirFile.exists()) {
+            userDirFile.mkdirs();
+        }
         if (fileList.isEmpty()) {
             Main.CliInterface.println("Nothing to save; database is empty.");
             return true;
@@ -323,7 +328,6 @@ public class AudioFileList {
             }
         }
         saveDatabaseFile();
-        saveDatabaseIndex();
     }
 
     // Modifies: this
