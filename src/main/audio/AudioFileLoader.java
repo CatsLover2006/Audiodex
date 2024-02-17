@@ -6,6 +6,7 @@ import org.jaudiotagger.audio.AudioFileIO;
 import ui.Main;
 
 import java.io.File;
+import java.lang.reflect.Array;
 
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler
@@ -32,29 +33,33 @@ public class AudioFileLoader {
     @SuppressWarnings("methodlength") // Large switch/case
     // No documentation needed, effectively a getter
     public static AudioFileType getAudioFiletype(String filename) {
-        String filetype = filename.substring(filename.length() - 4);
-        switch (filetype.toLowerCase()) {
-            case ".wav":
-            case "wave":
-                return AudioFileType.PCM_WAV;
-            case ".aif":
-            case "aiff":
-            case "aifc":
-                return AudioFileType.AIFF;
-            case ".mp1":
-            case ".mp2":
-            case ".mp3":
-                return AudioFileType.MP3;
-            case ".ogg":
-            case ".oga":
-            case "mogg":
-                return oggAudioType(filename);
-            case ".mp4":
-            case ".m4b":
-            case ".m4a":
-                return m4aAudioType(filename);
-            default:
-                return AudioFileType.EMPTY;
+        try {
+            String filetype = filename.substring(filename.length() - 4);
+            switch (filetype.toLowerCase()) {
+                case ".wav":
+                case "wave":
+                    return AudioFileType.PCM_WAV;
+                case ".aif":
+                case "aiff":
+                case "aifc":
+                    return AudioFileType.AIFF;
+                case ".mp1":
+                case ".mp2":
+                case ".mp3":
+                    return AudioFileType.MP3;
+                case ".ogg":
+                case ".oga":
+                case "mogg":
+                    return oggAudioType(filename);
+                case ".mp4":
+                case ".m4b":
+                case ".m4a":
+                    return m4aAudioType(filename);
+                default:
+                    return AudioFileType.EMPTY;
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return AudioFileType.EMPTY;
         }
     }
 
@@ -70,10 +75,10 @@ public class AudioFileLoader {
                 case "alac":
                     return AudioFileType.ALAC_MP4;
             }
-            return AudioFileType.EMPTY;
         } catch (Exception e) {
-            return AudioFileType.EMPTY;
+            // LMAO
         }
+        return AudioFileType.EMPTY;
     }
 
     // Effects: detects encoding of a .ogg-like file
@@ -86,9 +91,9 @@ public class AudioFileLoader {
                 case "ogg vorbis v1":
                     return AudioFileType.VORBIS;
             }
-            return AudioFileType.EMPTY;
         } catch (Exception e) {
-            return AudioFileType.EMPTY;
+            // LMAO
         }
+        return AudioFileType.EMPTY;
     }
 }

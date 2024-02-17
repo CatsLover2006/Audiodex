@@ -1,5 +1,6 @@
 package audio;
 
+import audio.filetypes.TagConversion;
 import org.json.simple.JSONObject;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +53,11 @@ public class AudioDataStructureTest {
 
     @Test
     public void emptyTest() {
+        new TagConversion(); // I'm not making a test class just for this
         structure = new AudioDataStructure("./lmao");
+        assertTrue(structure.isEmpty());
+        // Next test is known to cause IOException for (File).getCanonicalPath()
+        structure = new AudioDataStructure("\u0000/lmao");
         assertTrue(structure.isEmpty());
     }
 }
