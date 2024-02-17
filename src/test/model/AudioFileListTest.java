@@ -53,7 +53,14 @@ public class AudioFileListTest {
     @Test
     @Order(3)
     public void saveDatabaseTest() {
+        File dbDir = new File("./data/db");
+        assertNotNull(dbDir);
+        for (File f : dbDir.listFiles()) {
+            assertTrue(f.delete());
+        }
+        assertTrue(dbDir.delete());
         assertTrue(database.saveDatabaseFile());
+        (new File("./data/db/audioFolder")).mkdirs();
     }
 
     @Test
@@ -71,6 +78,7 @@ public class AudioFileListTest {
         database.sortList("Album");
         database.sortList("AlbumArtist");
         database.sortList("Title");
+        database.sortList("Album-Title"); // I used to use this
         database.sortList("Album_Title");
         database.sanitizeDatabase();
         assertEquals(20, database.listSize());
@@ -122,5 +130,19 @@ public class AudioFileListTest {
             fail("File error occured");
         }
         database.loadDatabase();
+        database.cleanDbFldr();
+        database.cleanDbFldr();
+        database.saveDatabaseFile();
+    }
+
+    @Test
+    @Order(9)
+    public void brokenFileTest() {
+        database.revertDb();
+        database.cleanDb("./data/readonly");
+        database.addFileToDatabase("\u0000");
+        database.addDirToDatabase("./data/scarlet.mp3");
+        new FileManager();
+        FileManager.writeToFile("\u0000", "This fails");
     }
 }
