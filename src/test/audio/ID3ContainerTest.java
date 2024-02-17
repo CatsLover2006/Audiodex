@@ -13,6 +13,11 @@ public class ID3ContainerTest {
         container.setID3Data("Discs", 420);
         container.setID3Long("Artist", "Hanabi"); // Will set as string
         container.setID3Long("Year", "2024"); // Will set as long
+        // These next 4 lines do nothing
+        container.setID3Data("Discs", null);
+        container.setID3Data("Discs", "");
+        container.setID3Long("Discs", null);
+        container.setID3Long("Discs", "");
         assertEquals(2024L, container.getID3Data("Year"));
         assertEquals(1L, container.getID3Data("Disc"));
         assertEquals(420L, container.getID3Data("Discs"));

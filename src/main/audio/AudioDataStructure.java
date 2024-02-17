@@ -50,7 +50,7 @@ public class AudioDataStructure {
 
     // Effects: returns true if audio data file type is empty
     public boolean isEmpty() {
-        return audioFileType == AudioFileType.EMPTY || audioFileType == AudioFileType.UNKNOWN;
+        return audioFileType == AudioFileType.EMPTY;
     }
 
     // Modifies: this
@@ -125,13 +125,13 @@ public class AudioDataStructure {
     // Effects: returns playback string for display
     public String getPlaybackString() {
         String workingData = (String) id3Data.getID3Data("Title");
-        if (workingData == null || workingData.equals("null") || workingData.isEmpty()) {
+        if (workingData == null || workingData.isEmpty()) {
             String[] dirList = filename.split(String.valueOf(separatorChar));
             return dirList[dirList.length - 1];
         }
         String base = workingData;
         workingData = (String) id3Data.getID3Data("Artist");
-        if (!(workingData == null || workingData.equals("null") || workingData.isEmpty())) {
+        if (!(workingData == null || workingData.isEmpty())) {
             base += " by " + workingData;
         }
         return base;

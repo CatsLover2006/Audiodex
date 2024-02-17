@@ -5,8 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static audio.AudioFileLoader.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AudioFileLoaderTest {
     @Test
@@ -26,7 +25,7 @@ public class AudioFileLoaderTest {
 
     @Test
     public void edgeCaseTests() {
-        new AudioFileLoader();
+        new AudioFileLoader(); // No need
         assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.mp4"));
         assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.ogg"));
         assertEquals(AudioFileType.MP3, getAudioFiletype("data/null.mp3"));
