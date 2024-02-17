@@ -26,6 +26,7 @@ public class AudioFileLoaderTest {
 
     @Test
     public void edgeCaseTests() {
+        new AudioFileLoader();
         assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.mp4"));
         assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.ogg"));
         assertEquals(AudioFileType.MP3, getAudioFiletype("data/null.mp3"));
