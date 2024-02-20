@@ -83,6 +83,9 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - java-vorbis-support existing
 - The Java port of LAME existing
   - I genuinely didn't think I'd get lossy audio decoding due to library support so that was an insane find
+- The port of JDK 11 to Mac OS X 10.6 to 10.11 existing
+  - This project might've been dead if not for this
+  - [Here's the port](https://github.com/Jazzzny/jdk-macos-legacy)
 
 _I'm a really lucky person ain't I?_
 
