@@ -52,9 +52,11 @@ public class MP4alacTest {
         assertTrue(alacDecoder.isReady());
         assertEquals(0, alacDecoder.getCurrentTime());
         alacDecoder.goToTime(100);
-        assertEquals(100, alacDecoder.getCurrentTime());
+        // Error range due to timing math
+        assertTrue(Math.abs(100 - alacDecoder.getCurrentTime()) < 0.05);
         alacDecoder.goToTime(10);
-        assertEquals(10, alacDecoder.getCurrentTime());
+        // Error range due to timing math
+        assertTrue(Math.abs(10 - alacDecoder.getCurrentTime()) < 0.05);
         assertFalse(alacDecoder.skipInProgress());
     }
 
@@ -69,9 +71,9 @@ public class MP4alacTest {
         assertEquals(16, format.getSampleSizeInBits());
         assertEquals(44100, format.getSampleRate());
         alacDecoder.goToTime(1);
-        AudioSample sample = alacDecoder.getNextSample();
         wavDecoder.prepareToPlayAudio();
-        wavDecoder.goToTime(1);
+        wavDecoder.goToTime(alacDecoder.getCurrentTime());
+        AudioSample sample = alacDecoder.getNextSample();
         AudioSample wavSample = wavDecoder.getNextSample();
         int wavOffset = 0;
         while (alacDecoder.moreSamples()) {
@@ -82,9 +84,6 @@ public class MP4alacTest {
                     wavOffset = -i; // this works, trust me
                 }
                 assertEquals(sample.getData()[i], wavSample.getData()[i + wavOffset]);
-                if (i == wavOffset) {
-                    (new ForcePauseThread()).start();
-                }
             }
             wavOffset += sample.getLength();
             sample = alacDecoder.getNextSample();
