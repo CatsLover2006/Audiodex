@@ -92,6 +92,7 @@ _I'm a really lucky person ain't I?_
 ## User Stories
 - As a user, I want to play my music
   - As a user, I want to play my music library nonstop for an extended period of time
+  - As a user, I don't expect my music playback history and queue to persist after closing the program
 - As a user, I want to be able to convert my music to a different format
 - As a user, I want to manage my music library
 
