@@ -35,11 +35,10 @@ public class MP4alac implements AudioDecoder {
     private String filename;
     private AudioFormat format;
     private double bytesPerSecond;
-    private AudioInputStream in;
-    private AudioInputStream decoded;
+    private Alac alac;
     private boolean ready = false;
-    private final byte[] data = new byte[8192]; // 8kb sample buffer, lossless decoding might be expensive
-    private int numberBytesRead = 0;
+    private byte[] data;
+    private int numberBytesRead = 1; // Fix
     private long totalSamples = 0;
     private boolean allowSampleReads = true;
     private long bytesPlayed = 0;
@@ -60,18 +59,17 @@ public class MP4alac implements AudioDecoder {
             File file = new File(filename);
             InputStream input = new FileInputStream(file);
             AlacAudioFileReader fileReader = new AlacAudioFileReader();
-            Alac alac = new Alac(new FileInputStream(file));
+            alac = new Alac(new FileInputStream(file));
             totalSamples = alac.getNumSamples();
-            in = fileReader.getAudioInputStream(file);
-            AudioFormat baseFormat = in.getFormat();
+            AudioFormat baseFormat = fileReader.getAudioInputStream(input).getFormat();
             format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
                     baseFormat.getSampleRate(),
-                    16,
+                    alac.getBitsPerSample(),
                     baseFormat.getChannels(),
-                    baseFormat.getChannels() * 2,
+                    baseFormat.getChannels() * alac.getBytesPerSample(),
                     baseFormat.getSampleRate(),
                     false);
-            decoded = AudioSystem.getAudioInputStream(format, in);
+            data = new byte[0xFFFF]; // Make sure we have space
             bytesPerSecond = format.getSampleSizeInBits() * format.getChannels() * format.getSampleRate() / 8;
             System.out.println("ALAC decoder ready!");
             ready = true;
@@ -86,11 +84,6 @@ public class MP4alac implements AudioDecoder {
     //           getAudioOutputFormat() and atEndOfFile() remain valid
     public void closeAudioFile() {
         ready = false;
-        try {
-            in.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     // Effects: wait for a set time
@@ -102,6 +95,9 @@ public class MP4alac implements AudioDecoder {
         }
     }
 
+    // This is what the library does so idk
+    private int[] decodeBuffer = new int[1024*24*3];
+
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     public AudioSample getNextSample() {
@@ -109,16 +105,12 @@ public class MP4alac implements AudioDecoder {
             wait(1);
         }
         while (moreSamples()) {
-            try {
-                numberBytesRead = decoded.read(data, 0, data.length);
-                if (numberBytesRead == -1) {
-                    break;
-                } // Yes I have to do this to track time
-                bytesPlayed += numberBytesRead;
-                return new AudioSample(data, numberBytesRead);
-            } catch (IOException e) {
-                // Move along
-            }
+            numberBytesRead = alac.decode(decodeBuffer, data);
+            if (numberBytesRead <= 0) {
+                break;
+            } // Yes I have to do this to track time
+            bytesPlayed += numberBytesRead;
+            return new AudioSample(data, numberBytesRead);
         }
         return new AudioSample();
     }
@@ -134,21 +126,18 @@ public class MP4alac implements AudioDecoder {
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
-        long toSkip = (long)(time * bytesPerSecond) - bytesPlayed;
         allowSampleReads = false;
-        if (toSkip < 0) {
-            // Reset doesn't work
-            prepareToPlayAudio();
-            toSkip = (long)(time * bytesPerSecond);
+        if (getCurrentTime() > time) {
+            prepareToPlayAudio(); // Reset
+            decodeBuffer = new int[1024 * 24 * 3]; // Reset decoding buffer
             bytesPlayed = 0;
         }
-        bytesPlayed += toSkip;
-        try {
-            while (toSkip != 0) { // It won't skip all the way
-                toSkip -= decoded.skip(toSkip);
-            }
-        } catch (IOException e) {
-            bytesPlayed -= toSkip;
+        while (getCurrentTime() < time) {
+            numberBytesRead = alac.decode(decodeBuffer, data);
+            if (numberBytesRead <= 0) {
+                break;
+            } // Yes I have to do this to track time
+            bytesPlayed += numberBytesRead;
         }
         allowSampleReads = true;
     }
@@ -172,7 +161,7 @@ public class MP4alac implements AudioDecoder {
     // Effects:  returns true if there are more samples to be played
     //           will return false is no file is loaded
     public boolean moreSamples() {
-        return numberBytesRead != -1;
+        return numberBytesRead > 0;
     }
 
     // Effects: returns decoded ID3 data
