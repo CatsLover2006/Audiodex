@@ -6,10 +6,7 @@ import audio.AudioSample;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -63,16 +60,14 @@ public class MP3 implements AudioDecoder {
             in = fileReader.getAudioInputStream(file);
             AudioFormat baseFormat = in.getFormat();
             format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-                    baseFormat.getSampleRate(),
-                    16,
-                    baseFormat.getChannels(),
-                    baseFormat.getChannels() * 2,
-                    baseFormat.getSampleRate(),
-                    false);
+                    baseFormat.getSampleRate(), 16, baseFormat.getChannels(),
+                    baseFormat.getChannels() * 2, baseFormat.getSampleRate(), false);
             decoded = new DecodedMpegAudioInputStream(format, in);
             audioFrameRate = baseFormat.getFrameRate();
             System.out.println("MP3 decoder ready!");
             ready = true;
+        } catch (FileNotFoundException e) {
+            return; // We don't set ready flag
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -139,6 +134,9 @@ public class MP3 implements AudioDecoder {
 
     // Effects: returns the current time in the audio in seconds
     public double getCurrentTime() {
+        if (decoded == null) {
+            return -1;
+        }
         return (Long)decoded.properties().get("mp3.position.microseconds") * 0.000001;
     }
 

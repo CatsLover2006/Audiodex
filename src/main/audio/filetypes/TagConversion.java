@@ -43,6 +43,8 @@ public class TagConversion {
         keyConv.put(FieldKey.ENCODER, "Encoder");
         keyConv.put(FieldKey.PRODUCER, "Producer");
         keyConv.put(FieldKey.BPM, "BPM");
+        keyConv.put(FieldKey.FBPM, "FloatingBPM");
+        keyConv.put(FieldKey.RATING, "Rating");
         keyConv.put(FieldKey.ARRANGER, "Arranger");
         keyConv.put(FieldKey.IS_COMPILATION, "IsCompilation");
         keyConv.put(FieldKey.ARRANGER_SORT, "Arranger-Sort");

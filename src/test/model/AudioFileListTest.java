@@ -1,5 +1,6 @@
 package model;
 
+import audio.AudioDataStructure;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
@@ -16,10 +17,12 @@ public class AudioFileListTest {
     public static void preTest() {
         File dbDir = new File("./data/db");
         assertNotNull(dbDir);
-        for (File f : dbDir.listFiles()) {
-            assertTrue(f.delete());
+        if (dbDir.exists()) {
+            for (File f : dbDir.listFiles()) {
+                assertTrue(f.delete());
+            }
+            assertTrue(dbDir.delete());
         }
-        assertTrue(dbDir.delete());
         database = new AudioFileList();
         database.setUserDir("./data/db/");
     }
@@ -42,9 +45,19 @@ public class AudioFileListTest {
         assertEquals(0, database.listSize());
         database.addFileToDatabase("./data/scarlet.aif");
         assertEquals(1, database.listSize());
+        database.updateFile(0,"./data/scarlet.wav");
+        assertEquals(1, database.listSize());
+        database.updateFile(0,"./data/scarlet.wav");
+        assertEquals(1, database.listSize());
+        database.updateFile(0,"./data/scarlet.wav.lmao");
+        assertEquals(1, database.listSize());
         database.addDirToDatabase("./data/");
         assertEquals(20, database.listSize());
-        database.addFileToDatabase("./data/scarlet.aif");
+        database.sanitizeDatabase();
+        assertEquals(20, database.listSize());
+        database.removeIndex(0);
+        assertEquals(19, database.listSize());
+        database.addFileToDatabase("./data/scarlet.wav");
         assertEquals(20, database.listSize());
         database.sanitizeDatabase();
         assertEquals(20, database.listSize());
@@ -140,9 +153,18 @@ public class AudioFileListTest {
     public void brokenFileTest() {
         database.revertDb();
         database.cleanDb("./data/readonly");
+        database.sanitizeDatabase();
         database.addFileToDatabase("\u0000");
+        database.updateFile(2, "\u0000");
         database.addDirToDatabase("./data/scarlet.mp3");
         new FileManager();
         FileManager.writeToFile("\u0000", "This fails");
+        database.updateFile(1, new AudioDataStructure("/data/scarlet.lol.mp3"));
+        assertEquals(20, database.listSize());
+        assertEquals(1, database.getRemovedFiles().size());
+        assertEquals(1, database.getRemovedFiles().get(0));
+        database.removeEmptyFiles();
+        assertEquals(19, database.listSize());
+        assertEquals(0, database.getRemovedFiles().size());
     }
 }

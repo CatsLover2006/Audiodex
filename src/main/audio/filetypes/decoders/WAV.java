@@ -144,6 +144,7 @@ public class WAV implements AudioDecoder {
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "NO");
+        base.setID3Data("Title", getFileName());
         return base; // Virtual stub
     }
 
