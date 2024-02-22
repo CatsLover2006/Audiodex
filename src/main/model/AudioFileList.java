@@ -335,4 +335,62 @@ public class AudioFileList {
     public void setUserDir(String nuDir) {
         userDir = nuDir;
     }
+
+    // Effects: returns a list of indexes to files that no longer exist
+    public List<Integer> getRemovedFiles() {
+        List<Integer> removed = new ArrayList<>();
+        File f;
+        for (int i = 0; i < fileList.size(); i++) {
+            f = new File(fileList.get(i).getFilename());
+            if (!f.exists()) {
+                removed.add(i);
+            }
+        }
+        return removed;
+    }
+
+    // Modifies: this
+    // Effects:  removes file index from database
+    public void removeIndex(int i) {
+        fileList.remove(i);
+    }
+
+    // Modifies: this
+    // Effects:  removes unlocatable files
+    public void removeEmptyFiles() {
+        File f; // Remove back-to-front to save decrementing the pointer
+        for (int i = fileList.size() - 1; i >= 0 ; i--) {
+            f = new File(fileList.get(i).getFilename());
+            if (!f.exists()) {
+                fileList.remove(i);
+            }
+        }
+    }
+
+    // Modifies: this
+    // Effects:  updates file pointer for index
+    public void updateFile(int i, String newFileName) {
+        try {
+            if (dbContainsFile((new File(newFileName)).getCanonicalPath())) {
+                Main.CliInterface.println("File already in database, skipping.");
+                return;
+            }
+        } catch (IOException e) {
+            Main.CliInterface.println("Error while trying to get absolute path of file.");
+            return;
+        }
+        Main.CliInterface.println("Swapping in file " + newFileName + "...");
+        AudioDataStructure data = new AudioDataStructure(newFileName);
+        if (data.isEmpty()) {
+            Main.CliInterface.println("Unknown file type, cannot use file.");
+            return;
+        }
+        fileList.set(i, data);
+    }
+
+    // Modifies: this
+    // Effects:  updates file pointer for index
+    public void updateFile(int i, AudioDataStructure data) {
+        fileList.set(i, data);
+    }
 }

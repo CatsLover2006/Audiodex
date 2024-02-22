@@ -1,18 +1,20 @@
 package ui;
 
 import audio.AudioDataStructure;
-import audio.AudioFileLoader;
 
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 
 import audio.ID3Container;
 import model.AudioConversion;
 import model.AudioFileList;
 import org.fusesource.jansi.*;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import static java.lang.Math.floor;
@@ -31,21 +33,12 @@ public class Main {
     private static AudioDataStructure nowPlaying;
     private static boolean loop = false;
 
-    // Effects: shuffles the database
-    private static void shuffleDatabase() {
-        LinkedList<AudioDataStructure> databaseClone = new LinkedList<>();
-        for (int i = 0; i < database.listSize(); i++) {
-            databaseClone.addLast(database.get(i));
+    // Effects: returns formatted time
+    private static String formatTime(long seconds) {
+        if (seconds == -1) {
+            return "X:XX";
         }
-        Random rng = new Random();
-        while (!databaseClone.isEmpty()) {
-            int randNumb = (int)Math.min(Math.floor(rng.nextDouble() * databaseClone.size()),
-                    databaseClone.size() - 1);
-            songQueue.addLast(databaseClone.get(randNumb));
-            databaseClone.remove(randNumb);
-        }
-        Cli.playDbFile(songQueue.getFirst());
-        songQueue.removeFirst();
+        return String.format("%01d:%02d", seconds / 60, seconds % 60);
     }
 
     // Effects: Counts currently converting audio files
@@ -203,21 +196,225 @@ public class Main {
             loadingFrame = null;
         }
 
+        private static String[] columns = {
+                "Title", "Artist", "Album", "Album Artist"
+        };
+
+        private static JScrollPane musicList;
+
         // Modifies: this
         // Effects:  displays main window
         public static void doGui(String[] args) {
             mainWindow = new JFrame("AudioDex");
-            mainWindow.setSize(500, 500);
+            mainWindow.setSize(900, 500);
             mainWindow.setResizable(true);
+            try {
+                mainWindow.setIconImage(ImageIO.read(new File("./data/spec/AppIcon.png")));
+            } catch (IOException e) {
+                // Whoops
+            }
             mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            updateGuiList();
+            createPlaybackBar();
+            visualizerThread = new PlaybackThread();
+            visualizerThread.start();
+            mainWindow.add(playbackStatusView);
+            mainWindow.add(musicList);
+            setupMainWindowLayout();
             mainWindow.setVisible(true);
-            //closeLoadingThread();
+            closeLoadingThread();
         }
+
+        // Modifies: this
+        // Effects:  sets up group layout for main window
+        private static void setupMainWindowLayout() {
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.weightx = 1.0;
+            constraints.anchor = GridBagConstraints.FIRST_LINE_START;
+            constraints.gridx = 0;
+            constraints.fill = GridBagConstraints.HORIZONTAL;
+            layout.setConstraints(playbackStatusView, constraints);
+            constraints.fill = GridBagConstraints.BOTH;
+            constraints.weighty = 1.0;
+            layout.setConstraints(musicList, constraints);
+            mainWindow.setLayout(layout);
+        }
+
+        // Effects: converts ID3 tag to its corresponding menu bar item
+        private static String convertKey(String key) {
+            switch (key) {
+                case "AlbumArtist":
+                    return "Album Artist";
+                default:
+                    return key;
+            }
+        }
+
+        // Effects: converts menu bar item to its corresponding ID3 tag
+        private static String convertValue(String value) {
+            switch (value) {
+                case "Album Artist":
+                    return "AlbumArtist";
+                default:
+                    return value;
+            }
+        }
+
+        // List management stuff
+        private static int lastClicked = -1;
 
         // Modifies: this
         // Effects:  updates the list
         public static void updateGuiList() {
+            Object[][] rowData = new Object[database.listSize()][columns.length];
+            String key;
+            for (int j = 0; j < columns.length; j++) {
+                key = convertValue(columns[j]); // Save time on lookup
+                for (int i = 0; i < database.listSize(); i++) {
+                    rowData[i][j] = database.get(i).getId3Data().getID3Data(key);
+                }
+            }
+            JTable musicTable = new JTable(rowData, columns) {
+                public boolean editCellAt(int row, int column, java.util.EventObject e) {
+                    if (lastClicked == row) {
+                        playDbFile(database.get(row));
+                    } else {
+                        lastClicked = row;
+                    }
+                    return false;
+                }
+            };
+            musicList = new JScrollPane(musicTable);
+            lastClicked = -1;
+            musicTable.setFillsViewportHeight(true);
+        }
 
+        private static JSlider playbackSlider = new JSlider(0, 0);
+        private static JLabel leftPlaybackLabel = new JLabel("X:XX");;
+        private static JLabel rightPlaybackLabel = new JLabel("X:XX");;
+        private static JPanel playbackStatusView = new JPanel(true);
+
+        // Effects: sets up the playback bar
+        public static void createPlaybackBar() {
+            playbackSlider.addChangeListener(e -> {
+                if (playbackSlider.getValueIsAdjusting()) {
+                    playbackManager.seekTo(playbackSlider.getValue() / 1000.0);
+                }
+            });
+            playbackStatusView.add(leftPlaybackLabel);
+            playbackStatusView.add(playbackSlider);
+            playbackStatusView.add(rightPlaybackLabel);
+            setupPlaybackBarLayout();
+        }
+
+        // Modifies: this
+        // Effects:  sets up the layout of the playback bar
+        private static void setupPlaybackBarLayout() {
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridy = 0;
+            layout.setConstraints(leftPlaybackLabel, constraints);
+            layout.setConstraints(rightPlaybackLabel, constraints);
+            constraints.fill = GridBagConstraints.HORIZONTAL;
+            constraints.weightx = 1.0;
+            layout.setConstraints(playbackSlider, constraints);
+            playbackStatusView.setLayout(layout);
+        }
+
+        // Modifies: this
+        // Effects:  sets playback bar length
+        public static void setPlaybackBarLength(double fileTime) {
+            if (fileTime == -1) {
+                playbackSlider.setMaximum(0);
+            } else { // Dies at a month long but why bother
+                playbackSlider.setMaximum((int) (fileTime * 1000));
+            }
+            rightPlaybackLabel.setText(formatTime((long) fileTime));
+            playbackStatusView.updateUI();
+        }
+
+        // Modifies: this
+        // Effects:  sets the playback bar value and times
+        public static void updatePlaybackBarStatus(double time) {
+            if (time == -1) {
+                playbackSlider.setValue(0);
+            } else if (!playbackSlider.getValueIsAdjusting()) {
+                playbackSlider.setValue((int) (time * 1000));
+            } // Dies at a month long but why bother
+            leftPlaybackLabel.setText(formatTime((long) time));
+            playbackStatusView.updateUI();
+        }
+
+        // Modifies: playbackManager and its decoding thread
+        // Effects:  plays a file from database
+        private static void playDbFile(AudioDataStructure audioDataStructure) {
+            File f = new File(audioDataStructure.getFilename());
+            if (f.isFile()) {
+                playbackManager.loadAudio(f.getAbsolutePath());
+                setPlaybackBarLength(playbackManager.getFileDuration());
+                playbackManager.startAudioDecoderThread();
+                playbackManager.playAudio();
+                nowPlaying = audioDataStructure;
+                id3 = playbackManager.getID3();
+                audioDataStructure.updateID3(id3); // Update on file load
+            } else {
+                System.out.println("File no longer exists, or is currently inaccessible.");
+            }
+        }
+
+        private static PlaybackThread visualizerThread;
+
+        // No other class needs to know this
+        // class for the thread which handles the playback indicator
+        // in CLI mode
+        private static class PlaybackThread extends Thread {
+            private boolean run = true;
+
+            // Modifies: this
+            // Effects:  ends thread
+            public void killThread() {
+                run = false;
+                safeJoin();
+            }
+
+            // Effects: join() but no try-catch
+            public void safeJoin() {
+                try {
+                    join();
+                } catch (InterruptedException e) {
+                    // lol
+                }
+            }
+
+            // Effects: join(long millis) but no try-catch
+            public void safeJoin(long millis) {
+                try {
+                    join(millis);
+                } catch (InterruptedException e) {
+                    // lol
+                }
+            }
+
+            // Effects: join(long millis, int nanos) but no try-catch
+            public void safeJoin(long millis, int nanos) {
+                try {
+                    join(millis, nanos);
+                } catch (InterruptedException e) {
+                    // lol
+                }
+            }
+
+            // Effects: plays audio in file loadedFile
+            public void run() {
+                while (run) {
+                    Cli.wait(20);
+                    if (playbackManager == null) {
+                        continue;
+                    }
+                    updatePlaybackBarStatus(playbackManager.getCurrentTime());
+                }
+            }
         }
 
         // No other class needs to know this
@@ -369,9 +566,11 @@ public class Main {
             if (AnsiConsole.getTerminalWidth() == 0) {
                 AnsiConsole.out().println("This application works better in a regular java console.");
             }
+            Scanner inputScanner = new Scanner(System.in);
+            updateAllFiles(inputScanner);
+            database.removeEmptyFiles();
             visualizerThread = new PlaybackThread();
             visualizerThread.start();
-            Scanner inputScanner = new Scanner(System.in);
             while (true) {
                 state = MenuState.CLI_MAINMENU;
                 printMenu();
@@ -383,6 +582,28 @@ public class Main {
                     AnsiConsole.out().println("Goodbye!");
                     return;
                 }
+            }
+        }
+
+        // Modifies: this
+        // Effects:  requests filename updates for all unlocatable files
+        private static void updateAllFiles(Scanner inputScanner) {
+            List<Integer> indexes = database.getRemovedFiles();
+            if (indexes.size() == 0) {
+                return;
+            }
+            for (Integer index : indexes) {
+                String in;
+                do {
+                    AnsiConsole.out().println("Couldn't find the file " + database.get(index).getFilename()
+                            + ", update index? (Y/n)");
+                    in = inputScanner.nextLine().toLowerCase().trim();
+                    if (in == "n") {
+                        break;
+                    }
+                    AnsiConsole.out().println("Please enter the new filename.");
+                    database.updateFile(index, inputScanner.nextLine().trim());
+                } while (database.get(index).isEmpty() || !(new File(database.get(index).getFilename())).exists());
             }
         }
 
@@ -511,6 +732,10 @@ public class Main {
                     loop = !loop;
                     break;
                 }
+                case "z": {
+                    updateMetadata();
+                    break;
+                }
                 /*case "}": {
                     debug(inputScanner);
                     return;
@@ -533,6 +758,23 @@ public class Main {
             }
             playDbFile(played.getFirst());
             played.removeFirst();
+        }
+
+        // Effects: shuffles the database
+        private static void shuffleDatabase() {
+            LinkedList<AudioDataStructure> databaseClone = new LinkedList<>();
+            for (int i = 0; i < database.listSize(); i++) {
+                databaseClone.addLast(database.get(i));
+            }
+            Random rng = new Random();
+            while (!databaseClone.isEmpty()) {
+                int randNumb = (int)Math.min(Math.floor(rng.nextDouble() * databaseClone.size()),
+                        databaseClone.size() - 1);
+                songQueue.addLast(databaseClone.get(randNumb));
+                databaseClone.remove(randNumb);
+            }
+            Cli.playDbFile(songQueue.getFirst());
+            songQueue.removeFirst();
         }
 
         // Modifies: this
@@ -645,7 +887,7 @@ public class Main {
             }
         }
 
-        private static void debug(Scanner scanner) {
+        /*private static void debug(Scanner scanner) {
             AnsiConsole.out().println(Ansi.ansi().fgBrightGreen() + "Debugging now!");
             String file = scanner.nextLine().trim();
             AnsiConsole.out().println(AudioFileLoader.getAudioFiletype(file));
@@ -693,6 +935,14 @@ public class Main {
             }
         }
 
+        // Modifies: database
+        // Effects:  updates all database metadata caches
+        private static void updateMetadata() {
+            for (int i = 0; i < database.listSize(); i++) {
+                database.updateFile(i, new AudioDataStructure(database.get(i).getFilename()));
+            }
+        }
+
         // Effects: Prints the error for an unknown command
         private static void unknownCommandError() {
             AnsiConsole.out().println("Invalid option.");
@@ -736,14 +986,6 @@ public class Main {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
                 wait(1000);
             }
-        }
-
-        // Effects: returns formatted time
-        private static String formatTime(long seconds) {
-            if (seconds == -1) {
-                return "X:XX";
-            }
-            return String.format("%01d:%02d", seconds / 60, seconds % 60);
         }
 
         // Effects: runs writePlaybackState() will null catching
@@ -860,6 +1102,7 @@ public class Main {
             AnsiConsole.out().println("5. Save database");
             AnsiConsole.out().println("6. Re-encode file");
             AnsiConsole.out().println("R. Shuffle and play database");
+            AnsiConsole.out().println("Z. Reload database metadata");
             AnsiConsole.out().println("L. Toggle loop");
             AnsiConsole.out().println("Q. Exit");
             AnsiConsole.out().println("M. Enter database backup manager");

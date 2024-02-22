@@ -13,24 +13,26 @@ import org.json.simple.*;
 // Will be used for the database
 public class AudioDataStructure {
 
-    private String filename;
-    private long bitrate;
-    private long sampleSize;
-    private AudioFileType audioFileType;
+    private final String filename;
+    private final long bitrate;
+    private final long sampleSize;
+    private final AudioFileType audioFileType;
     private ID3Container id3Data;
-    private long fileSize;
+    private final long fileSize;
 
     // Requires: filename points to a file (obviously)
     // Modifies: this
     // Effects:  creates a data structure for the audio from a file
     public AudioDataStructure(String filename) {
+        String fileSystemFilename;
         try {
-            this.filename = (new File(filename)).getCanonicalPath();
+            fileSystemFilename = (new File(filename)).getCanonicalPath();
         } catch (IOException e) {
-            this.filename = filename;
+            fileSystemFilename = filename;
         }
-        AudioDecoder audioDecoder = AudioFileLoader.loadFile(filename);
-        if (audioDecoder == null) {
+        this.filename = fileSystemFilename;
+        AudioDecoder audioDecoder = AudioFileLoader.loadFile(fileSystemFilename);
+        if (audioDecoder == null || !(new File(filename)).exists()) {
             bitrate = -1;
             sampleSize = -1;
             fileSize = -1;
