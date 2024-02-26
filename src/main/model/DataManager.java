@@ -18,29 +18,31 @@ import java.util.List;
 import static java.nio.file.Files.delete;
 
 // Instantiable class to handle the file list
-public class AudioFileList {
-    private final List<AudioDataStructure> fileList;
+public class DataManager {
+    private final List<AudioDataStructure> songFilelist;
+    private ApplicationSettings settings;
     private long dbIndex;
     private String userDir;
 
     // Modifies: this
     // Effects:  fileList is empty, loads database from (user home directory)/audiodex
-    public AudioFileList() {
-        fileList = new ArrayList<>();
+    public DataManager() {
+        songFilelist = new ArrayList<>();
+        settings = new ApplicationSettings();
         userDir = System.getProperty("user.home") + "/audiodex/";
     }
 
     // Effects: gets list size
-    public int listSize() {
-        return fileList.size();
+    public int audioListSize() {
+        return songFilelist.size();
     }
 
     // Effects: gets element from list
-    public AudioDataStructure get(int i) {
-        if (i < 0 || i >= fileList.size()) {
+    public AudioDataStructure getAudioFile(int i) {
+        if (i < 0 || i >= songFilelist.size()) {
             return null;
         }
-        return fileList.get(i);
+        return songFilelist.get(i);
     }
 
     public enum SortingTypes {
@@ -54,7 +56,7 @@ public class AudioFileList {
 
     // Modifies: this
     // Effects:  sorts music list
-    public void sortList(String type) {
+    public void sortSongList(String type) {
         SortingTypes sortBy;
         try {
             sortBy = SortingTypes.valueOf(type);
@@ -62,7 +64,7 @@ public class AudioFileList {
             return;
         }
         Main.CliInterface.println("Sorting database by " + type + "...");
-        bubble(sortBy, 0, fileList.size());
+        bubble(sortBy, 0, songFilelist.size());
     }
 
     // Modifies: this
@@ -70,7 +72,7 @@ public class AudioFileList {
     private void bubble(SortingTypes sortBy, int start, int end) {
         for (int i = end - 1; i > 0; i--) {
             for (int j = start; j < i; j++) {
-                if (outOfOrder(sortBy, fileList.get(j), fileList.get(j + 1))) {
+                if (outOfOrder(sortBy, songFilelist.get(j), songFilelist.get(j + 1))) {
                     swap(j, j + 1);
                 }
             }
@@ -80,9 +82,9 @@ public class AudioFileList {
     // Modifies: this
     // Effects:  swaps two elements in file list
     private void swap(int first, int second) {
-        AudioDataStructure firstValue = fileList.get(first);
-        fileList.set(first, fileList.get(second));
-        fileList.set(second, firstValue);
+        AudioDataStructure firstValue = songFilelist.get(first);
+        songFilelist.set(first, songFilelist.get(second));
+        songFilelist.set(second, firstValue);
     }
 
     // Effects: returns true if audio files are out of order
@@ -125,20 +127,20 @@ public class AudioFileList {
 
     // Modifies: this
     // Effects:  removes all null values from database
-    public void sanitizeDatabase() {
+    public void sanitizeAudioDatabase() {
         Main.CliInterface.println("Sanitizing Database...");
-        for (int i = 0; i < fileList.size(); i++) {
-            if (fileList.get(i) == null || fileList.get(i).isEmpty()
-                    || dbContainsMultipleOfFile(fileList.get(i).getFilename())) {
-                fileList.remove(i);
+        for (int i = 0; i < songFilelist.size(); i++) {
+            if (songFilelist.get(i) == null || songFilelist.get(i).isEmpty()
+                    || songDbContainsDuplicate(songFilelist.get(i).getFilename())) {
+                songFilelist.remove(i);
                 i--;
             }
         }
     }
 
     // Effects: returns true if database contains file, false otherwise
-    private boolean dbContainsFile(String filename) {
-        for (AudioDataStructure data : fileList) {
+    private boolean songDbContainsFile(String filename) {
+        for (AudioDataStructure data : songFilelist) {
             if (data.getFilename().equals(filename)) {
                 return true;
             }
@@ -147,9 +149,9 @@ public class AudioFileList {
     }
 
     // Effects: returns true if database contains two of this file, false otherwise
-    private boolean dbContainsMultipleOfFile(String filename) {
+    private boolean songDbContainsDuplicate(String filename) {
         int i = 0;
-        for (AudioDataStructure data : fileList) {
+        for (AudioDataStructure data : songFilelist) {
             if (data.getFilename().equals(filename)) {
                 i++;
             }
@@ -159,9 +161,9 @@ public class AudioFileList {
 
     // Modifies: this
     // Effects:  adds specified file to database
-    public void addFileToDatabase(String filename) {
+    public void addFileToSongDatabase(String filename) {
         try {
-            if (dbContainsFile((new File(filename)).getCanonicalPath())) {
+            if (songDbContainsFile((new File(filename)).getCanonicalPath())) {
                 Main.CliInterface.println("File already in database, skipping.");
                 return;
             }
@@ -175,12 +177,12 @@ public class AudioFileList {
             Main.CliInterface.println("Unknown file type, ignored file.");
             return;
         }
-        fileList.add(data);
+        songFilelist.add(data);
     }
 
     // Modifies: this
     // Effects:  adds all files in specified directory to database
-    public void addDirToDatabase(String dirname) {
+    public void addDirToSongDatabase(String dirname) {
         Main.CliInterface.println("Adding directory " + dirname + "...");
         File dir = new File(dirname);
         if (dir.isDirectory()) {
@@ -190,9 +192,9 @@ public class AudioFileList {
             }
             for (File file : fileList) { // Database uses absolute file paths, otherwise it would fail to load audio
                 if (file.isFile()) {
-                    addFileToDatabase(file.getAbsolutePath());
+                    addFileToSongDatabase(file.getAbsolutePath());
                 } else if (file.isDirectory()) {
-                    addDirToDatabase(file.getAbsolutePath());
+                    addDirToSongDatabase(file.getAbsolutePath());
                 }
             }
         }
@@ -217,11 +219,18 @@ public class AudioFileList {
     // Effects:  replaces file list with described data file
     public void loadDatabaseFile() {
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
-        JSONArray array = new JSONArray();
+        JSONArray array;
         JSONParser jsonParser = new JSONParser();
+        Object obj = null;
         try {
-            array = (JSONArray) jsonParser.parse(new FileReader(filename));
-        } catch (IOException e) {
+            obj = jsonParser.parse(new FileReader(filename));
+            JSONObject decoded = (JSONObject) obj;
+            settings = new ApplicationSettings((JSONObject) decoded.get("settings"));
+            array = (JSONArray) decoded.get("files");
+        } catch (ClassCastException e) {
+            array = (JSONArray) obj;
+            Main.CliInterface.println("Legacy-style database.");
+        } catch  (IOException e) {
             Main.CliInterface.println("Couldn't find database file...");
             return;
         } catch (ParseException e) {
@@ -229,7 +238,7 @@ public class AudioFileList {
             return;
         }
         for (Object object : array) {
-            fileList.add(AudioDataStructure.decode((JSONObject) object));
+            songFilelist.add(AudioDataStructure.decode((JSONObject) object));
         }
     }
 
@@ -241,19 +250,23 @@ public class AudioFileList {
         if (!userDirFile.exists()) {
             userDirFile.mkdirs();
         }
-        if (fileList.isEmpty()) {
-            Main.CliInterface.println("Nothing to save; database is empty.");
-            return true;
-        }
         dbIndex++;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
-        JSONArray array = new JSONArray();
-        for (AudioDataStructure structure : fileList) {
-            array.add(structure.encode());
-        }
-        String toSave = JSONArray.toJSONString(array);
+        String toSave = JSONObject.toJSONString(getDatasave());
         FileManager.writeToFile(filename, toSave);
         return saveDatabaseIndex();
+    }
+
+    // Effects: returns a JSONObject to be saved
+    private JSONObject getDatasave() {
+        JSONObject object = new JSONObject();
+        object.put("settings", settings.encode());
+        JSONArray array = new JSONArray();
+        for (AudioDataStructure structure : songFilelist) {
+            array.add(structure.encode());
+        }
+        object.put("files", array);
+        return object;
     }
 
     // Modifies: database files, specifically audiodex.dbindex
@@ -337,11 +350,11 @@ public class AudioFileList {
     }
 
     // Effects: returns a list of indexes to files that no longer exist
-    public List<Integer> getRemovedFiles() {
+    public List<Integer> getRemovedAudioFiles() {
         List<Integer> removed = new ArrayList<>();
         File f;
-        for (int i = 0; i < fileList.size(); i++) {
-            f = new File(fileList.get(i).getFilename());
+        for (int i = 0; i < songFilelist.size(); i++) {
+            f = new File(songFilelist.get(i).getFilename());
             if (!f.exists()) {
                 removed.add(i);
             }
@@ -351,27 +364,27 @@ public class AudioFileList {
 
     // Modifies: this
     // Effects:  removes file index from database
-    public void removeIndex(int i) {
-        fileList.remove(i);
+    public void removeSongIndex(int i) {
+        songFilelist.remove(i);
     }
 
     // Modifies: this
     // Effects:  removes unlocatable files
-    public void removeEmptyFiles() {
+    public void removeEmptyAudioFiles() {
         File f; // Remove back-to-front to save decrementing the pointer
-        for (int i = fileList.size() - 1; i >= 0 ; i--) {
-            f = new File(fileList.get(i).getFilename());
+        for (int i = songFilelist.size() - 1; i >= 0 ; i--) {
+            f = new File(songFilelist.get(i).getFilename());
             if (!f.exists()) {
-                fileList.remove(i);
+                songFilelist.remove(i);
             }
         }
     }
 
     // Modifies: this
     // Effects:  updates file pointer for index
-    public void updateFile(int i, String newFileName) {
+    public void updateAudioFile(int i, String newFileName) {
         try {
-            if (dbContainsFile((new File(newFileName)).getCanonicalPath())) {
+            if (songDbContainsFile((new File(newFileName)).getCanonicalPath())) {
                 Main.CliInterface.println("File already in database, skipping.");
                 return;
             }
@@ -385,12 +398,12 @@ public class AudioFileList {
             Main.CliInterface.println("Unknown file type, cannot use file.");
             return;
         }
-        fileList.set(i, data);
+        songFilelist.set(i, data);
     }
 
     // Modifies: this
     // Effects:  updates file pointer for index
-    public void updateFile(int i, AudioDataStructure data) {
-        fileList.set(i, data);
+    public void updateAudioFile(int i, AudioDataStructure data) {
+        songFilelist.set(i, data);
     }
 }
