@@ -11,7 +11,7 @@ import java.util.List;
 
 import audio.ID3Container;
 import model.AudioConversion;
-import model.AudioFileList;
+import model.DataManager;
 import org.fusesource.jansi.*;
 
 import javax.imageio.ImageIO;
@@ -27,7 +27,7 @@ public class Main {
     private static boolean USE_CLI = true;
     private static boolean end = false;
     private static String filename = "";
-    private static AudioFileList database;
+    private static DataManager database;
     private static List<AudioConversion> audioConverterList;
     private static LinkedList<AudioDataStructure> played;
     private static AudioDataStructure nowPlaying;
@@ -140,14 +140,14 @@ public class Main {
     public static void main(String[] args) {
         notMain = false;
         if (strArrContains(args, "--gui")) {
-            USE_CLI = false; // Prep
+            USE_CLI = false;
             Gui.createLoadingThread();
         }
         played = new LinkedList<>();
         songQueue = new LinkedList<>();
-        database = new AudioFileList();
+        database = new DataManager();
         database.loadDatabase();
-        database.sortList("Album_Title");
+        database.sortSongList("Album_Title");
         playbackManager = new AudioFilePlaybackBackend();
         audioConverterList = new ArrayList<>();
         if (USE_CLI) {
@@ -267,18 +267,18 @@ public class Main {
         // Modifies: this
         // Effects:  updates the list
         public static void updateGuiList() {
-            Object[][] rowData = new Object[database.listSize()][columns.length];
+            Object[][] rowData = new Object[database.audioListSize()][columns.length];
             String key;
             for (int j = 0; j < columns.length; j++) {
                 key = convertValue(columns[j]); // Save time on lookup
-                for (int i = 0; i < database.listSize(); i++) {
-                    rowData[i][j] = database.get(i).getId3Data().getID3Data(key);
+                for (int i = 0; i < database.audioListSize(); i++) {
+                    rowData[i][j] = database.getAudioFile(i).getId3Data().getID3Data(key);
                 }
             }
             JTable musicTable = new JTable(rowData, columns) {
                 public boolean editCellAt(int row, int column, java.util.EventObject e) {
                     if (lastClicked == row) {
-                        playDbFile(database.get(row));
+                        playDbFile(database.getAudioFile(row));
                     } else {
                         lastClicked = row;
                     }
@@ -568,7 +568,7 @@ public class Main {
             }
             Scanner inputScanner = new Scanner(System.in);
             updateAllFiles(inputScanner);
-            database.removeEmptyFiles();
+            database.removeEmptyAudioFiles();
             visualizerThread = new PlaybackThread();
             visualizerThread.start();
             while (true) {
@@ -588,22 +588,22 @@ public class Main {
         // Modifies: this
         // Effects:  requests filename updates for all unlocatable files
         private static void updateAllFiles(Scanner inputScanner) {
-            List<Integer> indexes = database.getRemovedFiles();
+            List<Integer> indexes = database.getRemovedAudioFiles();
             if (indexes.size() == 0) {
                 return;
             }
             for (Integer index : indexes) {
                 String in;
                 do {
-                    AnsiConsole.out().println("Couldn't find the file " + database.get(index).getFilename()
+                    AnsiConsole.out().println("Couldn't find the file " + database.getAudioFile(index).getFilename()
                             + ", update index? (Y/n)");
                     in = inputScanner.nextLine().toLowerCase().trim();
                     if (in == "n") {
                         break;
                     }
                     AnsiConsole.out().println("Please enter the new filename.");
-                    database.updateFile(index, inputScanner.nextLine().trim());
-                } while (database.get(index).isEmpty() || !(new File(database.get(index).getFilename())).exists());
+                    database.updateAudioFile(index, inputScanner.nextLine().trim());
+                } while (database.getAudioFile(index).isEmpty() || !(new File(database.getAudioFile(index).getFilename())).exists());
             }
         }
 
@@ -721,7 +721,7 @@ public class Main {
                     return;
                 }
                 case "d": { // Database uses absolute file paths, otherwise it would fail to load audio
-                    database.addFileToDatabase((new File(filename)).getAbsolutePath());
+                    database.addFileToSongDatabase((new File(filename)).getAbsolutePath());
                     return;
                 }
                 case "r": {
@@ -763,8 +763,8 @@ public class Main {
         // Effects: shuffles the database
         private static void shuffleDatabase() {
             LinkedList<AudioDataStructure> databaseClone = new LinkedList<>();
-            for (int i = 0; i < database.listSize(); i++) {
-                databaseClone.addLast(database.get(i));
+            for (int i = 0; i < database.audioListSize(); i++) {
+                databaseClone.addLast(database.getAudioFile(i));
             }
             Random rng = new Random();
             while (!databaseClone.isEmpty()) {
@@ -906,9 +906,9 @@ public class Main {
             // Check if file exists
             File f = new File(filename);
             if (f.isFile()) { // Database uses absolute file paths, otherwise it would fail to load audio
-                database.addFileToDatabase(f.getAbsolutePath());
-                database.sanitizeDatabase();
-                database.sortList("Album_Title");
+                database.addFileToSongDatabase(f.getAbsolutePath());
+                database.sanitizeAudioDatabase();
+                database.sortSongList("Album_Title");
             } else {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
                 wait(1000);
@@ -926,9 +926,9 @@ public class Main {
             // Check if file exists
             File f = new File(filename);
             if (f.isDirectory()) { // Database uses absolute file paths, otherwise it would fail to load audio
-                database.addDirToDatabase(f.getAbsolutePath());
-                database.sanitizeDatabase();
-                database.sortList("Album_Title");
+                database.addDirToSongDatabase(f.getAbsolutePath());
+                database.sanitizeAudioDatabase();
+                database.sortSongList("Album_Title");
             } else {
                 AnsiConsole.out().println("Directory doesn't exist, is a file, or is inaccessible.");
                 wait(1000);
@@ -938,8 +938,8 @@ public class Main {
         // Modifies: database
         // Effects:  updates all database metadata caches
         private static void updateMetadata() {
-            for (int i = 0; i < database.listSize(); i++) {
-                database.updateFile(i, new AudioDataStructure(database.get(i).getFilename()));
+            for (int i = 0; i < database.audioListSize(); i++) {
+                database.updateAudioFile(i, new AudioDataStructure(database.getAudioFile(i).getFilename()));
             }
         }
 
@@ -1138,7 +1138,7 @@ public class Main {
         // Modifies: this
         // Effects:  browses menu (duh)
         private static void browseMenu(Scanner inputScanner) {
-            if (database.listSize() == 0) {
+            if (database.audioListSize() == 0) {
                 return;
             }
             state = MenuState.CLI_BROWSEMENU;
@@ -1148,10 +1148,10 @@ public class Main {
                     songQueue.removeFirst();
                 }
                 if (songID < 0) {
-                    songID += database.listSize();
+                    songID += database.audioListSize();
                 }
-                if (songID >= database.listSize()) {
-                    songID -= database.listSize();
+                if (songID >= database.audioListSize()) {
+                    songID -= database.audioListSize();
                 }
                 printBrowseMenu();
                 int l = browseSwitch(inputScanner.nextLine(), songID, inputScanner);
@@ -1174,11 +1174,11 @@ public class Main {
                     return 1;
                 }
                 case "p": {
-                    playDbFile(database.get(idx));
+                    playDbFile(database.getAudioFile(idx));
                     break;
                 }
                 case "c":
-                    playDbFile(database.get(idx));
+                    playDbFile(database.getAudioFile(idx));
                 case "q":
                     return 7000;
                 case "r": {
@@ -1186,11 +1186,11 @@ public class Main {
                     break;
                 }
                 case "l": {
-                    songQueue.add(database.get(idx));
+                    songQueue.add(database.getAudioFile(idx));
                     break;
                 }
                 case "e": {
-                    encodeDatabaseFile(database.get(idx), scanner);
+                    encodeDatabaseFile(database.getAudioFile(idx), scanner);
                     break;
                 }
             }
@@ -1230,7 +1230,7 @@ public class Main {
                 horizonalBar();
             }
             AnsiConsole.out().println(Ansi.ansi().fgBrightGreen().toString()
-                    + database.get(songID).getPlaybackString() + Ansi.ansi().fgDefault().toString());
+                    + database.getAudioFile(songID).getPlaybackString() + Ansi.ansi().fgDefault().toString());
             horizonalBar();
             AnsiConsole.out().println("What would you like to do?");
             AnsiConsole.out().println("1. Browse to previous song in database");

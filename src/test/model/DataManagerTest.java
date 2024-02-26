@@ -4,14 +4,12 @@ import audio.AudioDataStructure;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
-import java.util.LinkedList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class AudioFileListTest {
-    static AudioFileList database;
+public class DataManagerTest {
+    static DataManager database;
 
     @BeforeAll
     public static void preTest() {
@@ -23,7 +21,7 @@ public class AudioFileListTest {
             }
             assertTrue(dbDir.delete());
         }
-        database = new AudioFileList();
+        database = new DataManager();
         database.setUserDir("./data/db/");
     }
 
@@ -42,25 +40,25 @@ public class AudioFileListTest {
     @Test
     @Order(2)
     public void databaseManagementTest() {
-        assertEquals(0, database.listSize());
-        database.addFileToDatabase("./data/scarlet.aif");
-        assertEquals(1, database.listSize());
-        database.updateFile(0,"./data/scarlet.wav");
-        assertEquals(1, database.listSize());
-        database.updateFile(0,"./data/scarlet.wav");
-        assertEquals(1, database.listSize());
-        database.updateFile(0,"./data/scarlet.wav.lmao");
-        assertEquals(1, database.listSize());
-        database.addDirToDatabase("./data/");
-        assertEquals(20, database.listSize());
-        database.sanitizeDatabase();
-        assertEquals(20, database.listSize());
-        database.removeIndex(0);
-        assertEquals(19, database.listSize());
-        database.addFileToDatabase("./data/scarlet.wav");
-        assertEquals(20, database.listSize());
-        database.sanitizeDatabase();
-        assertEquals(20, database.listSize());
+        assertEquals(0, database.audioListSize());
+        database.addFileToSongDatabase("./data/scarlet.aif");
+        assertEquals(1, database.audioListSize());
+        database.updateAudioFile(0,"./data/scarlet.wav");
+        assertEquals(1, database.audioListSize());
+        database.updateAudioFile(0,"./data/scarlet.wav");
+        assertEquals(1, database.audioListSize());
+        database.updateAudioFile(0,"./data/scarlet.wav.lmao");
+        assertEquals(1, database.audioListSize());
+        database.addDirToSongDatabase("./data/");
+        assertEquals(20, database.audioListSize());
+        database.sanitizeAudioDatabase();
+        assertEquals(20, database.audioListSize());
+        database.removeSongIndex(0);
+        assertEquals(19, database.audioListSize());
+        database.addFileToSongDatabase("./data/scarlet.wav");
+        assertEquals(20, database.audioListSize());
+        database.sanitizeAudioDatabase();
+        assertEquals(20, database.audioListSize());
     }
 
     @Test
@@ -86,20 +84,20 @@ public class AudioFileListTest {
     @Test
     @Order(5)
     public void doSortTest() {
-        database.sortList("Filesize");
-        database.sortList("Artist");
-        database.sortList("Album");
-        database.sortList("AlbumArtist");
-        database.sortList("Title");
-        database.sortList("Album-Title"); // I used to use this
-        database.sortList("Album_Title");
-        database.sanitizeDatabase();
-        assertEquals(20, database.listSize());
-        assertNull(database.get(-1));
+        database.sortSongList("Filesize");
+        database.sortSongList("Artist");
+        database.sortSongList("Album");
+        database.sortSongList("AlbumArtist");
+        database.sortSongList("Title");
+        database.sortSongList("Album-Title"); // I used to use this
+        database.sortSongList("Album_Title");
+        database.sanitizeAudioDatabase();
+        assertEquals(20, database.audioListSize());
+        assertNull(database.getAudioFile(-1));
         for (int i = 0; i < 20; i++) {
-            assertNotNull(database.get(i));
+            assertNotNull(database.getAudioFile(i));
         }
-        assertNull(database.get(20));
+        assertNull(database.getAudioFile(20));
     }
 
     @Test
@@ -153,18 +151,18 @@ public class AudioFileListTest {
     public void brokenFileTest() {
         database.revertDb();
         database.cleanDb("./data/readonly");
-        database.sanitizeDatabase();
-        database.addFileToDatabase("\u0000");
-        database.updateFile(2, "\u0000");
-        database.addDirToDatabase("./data/scarlet.mp3");
+        database.sanitizeAudioDatabase();
+        database.addFileToSongDatabase("\u0000");
+        database.updateAudioFile(2, "\u0000");
+        database.addDirToSongDatabase("./data/scarlet.mp3");
         new FileManager();
         FileManager.writeToFile("\u0000", "This fails");
-        database.updateFile(1, new AudioDataStructure("/data/scarlet.lol.mp3"));
-        assertEquals(20, database.listSize());
-        assertEquals(1, database.getRemovedFiles().size());
-        assertEquals(1, database.getRemovedFiles().get(0));
-        database.removeEmptyFiles();
-        assertEquals(19, database.listSize());
-        assertEquals(0, database.getRemovedFiles().size());
+        database.updateAudioFile(1, new AudioDataStructure("/data/scarlet.lol.mp3"));
+        assertEquals(20, database.audioListSize());
+        assertEquals(1, database.getRemovedAudioFiles().size());
+        assertEquals(1, database.getRemovedAudioFiles().get(0));
+        database.removeEmptyAudioFiles();
+        assertEquals(19, database.audioListSize());
+        assertEquals(0, database.getRemovedAudioFiles().size());
     }
 }

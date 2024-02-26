@@ -5,10 +5,7 @@ import audio.AudioFileLoader;
 import audio.AudioSample;
 import audio.ID3Container;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.*;
 
 // Backend for allowing interactions between the UI and filesystem
 // Specific to decoding audio
@@ -98,7 +95,29 @@ public class AudioFilePlaybackBackend {
     private AudioFormat audioFormat;
     private SourceDataLine line = null;
     private DecodingThread decoderThread = null;
+    private boolean replayGain = false;
     protected boolean paused = false;
+    private float replayGainVal = 0;
+
+    // Modifies: this
+    // Effects:  sets replaygain status
+    public void setReplayGain(boolean to) {
+        replayGain = to;
+        if (replayGain) {
+            setReplayGain();
+        } else {
+            replayGainVal = 0;
+            setReplayGain();
+        }
+    }
+
+    // Modifies: this
+    // Effects:  sets replaygain value
+    private void setReplayGain() {
+        FloatControl gainControl =
+                (FloatControl) line.getControl(FloatControl.Type.MASTER_GAIN);
+        gainControl.setValue(replayGainVal);
+    }
 
     // Requires: filename points to file (in order for anything to happen)
     // Modifies: this
@@ -116,6 +135,8 @@ public class AudioFilePlaybackBackend {
         try {
             audioFormat = loadedFile.getAudioOutputFormat();
             line = AudioSystem.getSourceDataLine(audioFormat);
+            replayGainVal = 0; // TODO: load replaygain from file
+            setReplayGain();
             line.open();
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
