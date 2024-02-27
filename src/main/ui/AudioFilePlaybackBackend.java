@@ -6,6 +6,8 @@ import audio.AudioSample;
 import audio.ID3Container;
 
 import javax.sound.sampled.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 // Backend for allowing interactions between the UI and filesystem
 // Specific to decoding audio
@@ -97,17 +99,28 @@ public class AudioFilePlaybackBackend {
     private DecodingThread decoderThread = null;
     private boolean replayGain = false;
     protected boolean paused = false;
-    private float replayGainVal = 0;
+    private float replayGainVal;
+    private boolean failedReplayGainSet = false;
 
     // Modifies: this
     // Effects:  sets replaygain status
     public void setReplayGain(boolean to) {
         replayGain = to;
-        if (replayGain) {
-            setReplayGain();
-        } else {
-            replayGainVal = 0;
-            setReplayGain();
+        if (line == null || !line.isOpen()) {
+            return;
+        }
+        failedReplayGainSet = false;
+        try {
+            if (replayGain) {
+                setReplayGain();
+            } else {
+                resetReplayGain();
+            }
+        } catch (Exception e) {
+            failedReplayGainSet = true;
+        }
+        for (Control control : line.getControls()) {
+            System.out.println(control.toString());
         }
     }
 
@@ -117,6 +130,14 @@ public class AudioFilePlaybackBackend {
         FloatControl gainControl =
                 (FloatControl) line.getControl(FloatControl.Type.MASTER_GAIN);
         gainControl.setValue(replayGainVal);
+    }
+
+    // Modifies: this
+    // Effects:  resets replaygain value
+    private void resetReplayGain() {
+        FloatControl gainControl =
+                (FloatControl) line.getControl(FloatControl.Type.MASTER_GAIN);
+        gainControl.setValue(-6.0f);
     }
 
     // Requires: filename points to file (in order for anything to happen)
@@ -135,11 +156,21 @@ public class AudioFilePlaybackBackend {
         try {
             audioFormat = loadedFile.getAudioOutputFormat();
             line = AudioSystem.getSourceDataLine(audioFormat);
-            replayGainVal = 0; // TODO: load replaygain from file
-            setReplayGain();
-            line.open();
+            line.open(audioFormat);
+            replayGainVal = loadedFile.getReplayGain();
+            System.out.println("Replaygain is: " + replayGainVal);
+            setReplayGain(replayGain);
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    // Effects: returns image of playing audio
+    public BufferedImage getArtwork() {
+        try {
+            return (BufferedImage) loadedFile.getArtwork().getImage();
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -273,6 +304,11 @@ public class AudioFilePlaybackBackend {
 
     // Effects: returns playback string for display
     public String getPlaybackString() {
+        return getPlaybackString(true);
+    }
+
+    // Effects: returns playback string for display
+    public String getPlaybackString(boolean cli) {
         if (loadedFile == null) {
             return "Not Playing";
         }
@@ -286,7 +322,7 @@ public class AudioFilePlaybackBackend {
         }
         String base = workingData;
         workingData = (String) id3.getID3Data("Artist");
-        if (!(workingData == null || workingData.equals("null") || workingData.isEmpty())) {
+        if (cli && !(workingData == null || workingData.equals("null") || workingData.isEmpty())) {
             base += " by " + workingData;
         }
         return base;

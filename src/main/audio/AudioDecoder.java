@@ -67,4 +67,8 @@ public interface AudioDecoder {
     // Effects: returns true if goToTime() is running
     //          only exists due to having multiple threads
     boolean skipInProgress();
+
+    // Effects: returns replaygain value
+    //          defaults to -6
+    float getReplayGain();
 }

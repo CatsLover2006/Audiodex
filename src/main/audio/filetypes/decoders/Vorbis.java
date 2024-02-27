@@ -284,4 +284,17 @@ public class Vorbis implements AudioDecoder {
     public void forceEnableDecoding() {
         allowSampleReads = true;
     }
+
+    // Effects: returns replaygain value
+    //          defaults to -6
+    public float getReplayGain() {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+            return TagConversion.getReplayGain(f.getTag());
+        } catch (Exception e) {
+            // Why?
+        }
+        return -6;
+    }
 }

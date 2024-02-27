@@ -242,6 +242,11 @@ public class DataManager {
         }
     }
 
+    // Effects: returns the ApplicationSettings struct
+    public ApplicationSettings getSettings() {
+        return settings;
+    }
+
     // Modifies: this
     // Effects:  replaces file list with described data file
     //           returns true on success, false on failure

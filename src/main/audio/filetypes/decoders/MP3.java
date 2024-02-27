@@ -18,9 +18,12 @@ import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
+import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
+import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.images.Artwork;
 import ui.Main;
 
@@ -161,16 +164,23 @@ public class MP3 implements AudioDecoder {
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
-        AudioFile f = getAudioFile(filename);
+        MP3File f = (MP3File)getAudioFile(filename);
         if (f == null) {
-            return null;
+            return base;
         }
         base.setID3Data("VBR", f.getAudioHeader().isVariableBitRate() ? "YES" : "NO");
         base.setID3Data("bitRate", f.getAudioHeader().getBitRateAsNumber());
         base.setID3Data("sampleRate", f.getAudioHeader().getSampleRateAsNumber());
+        getID3v1(f, base);
+        getID3v2(f, base);
+        return base;
+    }
+
+    // Effects: gets relevant ID3v1 tags
+    private void getID3v1(MP3File f, ID3Container base) {
         Tag tag = f.getTag();
         if (tag == null) {
-            return null;
+            return;
         }
         for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
             try {
@@ -180,7 +190,17 @@ public class MP3 implements AudioDecoder {
                 base.setID3Long(entry.getValue(), tag.getFirst(entry.getKey()));
             }
         }
-        return base;
+    }
+
+    // Effects: gets relevant ID3v2 tags
+    private void getID3v2(MP3File f, ID3Container base) {
+        if (f.hasID3v2Tag()) {
+            return;
+        }
+        ID3v24Tag v24tag = f.getID3v2TagAsv24();
+        for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
+
+        }
     }
 
     // Effects: returns AudioFile class
@@ -256,5 +276,18 @@ public class MP3 implements AudioDecoder {
         } catch (Exception e) {
             // Why?
         }
+    }
+
+    // Effects: returns replaygain value
+    //          defaults to -6
+    public float getReplayGain() {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+            return TagConversion.getReplayGain(f.getTag());
+        } catch (Exception e) {
+            // Why?
+        }
+        return -6;
     }
 }
