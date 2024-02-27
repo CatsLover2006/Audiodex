@@ -3,6 +3,8 @@ package ui;
 import audio.AudioDataStructure;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -20,8 +22,10 @@ import org.fusesource.jansi.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.Border;
 
 import static java.lang.Math.floor;
+import static java.lang.Math.random;
 import static java.lang.Thread.*;
 
 public class Main {
@@ -98,15 +102,13 @@ public class Main {
         if (end || notMain) {
             return;
         }
-        played.addFirst(nowPlaying);
-        nowPlaying = null;
-        maxBoundPlayedList();
         if (USE_CLI) {
+            played.addFirst(nowPlaying);
+            nowPlaying = null;
+            maxBoundPlayedList();
             Cli.finishedSong();
         } else {
-            if (!songQueue.isEmpty()) {
-                // Run the playDbFile() function for GUI
-            }
+            Gui.songFinishedPlaying();
         }
     }
 
@@ -177,6 +179,15 @@ public class Main {
         private static LoadingFrameThread loadingFrame = null;
         private static JFrame mainWindow;
 
+        private enum LoopType {
+            NO,
+            ONE,
+            ALL
+        }
+
+        private static LoopType loop = LoopType.NO;
+        private static boolean shuffle = false;
+
         // Modifies: this
         // Effects:  shows loading thread
         public static void createLoadingThread() {
@@ -221,6 +232,7 @@ public class Main {
             mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             updateGuiList();
             createPlaybackBar();
+            createControlsView();
             createMusicView();
             visualizerThread = new PlaybackThread();
             visualizerThread.start();
@@ -230,6 +242,71 @@ public class Main {
             setupMenubar();
             mainWindow.setVisible(true);
             closeLoadingThread();
+        }
+
+        public static void updateControls() {
+            playButton.setIcon(new ImageIcon(playbackManager.paused() ? paused : playing));
+            prevButton.setIcon(new ImageIcon(played.isEmpty() ? prevInactive : prev));
+            skipButton.setIcon(new ImageIcon(songQueue.isEmpty() ? skipInactive : skip));
+        }
+
+        // Modifies: this
+        // Effects:  handle when a song just finished playing
+        public static void songFinishedPlaying() {
+            if (loop == LoopType.ONE) {
+                playDbFile(nowPlaying);
+                updateControls();
+                return;
+            }
+            if (songQueue.isEmpty()) {
+                if (loop == LoopType.ALL) {
+                    queueFrom(0);
+                    playNext();
+                } else {
+                    setPlaybackBarLength(-1);
+                    played.addFirst(nowPlaying);
+                    nowPlaying = null;
+                }
+            } else {
+                playNext();
+            }
+            maxBoundPlayedList();
+            updatePlaybackBar();
+        }
+
+        // Modifies: this
+        // Effects:  plays most recently played song, if possible
+        private static void playPrevious() {
+            if (played.isEmpty()) {
+                AnsiConsole.out().println("No previous song to play!");
+                return;
+            }
+            if (nowPlaying != null) {
+                songQueue.addFirst(nowPlaying);
+            }
+            playDbFile(played.getFirst());
+            played.removeFirst();
+            updatePlaybackBar();
+        }
+
+        // Modifies: this
+        // Effects:  plays next song, if possible
+        private static void playNext() {
+            if (songQueue.isEmpty()) {
+                AnsiConsole.out().println("No song in queue to play!");
+                return;
+            }
+            // If song queue isn't empty we're playing SOMETHING
+            played.addFirst(nowPlaying);
+            if (shuffle) {
+                int i = (int)(random() * songQueue.size()) % songQueue.size();
+                playDbFile(songQueue.get(i));
+                songQueue.remove(i);
+            } else {
+                playDbFile(songQueue.getFirst());
+                songQueue.removeFirst();
+            }
+            updatePlaybackBar();
         }
 
         // Modifies: this
@@ -298,7 +375,7 @@ public class Main {
             JTable musicTable = new JTable(rowData, columns) {
                 public boolean editCellAt(int row, int column, java.util.EventObject e) {
                     if (lastClicked == row) {
-                        playDbFile(database.getAudioFile(row));
+                        queueFrom(row);
                         updatePlaybackBar();
 
                     } else {
@@ -317,31 +394,88 @@ public class Main {
         private static JLabel rightPlaybackLabel = new JLabel("X:XX");;
         private static JPanel playbackStatusView = new JPanel(true);
         private static JPanel musicPlaybackView = new JPanel(true);
+        private static JPanel controlsView = new JPanel(true);
         private static JLabel musicArt = new JLabel();
         private static JLabel fileLabel = new JLabel();
         private static JLabel albumLabel = new JLabel();
         private static BufferedImage placeholder;
+        private static BufferedImage skip, prev, skipInactive, prevInactive, paused, playing;
+        private static JButton skipButton, prevButton, playButton;
 
         static {
             try {
                 placeholder = ImageIO.read(new File("data/spec/AppIcon.png"));
+                skip = ImageIO.read(new File("data/spec/NextIcon.png"));
+                skipInactive = ImageIO.read(new File("data/spec/NextIconInactive.png"));
+                prev = ImageIO.read(new File("data/spec/PrevIcon.png"));
+                prevInactive = ImageIO.read(new File("data/spec/PrevIconInactive.png"));
+                paused = ImageIO.read(new File("data/spec/PauseIcon.png"));
+                playing = ImageIO.read(new File("data/spec/PlayIcon.png"));
             } catch (IOException e) {
                 placeholder = new BufferedImage(48, 48, BufferedImage.TYPE_3BYTE_BGR);
+                skip = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
+                prev = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
+                skipInactive = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
+                prevInactive = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
+                paused = new BufferedImage(48, 32, BufferedImage.TYPE_3BYTE_BGR);
+                playing = new BufferedImage(48, 32, BufferedImage.TYPE_3BYTE_BGR);
             }
+            Border emptyBorder = BorderFactory.createEmptyBorder();
+            skipButton = new JButton(new ImageIcon(skipInactive));
+            skipButton.setBorder(emptyBorder);
+            skipButton.addActionListener(e -> playNext());
+            prevButton = new JButton(new ImageIcon(prevInactive));
+            prevButton.setBorder(emptyBorder);
+            prevButton.addActionListener(e -> playPrevious());
+            playButton = new JButton(new ImageIcon(paused));
+            playButton.setBorder(emptyBorder);
+            playButton.addActionListener(e -> togglePlayback());
+        }
+
+        // Modifies: this
+        // Effects:  toggles play/pause status
+        private static void togglePlayback() {
+            if (playbackManager.paused()) {
+                playbackManager.playAudio();
+            } else {
+                playbackManager.pauseAudio();
+            }
+            updateControls();
+        }
+
+        // Effects: sets up the music controls view
+        public static void createControlsView() {
+            controlsView.add(skipButton);
+            controlsView.add(prevButton);
+            controlsView.add(playButton);
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridy = 0;
+            constraints.gridx = 1;
+            layout.setConstraints(skipButton, constraints);
+            constraints.gridx = 0;
+            layout.setConstraints(prevButton, constraints);
+            constraints.gridy = 1;
+            constraints.gridwidth = 2;
+            constraints.weightx = 1;
+            layout.setConstraints(playButton, constraints);
+            controlsView.setLayout(layout);
         }
 
         // Effects: sets up the music playback view
         public static void createMusicView() {
             musicPlaybackView.add(musicArt);
-            musicArt.setIcon(new ImageIcon(placeholder));
             musicPlaybackView.add(fileLabel);
             musicPlaybackView.add(albumLabel);
             musicPlaybackView.add(playbackStatusView);
+            musicPlaybackView.add(controlsView);
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
             constraints.gridy = 0;
-            constraints.gridx = 0;
+            constraints.gridx = 2;
             constraints.gridheight = 2;
+            layout.setConstraints(controlsView, constraints);
+            constraints.gridx = 0;
             layout.setConstraints(musicArt, constraints);
             constraints.weightx = 1.0;
             constraints.gridheight = 1;
@@ -352,14 +486,30 @@ public class Main {
             constraints.gridx = 0;
             constraints.gridy = 2;
             constraints.fill = GridBagConstraints.HORIZONTAL;
-            constraints.gridwidth = 2;
+            constraints.gridwidth = 4;
             layout.setConstraints(playbackStatusView, constraints);
             musicPlaybackView.setLayout(layout);
         }
 
+        // Modifies: this
+        // Effects:  queues songs in the order of the list from the selected element
+        private static void queueFrom(int index) {
+            playDbFile(database.getAudioFile(index));
+            songQueue.clear();
+            for (index++; index < database.audioListSize(); index++) {
+                songQueue.addLast(database.getAudioFile(index));
+            }
+        }
+
+        private static AlbumArtworkUpdater updater;
+
         // Effects: updates music playback view
         public static void updatePlaybackBar() {
-            (new AlbumArtworkUpdater()).start();
+            if (updater != null && updater.isAlive()) {
+                updater.stop();
+            }
+            updater = new AlbumArtworkUpdater();
+            updater.start();
             fileLabel.setText(playbackManager.getPlaybackString(false));
             String artistLabel = "";
             Object obj = playbackManager.getID3().getID3Data("Artist");
@@ -374,6 +524,7 @@ public class Main {
                 artistLabel += playbackManager.getID3().getID3Data("Album").toString();
             }
             albumLabel.setText(artistLabel);
+            updateControls();
         }
 
         // Thread to update album artwork
