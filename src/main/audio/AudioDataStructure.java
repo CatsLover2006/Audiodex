@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import static java.io.File.separatorChar;
 
-import org.json.simple.*;
+import org.json.*;
 
 // Audio data structure class
 // Will be used for the database
@@ -37,7 +37,6 @@ public class AudioDataStructure {
             sampleSize = -1;
             fileSize = -1;
             audioFileType = AudioFileType.EMPTY;
-            id3Data = null;
             return;
         }
         fileSize = (new File(filename)).length(); // Will exist
@@ -117,11 +116,28 @@ public class AudioDataStructure {
     public static AudioDataStructure decode(JSONObject data) {
         String filename = (String) data.get("filename");
         AudioFileType filetype = AudioFileType.valueOf((String) data.get("filetype"));
-        long bitrate = (Long) data.get("bitrate");
-        long filesize = (Long) data.get("filesize");
-        long samplesize = (Long) data.get("samplesize");
+        long bitrate = getLong(data.get("bitrate"));
+        long filesize = getLong(data.get("filesize"));
+        long samplesize = getLong(data.get("samplesize"));
         JSONObject id3 = (JSONObject) data.get("ID3data");
         return new AudioDataStructure(filename, filesize, bitrate, samplesize, filetype, id3);
+    }
+
+    // Effects: returns long representation of value
+    private static long getLong(Object obj) {
+        try {
+            return (Long) obj;
+        } catch (ClassCastException e) {
+            try {
+                return (Integer) obj;
+            } catch (ClassCastException f) {
+                try {
+                    return Long.parseLong(obj.toString());
+                } catch (NumberFormatException g) {
+                    return 0;
+                }
+            }
+        }
     }
 
     // Effects: returns playback string for display

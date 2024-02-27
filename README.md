@@ -103,6 +103,9 @@ _I'm a really lucky person ain't I?_
   - As a user, I don't expect my music playback history and queue to persist after closing the program
 - As a user, I want to be able to convert my music to a different format
 - As a user, I want to manage my music library
+  - As a user, I expect my music library to automatically be listed when I launch the program after importing the first time
+  - As a user, I expect my music library to not disappear if I move the application<br>I expect my music library to be stored as a part of my user, and not alongside the application
+  - As a user, I expect to be able to revert my music library to a previous version if I do something I didn't intend to do
 
 In effect I'm creating a iTunes competitor.<br>
 I have made a program that I would intentionally go out of my way to use. ~~It's still command line.~~ Wow.

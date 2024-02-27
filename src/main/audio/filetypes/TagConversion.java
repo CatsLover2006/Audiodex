@@ -111,6 +111,7 @@ public class TagConversion {
     public static float getReplayGain(Tag tag) {
         Pattern gainPattern = Pattern.compile("-?[.\\d]+");
         Iterator<TagField> fields = tag.getFields();
+        float albumGain = -6;
         try {
             while (fields.hasNext()) {
                 TagField field = fields.next();
@@ -120,24 +121,15 @@ public class TagConversion {
                     float replaygain = Float.parseFloat(m.group());
                     return replaygain;
                 }
-            }
-        } catch (Exception e) {
-            // LMAO
-        }
-        fields = tag.getFields();
-        try {
-            while (fields.hasNext()) {
-                TagField field = fields.next();
                 if ((field.getId() + field.toString()).contains("replaygain_album_gain")) {
                     Matcher m = gainPattern.matcher(field.toString());
                     m.find();
-                    float replaygain = Float.parseFloat(m.group());
-                    return replaygain;
+                    albumGain = Float.parseFloat(m.group());
                 }
             }
         } catch (Exception e) {
             // LMAO
         }
-        return -6;
+        return albumGain;
     }
 }

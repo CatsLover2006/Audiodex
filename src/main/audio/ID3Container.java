@@ -1,8 +1,6 @@
 package audio;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
+import org.json.JSONObject;
 
 // Container for ID3 data
 public class ID3Container {
@@ -13,7 +11,7 @@ public class ID3Container {
         id3data = new JSONObject();
     }
 
-    // Effects: uses an existing JSON object
+    // Effects: use ds an existing JSON object
     public ID3Container(JSONObject obj) {
         id3data = obj;
     }
@@ -25,7 +23,11 @@ public class ID3Container {
     //          Long and String, everything else is up
     //          to somebody else
     public Object getID3Data(String key) {
-        return id3data.get(key);
+        try {
+            return id3data.get(key);
+        } catch (Exception e) {
+            return null; // I can't assume shit
+        }
     }
 
     // Modifies: this
