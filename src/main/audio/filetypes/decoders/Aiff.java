@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
@@ -246,5 +247,18 @@ public class Aiff implements AudioDecoder {
         } catch (Exception e) {
             // Why?
         }
+    }
+
+    // Effects: returns replaygain value
+    //          defaults to -6
+    public float getReplayGain() {
+        AudioFile f = null;
+        try {
+            f = AudioFileIO.read(new File(filename));
+            return TagConversion.getReplayGain(f.getTag());
+        } catch (Exception e) {
+            // Why?
+        }
+        return -6;
     }
 }

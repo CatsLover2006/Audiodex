@@ -3,6 +3,10 @@ package ui;
 import audio.AudioDataStructure;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -150,6 +154,7 @@ public class Main {
         database.sortSongList("Album_Title");
         playbackManager = new AudioFilePlaybackBackend();
         audioConverterList = new ArrayList<>();
+        playbackManager.setReplayGain(database.getSettings().doSoundCheck());
         if (USE_CLI) {
             Cli.cli(args);
         } else {
@@ -216,17 +221,32 @@ public class Main {
             mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             updateGuiList();
             createPlaybackBar();
+            createMusicView();
             visualizerThread = new PlaybackThread();
             visualizerThread.start();
-            mainWindow.add(playbackStatusView);
+            mainWindow.add(musicPlaybackView);
             mainWindow.add(musicList);
             setupMainWindowLayout();
+            setupMenubar();
             mainWindow.setVisible(true);
             closeLoadingThread();
         }
 
         // Modifies: this
-        // Effects:  sets up group layout for main window
+        // Effects:  sets up menu bard for main window
+        private static void setupMenubar() {
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            JMenuBar menuBar = new JMenuBar();
+            JMenu menu = new JMenu("File");
+            JMenuItem item = new JMenuItem("Save database");
+            item.addActionListener(e -> database.saveDatabaseFile());
+            menu.add(item);
+            menuBar.add(menu);
+            mainWindow.setJMenuBar(menuBar);
+        }
+
+        // Modifies: this
+        // Effects:  sets up grid bag layout for main window
         private static void setupMainWindowLayout() {
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
@@ -234,7 +254,7 @@ public class Main {
             constraints.anchor = GridBagConstraints.FIRST_LINE_START;
             constraints.gridx = 0;
             constraints.fill = GridBagConstraints.HORIZONTAL;
-            layout.setConstraints(playbackStatusView, constraints);
+            layout.setConstraints(musicPlaybackView, constraints);
             constraints.fill = GridBagConstraints.BOTH;
             constraints.weighty = 1.0;
             layout.setConstraints(musicList, constraints);
@@ -279,6 +299,8 @@ public class Main {
                 public boolean editCellAt(int row, int column, java.util.EventObject e) {
                     if (lastClicked == row) {
                         playDbFile(database.getAudioFile(row));
+                        updatePlaybackBar();
+
                     } else {
                         lastClicked = row;
                     }
@@ -294,6 +316,92 @@ public class Main {
         private static JLabel leftPlaybackLabel = new JLabel("X:XX");;
         private static JLabel rightPlaybackLabel = new JLabel("X:XX");;
         private static JPanel playbackStatusView = new JPanel(true);
+        private static JPanel musicPlaybackView = new JPanel(true);
+        private static JLabel musicArt = new JLabel();
+        private static JLabel fileLabel = new JLabel();
+        private static JLabel albumLabel = new JLabel();
+        private static BufferedImage placeholder;
+
+        static {
+            try {
+                placeholder = ImageIO.read(new File("data/spec/AppIcon.png"));
+            } catch (IOException e) {
+                placeholder = new BufferedImage(48, 48, BufferedImage.TYPE_3BYTE_BGR);
+            }
+        }
+
+        // Effects: sets up the music playback view
+        public static void createMusicView() {
+            musicPlaybackView.add(musicArt);
+            musicArt.setIcon(new ImageIcon(placeholder));
+            musicPlaybackView.add(fileLabel);
+            musicPlaybackView.add(albumLabel);
+            musicPlaybackView.add(playbackStatusView);
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridy = 0;
+            constraints.gridx = 0;
+            constraints.gridheight = 2;
+            layout.setConstraints(musicArt, constraints);
+            constraints.weightx = 1.0;
+            constraints.gridheight = 1;
+            constraints.gridx = 1;
+            layout.setConstraints(fileLabel, constraints);
+            constraints.gridy = 1;
+            layout.setConstraints(albumLabel, constraints);
+            constraints.gridx = 0;
+            constraints.gridy = 2;
+            constraints.fill = GridBagConstraints.HORIZONTAL;
+            constraints.gridwidth = 2;
+            layout.setConstraints(playbackStatusView, constraints);
+            musicPlaybackView.setLayout(layout);
+        }
+
+        // Effects: updates music playback view
+        public static void updatePlaybackBar() {
+            (new AlbumArtworkUpdater()).start();
+            fileLabel.setText(playbackManager.getPlaybackString(false));
+            String artistLabel = "";
+            Object obj = playbackManager.getID3().getID3Data("Artist");
+            if (obj != null && !obj.toString().isEmpty()) {
+                artistLabel = playbackManager.getID3().getID3Data("Artist").toString();
+            }
+            obj = playbackManager.getID3().getID3Data("Album");
+            if (obj != null && !obj.toString().isEmpty()) {
+                if (artistLabel.length() != 0) {
+                    artistLabel += " - ";
+                }
+                artistLabel += playbackManager.getID3().getID3Data("Album").toString();
+            }
+            albumLabel.setText(artistLabel);
+        }
+
+        // Thread to update album artwork
+        private static class AlbumArtworkUpdater extends Thread {
+            public void run() {
+                musicArt.setIcon(new ImageIcon(placeholder));
+                BufferedImage bufferedImage = playbackManager.getArtwork();
+                if (bufferedImage != null) {
+                    int newWidth = (int)(Math.min(48.0 / bufferedImage.getWidth(), 48.0 / bufferedImage.getHeight())
+                            * bufferedImage.getWidth());
+                    int newHeight = (int)(Math.min(48.0 / bufferedImage.getWidth(), 48.0 / bufferedImage.getHeight())
+                            * bufferedImage.getHeight());
+                    BufferedImage resized = new BufferedImage(newWidth, newHeight, bufferedImage.getType());
+                    Graphics2D g = resized.createGraphics();
+                    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+                    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                            RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                    g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
+                            RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+                    g.drawImage(bufferedImage, 0, 0, newWidth, newHeight, 0, 0, bufferedImage.getWidth(),
+                            bufferedImage.getHeight(), null);
+                    g.dispose();
+                    musicArt.setIcon(new ImageIcon(resized));
+                    musicArt.setPreferredSize(new Dimension(newWidth, newHeight));
+                }
+            }
+        }
 
         // Effects: sets up the playback bar
         public static void createPlaybackBar() {
@@ -313,7 +421,7 @@ public class Main {
         private static void setupPlaybackBarLayout() {
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
-            constraints.gridy = 0;
+            constraints.gridy = 1;
             layout.setConstraints(leftPlaybackLabel, constraints);
             layout.setConstraints(rightPlaybackLabel, constraints);
             constraints.fill = GridBagConstraints.HORIZONTAL;
@@ -332,6 +440,10 @@ public class Main {
             }
             rightPlaybackLabel.setText(formatTime((long) fileTime));
             playbackStatusView.updateUI();
+            if (!visualizerThread.isAlive()) {
+                visualizerThread = new PlaybackThread();
+                visualizerThread.start();
+            }
         }
 
         // Modifies: this

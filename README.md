@@ -22,9 +22,9 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - [x] Read ID3 tags
   - [x] Write ID3 tags
     - Tested using AIFF re-encoding
-    - Will add full editing capability during GUI stage
+    - Will add full editing capability during GUI stage (aka soon)
   - [x] Read album art
-    - ~~Won't touch this with a ten foot pole until GUI time~~<br>~~Turns out I jumped the gun and added a function to load a `BufferedImage` in the `AudioDecoder` interface. It's still not very useful without a GUI, but I might use it to clone album art while encoding.~~<br>Yep I started using it to clone album artwork.
+    - GUI resizes the artwork on separate thread to speed up GUI loading (relevant on my 2008 machine)
   - [x] Write album art
 - [x] All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding
@@ -60,13 +60,19 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Maybe) WMA
 
 ## Known Issues
-- You can't remove audio files from the database (will be fixed soon)
+- You can't remove audio files from the database via the CLI
+  - Only accessible through GUI or removing backend file
 - Encoded audio has a comment of "0"
+  - Maybe? Major backend changes have occured and I'm unsure of if this still applies
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 - ALAC vs AAC detection is weird since they share their container, there's no fix for this
   - Similar situation for detection in the OGG container, but there's only one supported playback mode within this container so it's just to avoid throwing errors
+- Gain system is partially dependent on format and system
+  - No way to fix this, it's entirely dependent on implementation
+- Due to no way to test on Windows or Linux, there's no way to test if a system config specific to macOS will crash Windows/Linux systems
+  - Specific to GUI interface
 
 ## Lucky Breaks
 - jaudiotagger handles most of the ID3 metadata I care about
@@ -86,6 +92,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - The port of JDK 11 to Mac OS X 10.6 to 10.11 existing
   - This project might've been dead if not for this
   - [Here's the port](https://github.com/Jazzzny/jdk-macos-legacy)
+- GridBagLayout
+  - All hail GridBagLayout
 
 _I'm a really lucky person ain't I?_
 
@@ -97,4 +105,4 @@ _I'm a really lucky person ain't I?_
 - As a user, I want to manage my music library
 
 In effect I'm creating a iTunes competitor.<br>
-I have made a program that I would intentionally go out of my way to use. It's still command line. Wow.
+I have made a program that I would intentionally go out of my way to use. ~~It's still command line.~~ Wow.

@@ -4,6 +4,9 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
+import audio.filetypes.TagConversion;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.images.Artwork;
 
 import javax.sound.sampled.AudioFormat;
@@ -173,6 +176,12 @@ public class WAV implements AudioDecoder {
 
     public AudioFileType getFileType() {
         return AudioFileType.PCM_WAV;
+    }
+
+    // Effects: returns replaygain value
+    //          defaults to -6
+    public float getReplayGain() {
+        return -6; // Not stored
     }
 
 }
