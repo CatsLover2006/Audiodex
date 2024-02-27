@@ -399,8 +399,15 @@ public class Main {
         private static JLabel fileLabel = new JLabel();
         private static JLabel albumLabel = new JLabel();
         private static BufferedImage placeholder;
-        private static BufferedImage skip, prev, skipInactive, prevInactive, paused, playing;
-        private static JButton skipButton, prevButton, playButton;
+        private static BufferedImage skip;
+        private static BufferedImage prev;
+        private static BufferedImage skipInactive;
+        private static BufferedImage prevInactive;
+        private static BufferedImage paused;
+        private static BufferedImage playing;
+        private static JButton skipButton;
+        private static JButton prevButton;
+        private static JButton playButton;
 
         static {
             try {
@@ -469,6 +476,11 @@ public class Main {
             musicPlaybackView.add(albumLabel);
             musicPlaybackView.add(playbackStatusView);
             musicPlaybackView.add(controlsView);
+            createMusicLayout();
+        }
+
+        // Effects: helper for createMusicView()
+        private static void createMusicLayout() {
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
             constraints.gridy = 0;
@@ -866,7 +878,8 @@ public class Main {
                     }
                     AnsiConsole.out().println("Please enter the new filename.");
                     database.updateAudioFile(index, inputScanner.nextLine().trim());
-                } while (database.getAudioFile(index).isEmpty() || !(new File(database.getAudioFile(index).getFilename())).exists());
+                } while (database.getAudioFile(index).isEmpty()
+                        || !(new File(database.getAudioFile(index).getFilename())).exists());
             }
         }
 

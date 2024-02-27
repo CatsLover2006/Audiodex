@@ -37,6 +37,6 @@
     <orderEntry type="library" name="vavi-sound-alac 0.3.2 (Self-Compiled)" level="project" />
     <orderEntry type="library" name="java-vorbis-support (1.2.1)" level="project" />
     <orderEntry type="library" name="Java LAME 3.98.4" level="project" />
-    <orderEntry type="library" name="JSON.simple 1.1" level="project" />
+    <orderEntry type="library" name="JSON.simple" level="project" />
   </component>
 </module>

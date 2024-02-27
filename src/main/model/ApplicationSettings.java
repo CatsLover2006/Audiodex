@@ -1,6 +1,6 @@
 package model;
 
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 
 // Class to store application settings
 public class ApplicationSettings {

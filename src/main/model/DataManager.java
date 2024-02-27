@@ -2,9 +2,7 @@ package model;
 
 import audio.AudioDataStructure;
 import audio.ID3Container;
-import org.json.simple.*;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.json.*;
 import ui.Main;
 
 import java.io.File;
@@ -16,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.nio.file.Files.delete;
+import static model.FileManager.readFile;
 
 // Instantiable class to handle the file list
 public class DataManager {
@@ -215,27 +214,20 @@ public class DataManager {
         loadDatabaseFile();
     }
 
+    // Requires: file exists
     // Modifies: this
     // Effects:  replaces file list with described data file
     public void loadDatabaseFile() {
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         JSONArray array;
-        JSONParser jsonParser = new JSONParser();
-        Object obj = null;
+        System.out.println(readFile(filename));
         try {
-            obj = jsonParser.parse(new FileReader(filename));
-            JSONObject decoded = (JSONObject) obj;
+            JSONObject decoded = new JSONObject(readFile(filename));
             settings = new ApplicationSettings((JSONObject) decoded.get("settings"));
             array = (JSONArray) decoded.get("files");
-        } catch (ClassCastException e) {
-            array = (JSONArray) obj;
+        } catch (JSONException e) {
+            array = new JSONArray(readFile(filename));
             Main.CliInterface.println("Legacy-style database.");
-        } catch  (IOException e) {
-            Main.CliInterface.println("Couldn't find database file...");
-            return;
-        } catch (ParseException e) {
-            Main.CliInterface.println("Error in parsing database...");
-            return;
         }
         for (Object object : array) {
             songFilelist.add(AudioDataStructure.decode((JSONObject) object));
@@ -257,7 +249,7 @@ public class DataManager {
         }
         dbIndex++;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
-        String toSave = JSONObject.toJSONString(getDatasave());
+        String toSave = getDatasave().toString();
         FileManager.writeToFile(filename, toSave);
         return saveDatabaseIndex();
     }
@@ -268,7 +260,7 @@ public class DataManager {
         object.put("settings", settings.encode());
         JSONArray array = new JSONArray();
         for (AudioDataStructure structure : songFilelist) {
-            array.add(structure.encode());
+            array.put(structure.encode());
         }
         object.put("files", array);
         return object;
@@ -377,7 +369,7 @@ public class DataManager {
     // Effects:  removes unlocatable files
     public void removeEmptyAudioFiles() {
         File f; // Remove back-to-front to save decrementing the pointer
-        for (int i = songFilelist.size() - 1; i >= 0 ; i--) {
+        for (int i = songFilelist.size() - 1; i >= 0; i--) {
             f = new File(songFilelist.get(i).getFilename());
             if (!f.exists()) {
                 songFilelist.remove(i);
