@@ -93,7 +93,7 @@ public class MP4alac implements AudioDecoder {
     }
 
     // This is what the library does so idk
-    private int[] decodeBuffer = new int[1024*24*3];
+    private int[] decodeBuffer = new int[1024 * 24 * 3];
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample

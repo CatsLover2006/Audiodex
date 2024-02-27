@@ -390,8 +390,8 @@ public class Main {
         }
 
         private static JSlider playbackSlider = new JSlider(0, 0);
-        private static JLabel leftPlaybackLabel = new JLabel("X:XX");;
-        private static JLabel rightPlaybackLabel = new JLabel("X:XX");;
+        private static JLabel leftPlaybackLabel = new JLabel("X:XX");
+        private static JLabel rightPlaybackLabel = new JLabel("X:XX");
         private static JPanel playbackStatusView = new JPanel(true);
         private static JPanel musicPlaybackView = new JPanel(true);
         private static JPanel controlsView = new JPanel(true);
