@@ -98,7 +98,7 @@ public class AudioFilePlaybackBackend {
     private SourceDataLine line = null;
     private DecodingThread decoderThread = null;
     private boolean replayGain = false;
-    protected boolean paused = false;
+    private boolean paused = false;
     private float replayGainVal;
     private boolean failedReplayGainSet = false;
 
