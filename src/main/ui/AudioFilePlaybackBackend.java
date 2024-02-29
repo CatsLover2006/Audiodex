@@ -4,6 +4,7 @@ import audio.AudioDecoder;
 import audio.AudioFileLoader;
 import audio.AudioSample;
 import audio.ID3Container;
+import model.ExceptionIgnore;
 
 import javax.sound.sampled.*;
 import java.awt.image.BufferedImage;
@@ -24,11 +25,8 @@ public class AudioFilePlaybackBackend {
         private class FinishedSongThread extends Thread {
             public void run() {
                 while (decoderThread != null) {
-                    try { // Wait for decoder thread to finish, in case we've got a music queue
-                        sleep(0, 1);
-                    } catch (InterruptedException e) {
-                        // LMAO just burn more time
-                    }
+                    // Wait for decoder thread to finish, in case we've got a music queue
+                    ExceptionIgnore.ignoreExc(() -> sleep(0, 1));
                 }
                 Main.finishedSong();
             }
@@ -44,29 +42,7 @@ public class AudioFilePlaybackBackend {
 
         // Effects: join() but no try-catch
         public void safeJoin() {
-            try {
-                join();
-            } catch (InterruptedException e) {
-                // lol
-            }
-        }
-
-        // Effects: join(long millis) but no try-catch
-        public void safeJoin(long millis) {
-            try {
-                join(millis);
-            } catch (InterruptedException e) {
-                // lol
-            }
-        }
-
-        // Effects: join(long millis, int nanos) but no try-catch
-        public void safeJoin(long millis, int nanos) {
-            try {
-                join(millis, nanos);
-            } catch (InterruptedException e) {
-                // lol
-            }
+            ExceptionIgnore.ignoreExc(() -> join());
         }
 
         // Effects: plays audio in file loadedFile
@@ -75,7 +51,6 @@ public class AudioFilePlaybackBackend {
             while (run && loadedFile.moreSamples()) {
                 sample = loadedFile.getNextSample();
                 line.write(sample.getData(), 0, sample.getLength());
-                //System.out.println(sample.getLength()); // Debugging info
             }
             line.stop();
             loadedFile.closeAudioFile();

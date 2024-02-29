@@ -1,6 +1,7 @@
 package model;
 
 import audio.AudioDataStructure;
+import org.json.JSONArray;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
@@ -50,6 +51,8 @@ public class DataManagerTest {
         database.updateAudioFile(0,"./data/scarlet.wav.lmao");
         assertEquals(1, database.audioListSize());
         database.addDirToSongDatabase("./data/");
+        assertEquals(20, database.audioListSize());
+        database.addDirToSongDatabase("./data/db/audiofolder");
         assertEquals(20, database.audioListSize());
         database.sanitizeAudioDatabase();
         assertEquals(20, database.audioListSize());
@@ -164,5 +167,31 @@ public class DataManagerTest {
         database.removeEmptyAudioFiles();
         assertEquals(19, database.audioListSize());
         assertEquals(0, database.getRemovedAudioFiles().size());
+        manager = new DataManager();
+        manager.setUserDir("./data/db/null");
+        manager.cleanDbFldr();
+        new ExceptionIgnore(); // Throw this in to save that
+    }
+
+    static DataManager manager;
+
+    @Test
+    @Order(10)
+    public void legacyDatabaseTest() {
+        if (!database.getSettings().doSoundCheck()) {
+            database.getSettings().toggleSoundCheck();
+        } // Set sound check
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < database.audioListSize(); i++) {
+            array.put(database.getAudioFile(i).encode());
+        } // Clone
+        FileManager.writeToFile("data/db/1.audiodex.json", array.toString());
+        manager = new DataManager();
+        manager.setUserDir("./data/db/");
+        manager.loadDatabase();
+        for (int i = 0; i < manager.audioListSize(); i++) {
+            assertEquals(database.getAudioFile(i).getFilename(), manager.getAudioFile(i).getFilename());
+        } // Sound check defaults to off, it was set on.
+        assertNotEquals(database.getSettings().doSoundCheck(), manager.getSettings().doSoundCheck());
     }
 }

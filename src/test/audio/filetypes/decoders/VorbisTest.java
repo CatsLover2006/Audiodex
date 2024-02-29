@@ -109,5 +109,6 @@ public class VorbisTest {
         id3.setID3Data("Encoder", "Audiodex");
         vorbisDecoder.setID3(id3);
         vorbisDecoder.setArtwork(vorbisDecoder.getArtwork());
+        assertEquals(-6, vorbisDecoder.getReplayGain());
     }
 }

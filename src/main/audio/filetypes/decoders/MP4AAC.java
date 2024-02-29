@@ -5,6 +5,7 @@ import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.TagConversion;
+import model.ExceptionIgnore;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.Decoder;
 import net.sourceforge.jaad.aac.SampleBuffer;
@@ -63,7 +64,6 @@ public class MP4AAC implements AudioDecoder {
     // Effects: loads audio and makes all other functions valid
     public void prepareToPlayAudio() {
         try {
-            //cachedID3 = makeID3();
             file = new RandomAccessFile(filename, "r");
             MP4Container container = new MP4Container(file);
             Movie movie = container.getMovie();
@@ -206,14 +206,14 @@ public class MP4AAC implements AudioDecoder {
                 try {
                     tag.setField(entry.getValue(), data.toString());
                 } catch (Exception e) {
-                    Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
+                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
                 }
             }
         }
         try {
             f.commit();
         } catch (CannotWriteException e) {
-            Main.CliInterface.println("Failed to write to file.");
+            System.out.println("Failed to write to file.");
         }
     }
 
@@ -246,14 +246,11 @@ public class MP4AAC implements AudioDecoder {
 
     // Effects: sets the album artwork if possible
     public void setArtwork(Artwork image) {
-        AudioFile f = null;
-        try {
-            f = AudioFileIO.read(new File(filename));
+        ExceptionIgnore.ignoreExc(() ->  {
+            AudioFile f = AudioFileIO.read(new File(filename));
             f.getTag().setField(image);
             f.commit();
-        } catch (Exception e) {
-            // Why?
-        }
+        });
     }
 
     // Effects: returns replaygain value

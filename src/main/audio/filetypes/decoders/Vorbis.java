@@ -7,6 +7,7 @@ import audio.ID3Container;
 import audio.filetypes.TagConversion;
 import com.github.trilarion.sound.vorbis.sampled.DecodedVorbisAudioInputStream;
 import com.github.trilarion.sound.vorbis.sampled.spi.VorbisAudioFileReader;
+import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
@@ -83,12 +84,10 @@ public class Vorbis implements AudioDecoder {
     //           getAudioOutputFormat() and atEndOfFile() remain valid
     public void closeAudioFile() {
         ready = false;
-        try {
+        ExceptionIgnore.ignoreExc(() ->  {
             decoded.close();
             in.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 
     // Effects: returns true if goToTime() is running
@@ -99,11 +98,7 @@ public class Vorbis implements AudioDecoder {
 
     // Effects: wait for a set time
     private static void wait(int nanos) {
-        try {
-            sleep(0, nanos);
-        } catch (InterruptedException e) {
-            // Why?
-        }
+        ExceptionIgnore.ignoreExc(() -> sleep(0, nanos));
     }
 
     // Requires: prepareToPlayAudio() called
@@ -112,17 +107,14 @@ public class Vorbis implements AudioDecoder {
         while (!allowSampleReads) {
             wait(1);
         }
+        numberBytesRead = -2;
         while (moreSamples()) {
-            try {
-                numberBytesRead = decoded.read(data, 0, data.length);
-                if (numberBytesRead == -1) {
-                    break;
-                } // Yes I have to do this to track time
-                bytesPlayed += numberBytesRead;
-                return new AudioSample(data, numberBytesRead);
-            } catch (IOException e) {
-                // Move along
-            }
+            ExceptionIgnore.ignoreExc(() -> numberBytesRead = decoded.read(data, 0, data.length));
+            if (numberBytesRead < 0) {
+                continue;
+            } // Yes I have to do this to track time
+            bytesPlayed += numberBytesRead;
+            return new AudioSample(data, numberBytesRead);
         }
         return new AudioSample();
     }
@@ -132,7 +124,7 @@ public class Vorbis implements AudioDecoder {
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
-        try {
+        ExceptionIgnore.ignoreExc(() ->  {
             long toSkip = (long) (time * bytesPerSecond) - bytesPlayed;
             if (toSkip < 0) {
                 allowSampleReads = false;
@@ -147,14 +139,10 @@ public class Vorbis implements AudioDecoder {
                 bytesPlayed += skipped;
                 toSkip -= skipped;
                 if (skipped == 0) {
-                    allowSampleReads = true;
-                    return;
+                    break;
                 }
             }
-            allowSampleReads = true;
-        } catch (IOException e) {
-            // RIP
-        }
+        });
         allowSampleReads = true;
     }
 
@@ -221,14 +209,14 @@ public class Vorbis implements AudioDecoder {
                 try {
                     tag.setField(entry.getValue(), data.toString());
                 } catch (FieldDataInvalidException e) {
-                    Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
+                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
                 }
             }
         }
         try {
             f.commit();
         } catch (CannotWriteException e) {
-            Main.CliInterface.println("Failed to write to file.");
+            System.out.println("Failed to write to file.");
         }
     }
 
@@ -261,14 +249,11 @@ public class Vorbis implements AudioDecoder {
 
     // Effects: sets the album artwork if possible
     public void setArtwork(Artwork image) {
-        AudioFile f = null;
-        try {
-            f = AudioFileIO.read(new File(filename));
+        ExceptionIgnore.ignoreExc(() -> {
+            AudioFile f = AudioFileIO.read(new File(filename));
             f.getTag().setField(image);
             f.commit();
-        } catch (Exception e) {
-            // Why?
-        }
+        });
     }
 
     // Modifies: this

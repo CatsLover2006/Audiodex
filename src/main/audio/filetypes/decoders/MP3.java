@@ -15,6 +15,7 @@ import audio.ID3Container;
 import audio.filetypes.TagConversion;
 import javazoom.spi.mpeg.sampled.convert.DecodedMpegAudioInputStream;
 import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
+import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
@@ -82,12 +83,10 @@ public class MP3 implements AudioDecoder {
     //           getAudioOutputFormat() and atEndOfFile() remain valid
     public void closeAudioFile() {
         ready = false;
-        try {
+        ExceptionIgnore.ignoreExc(() ->  {
             decoded.close();
             in.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        });
     }
 
     // Effects: returns true if goToTime() is running
@@ -228,14 +227,14 @@ public class MP3 implements AudioDecoder {
                 try {
                     tag.setField(entry.getValue(), data.toString());
                 } catch (FieldDataInvalidException e) {
-                    Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
+                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
                 }
             }
         }
         try {
             f.commit();
         } catch (CannotWriteException e) {
-            Main.CliInterface.println("Failed to write to file.");
+            System.out.println("Failed to write to file.");
         }
     }
 
@@ -268,14 +267,11 @@ public class MP3 implements AudioDecoder {
 
     // Effects: sets the album artwork if possible
     public void setArtwork(Artwork image) {
-        AudioFile f = null;
-        try {
-            f = AudioFileIO.read(new File(filename));
+        ExceptionIgnore.ignoreExc(() ->  {
+            AudioFile f = AudioFileIO.read(new File(filename));
             f.getTag().setField(image);
             f.commit();
-        } catch (Exception e) {
-            // Why?
-        }
+        });
     }
 
     // Effects: returns replaygain value

@@ -22,11 +22,8 @@ public class AudioConversion {
         private class FinishedEncodeThread extends Thread {
             public void run() {
                 do {
-                    try { // Wait for decoder thread to finish, in case we've got a music queue
-                        sleep(0, 1);
-                    } catch (InterruptedException e) {
-                        // LMAO just burn more time
-                    }
+                    // Wait for decoder thread to finish, in case we've got a music queue
+                    ExceptionIgnore.ignoreExc(() -> sleep(0, 1));
                 } while (converterThread != null);
                 Main.finishedEncode();
             }
@@ -34,11 +31,7 @@ public class AudioConversion {
 
         // Effects: join() but no try-catch
         public void safeJoin() {
-            try {
-                join();
-            } catch (InterruptedException e) {
-                // lol
-            }
+            ExceptionIgnore.ignoreExc(() -> join());
         }
 
         // Effects: plays audio in file loadedFile

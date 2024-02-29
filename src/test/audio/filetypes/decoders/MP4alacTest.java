@@ -104,5 +104,6 @@ public class MP4alacTest {
         id3.setID3Data("Encoder", "Audiodex");
         alacDecoder.setID3(id3);
         alacDecoder.setArtwork(alacDecoder.getArtwork());
+        assertEquals(-6, alacDecoder.getReplayGain());
     }
 }

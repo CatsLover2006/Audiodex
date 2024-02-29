@@ -49,6 +49,7 @@ public class MP3Test {
         // Error range due to timing math
         assertTrue(Math.abs(10 - mp3Decoder.getCurrentTime()) < 0.05);
         assertFalse(mp3Decoder.skipInProgress());
+        mp3Decoder.closeAudioFile();
     }
 
     @Test // Test if decoding works
@@ -73,6 +74,7 @@ public class MP3Test {
             wavSample = wavDecoder.getNextSample();
             sample = mp3Decoder.getNextSample();
         }
+        mp3Decoder.closeAudioFile();
     }
 
     @Test // Test ID3 data
@@ -88,5 +90,7 @@ public class MP3Test {
         id3.setID3Data("Encoder", "Audiodex");
         mp3Decoder.setID3(id3);
         mp3Decoder.setArtwork(mp3Decoder.getArtwork());
+        assertEquals(-6, mp3Decoder.getReplayGain());
+        mp3Decoder.closeAudioFile();
     }
 }
