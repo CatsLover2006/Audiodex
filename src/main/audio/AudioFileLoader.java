@@ -76,7 +76,7 @@ public class AudioFileLoader {
                     return AudioFileType.ALAC_MP4;
             }
         } catch (Exception e) {
-            // LMAO
+            // Can't use the easy thing here
         }
         return AudioFileType.EMPTY;
     }
@@ -92,7 +92,7 @@ public class AudioFileLoader {
                     return AudioFileType.VORBIS;
             }
         } catch (Exception e) {
-            // LMAO
+            // Can't use the easy thing here
         }
         return AudioFileType.EMPTY;
     }

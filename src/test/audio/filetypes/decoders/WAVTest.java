@@ -66,5 +66,6 @@ public class  WAVTest {
         assertEquals("NO", id3.getID3Data("VBR"));
         wavDecoder.setID3(id3);
         wavDecoder.setArtwork(wavDecoder.getArtwork());
+        assertEquals(-6, wavDecoder.getReplayGain());
     }
 }

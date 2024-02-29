@@ -6,7 +6,6 @@ import org.json.*;
 import ui.Main;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -62,7 +61,7 @@ public class DataManager {
         } catch (Exception e) {
             return;
         }
-        Main.CliInterface.println("Sorting database by " + type + "...");
+        System.out.println("Sorting database by " + type + "...");
         bubble(sortBy, 0, songFilelist.size());
     }
 
@@ -127,7 +126,7 @@ public class DataManager {
     // Modifies: this
     // Effects:  removes all null values from database
     public void sanitizeAudioDatabase() {
-        Main.CliInterface.println("Sanitizing Database...");
+        System.out.println("Sanitizing Database...");
         for (int i = 0; i < songFilelist.size(); i++) {
             if (songFilelist.get(i) == null || songFilelist.get(i).isEmpty()
                     || songDbContainsDuplicate(songFilelist.get(i).getFilename())) {
@@ -163,17 +162,17 @@ public class DataManager {
     public void addFileToSongDatabase(String filename) {
         try {
             if (songDbContainsFile((new File(filename)).getCanonicalPath())) {
-                Main.CliInterface.println("File already in database, skipping.");
+                System.out.println("File already in database, skipping.");
                 return;
             }
         } catch (IOException e) {
-            Main.CliInterface.println("Error while trying to get absolute path of file.");
+            System.out.println("Error while trying to get absolute path of file.");
             return;
         }
-        Main.CliInterface.println("Adding file " + filename + "...");
+        System.out.println("Adding file " + filename + "...");
         AudioDataStructure data = new AudioDataStructure(filename);
         if (data.isEmpty()) {
-            Main.CliInterface.println("Unknown file type, ignored file.");
+            System.out.println("Unknown file type, ignored file.");
             return;
         }
         songFilelist.add(data);
@@ -182,7 +181,7 @@ public class DataManager {
     // Modifies: this
     // Effects:  adds all files in specified directory to database
     public void addDirToSongDatabase(String dirname) {
-        Main.CliInterface.println("Adding directory " + dirname + "...");
+        System.out.println("Adding directory " + dirname + "...");
         File dir = new File(dirname);
         if (dir.isDirectory()) {
             File[] fileList = dir.listFiles();
@@ -207,10 +206,10 @@ public class DataManager {
             dbIndex = Long.parseLong(Files.readString(Paths.get(filename)), 36);
         } catch (Exception e) {
             dbIndex = 0;
-            Main.CliInterface.println("New database.");
+            System.out.println("New database.");
             return;
         }
-        Main.CliInterface.println("Successfully loaded database index: " + dbIndex);
+        System.out.println("Successfully loaded database index: " + dbIndex);
         loadDatabaseFile();
     }
 
@@ -226,8 +225,13 @@ public class DataManager {
             settings = new ApplicationSettings((JSONObject) decoded.get("settings"));
             array = (JSONArray) decoded.get("files");
         } catch (JSONException e) {
-            array = new JSONArray(readFile(filename));
-            Main.CliInterface.println("Legacy-style database.");
+            try {
+                array = new JSONArray(readFile(filename));
+                System.out.println("Legacy-style database.");
+            } catch (JSONException e2) {
+                System.out.println("Error while decoding database.");
+                return;
+            }
         }
         for (Object object : array) {
             songFilelist.add(AudioDataStructure.decode((JSONObject) object));
@@ -280,9 +284,9 @@ public class DataManager {
         if ((new File(filename)).exists()) {
             loadDatabaseFile();
             saveDatabaseIndex();
-            Main.CliInterface.println("Successfully reverted database!");
+            System.out.println("Successfully reverted database!");
         } else {
-            Main.CliInterface.println("Could not find previous version of database...");
+            System.out.println("Could not find previous version of database...");
             dbIndex++;
         }
     }
@@ -291,14 +295,10 @@ public class DataManager {
     // Effects:  cleans (deletes all files for) database with specified filename
     public void cleanDb(String filename) {
         if ((new File(filename)).exists()) {
-            Main.CliInterface.println("Cleaning database at " + filename + "...");
-            try {
-                delete(Paths.get(filename));
-            } catch (Exception e) {
-                // lol
-            }
+            System.out.println("Cleaning database at " + filename + "...");
+            ExceptionIgnore.ignoreExc(() -> delete(Paths.get(filename)));
         } else {
-            Main.CliInterface.println("No database to clean!");
+            System.out.println("No database to clean!");
         }
     }
 
@@ -329,13 +329,11 @@ public class DataManager {
             if (f.isDirectory()) {
                 continue;
             }
-            try {
+            ExceptionIgnore.ignoreExc(() -> {
                 String filename = f.getAbsolutePath();
                 delete(f.toPath());
-                Main.CliInterface.println("Deleted " + filename + ".");
-            } catch (IOException e) {
-                // LMAO
-            }
+                System.out.println("Deleted " + filename + ".");
+            });
         }
         saveDatabaseFile();
     }
@@ -382,17 +380,17 @@ public class DataManager {
     public void updateAudioFile(int i, String newFileName) {
         try {
             if (songDbContainsFile((new File(newFileName)).getCanonicalPath())) {
-                Main.CliInterface.println("File already in database, skipping.");
+                System.out.println("File already in database, skipping.");
                 return;
             }
         } catch (IOException e) {
-            Main.CliInterface.println("Error while trying to get absolute path of file.");
+            System.out.println("Error while trying to get absolute path of file.");
             return;
         }
-        Main.CliInterface.println("Swapping in file " + newFileName + "...");
+        System.out.println("Swapping in file " + newFileName + "...");
         AudioDataStructure data = new AudioDataStructure(newFileName);
         if (data.isEmpty()) {
-            Main.CliInterface.println("Unknown file type, cannot use file.");
+            System.out.println("Unknown file type, cannot use file.");
             return;
         }
         songFilelist.set(i, data);

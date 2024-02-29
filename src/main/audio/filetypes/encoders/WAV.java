@@ -34,7 +34,7 @@ public class WAV implements AudioEncoder {
     // Modifies: this
     // Effects:  sets the target audio format for encoder
     public void setAudioFormat(AudioFormat format, HashMap<String, String> encoderSpecificValues) {
-        Main.CliInterface.println("WAV does not have any configurable settings.");
+        System.out.println("WAV does not have any configurable settings.");
     }
 
     // Modifies: filesystem

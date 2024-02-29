@@ -6,6 +6,7 @@ import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.TagConversion;
 import com.beatofthedrum.alacdecoder.Alac;
+import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
@@ -85,11 +86,7 @@ public class MP4alac implements AudioDecoder {
 
     // Effects: wait for a set time
     private static void wait(int nanos) {
-        try {
-            sleep(0, nanos);
-        } catch (InterruptedException e) {
-            // Why?
-        }
+        ExceptionIgnore.ignoreExc(() -> sleep(0, nanos));
     }
 
     // This is what the library does so idk
@@ -101,13 +98,13 @@ public class MP4alac implements AudioDecoder {
         while (!allowSampleReads) {
             wait(1);
         }
-        while (moreSamples()) {
+        if (moreSamples()) {
             numberBytesRead = alac.decode(decodeBuffer, data);
-            if (numberBytesRead <= 0) {
-                break;
-            } // Yes I have to do this to track time
-            bytesPlayed += numberBytesRead;
-            return new AudioSample(data, numberBytesRead);
+            if (numberBytesRead > 0) {
+                // Yes I have to do this to track time
+                bytesPlayed += numberBytesRead;
+                return new AudioSample(data, numberBytesRead);
+            }
         }
         return new AudioSample();
     }
@@ -201,14 +198,14 @@ public class MP4alac implements AudioDecoder {
                 try {
                     tag.setField(entry.getValue(), data.toString());
                 } catch (FieldDataInvalidException e) {
-                    Main.CliInterface.println("Failed to set " + entry.getKey() + " to " + data);
+                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
                 }
             }
         }
         try {
             f.commit();
         } catch (CannotWriteException e) {
-            Main.CliInterface.println("Failed to write to file.");
+            System.out.println("Failed to write to file.");
         }
     }
 
@@ -241,14 +238,11 @@ public class MP4alac implements AudioDecoder {
 
     // Effects: sets the album artwork if possible
     public void setArtwork(Artwork image) {
-        AudioFile f = null;
-        try {
-            f = AudioFileIO.read(new File(filename));
+        ExceptionIgnore.ignoreExc(() -> {
+            AudioFile f = AudioFileIO.read(new File(filename));
             f.getTag().setField(image);
             f.commit();
-        } catch (Exception e) {
-            // Why?
-        }
+        });
     }
 
     // Modifies: this

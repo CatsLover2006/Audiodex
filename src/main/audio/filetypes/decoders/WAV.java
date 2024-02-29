@@ -5,6 +5,7 @@ import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.TagConversion;
+import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.images.Artwork;
@@ -65,27 +66,20 @@ public class WAV implements AudioDecoder {
     //           getAudioOutputFormat() and atEndOfFile() remain valid
     public void closeAudioFile() {
         ready = false;
-        try {
-            in.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ExceptionIgnore.ignoreExc(() -> in.close());
     }
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     public AudioSample getNextSample() {
+        numberBytesRead = -2;
         while (moreSamples()) {
-            try {
-                numberBytesRead = in.read(data, 0, data.length);
-                if (numberBytesRead == -1) {
-                    break;
-                } // Yes I have to do this to track time
-                bytesPlayed += numberBytesRead;
-                return new AudioSample(data, numberBytesRead);
-            } catch (IOException e) {
-                // Move along
-            }
+            ExceptionIgnore.ignoreExc(() -> numberBytesRead = in.read(data, 0, data.length));
+            if (numberBytesRead < 0) {
+                continue;
+            } // Yes I have to do this to track time
+            bytesPlayed += numberBytesRead;
+            return new AudioSample(data, numberBytesRead);
         }
         return new AudioSample();
     }
@@ -102,7 +96,7 @@ public class WAV implements AudioDecoder {
     // Effects:  moves audio to a different point of the file
     public void goToTime(double time) {
         skipping = true;
-        try {
+        ExceptionIgnore.ignoreExc(() -> {
             prepareToPlayAudio(); // Reset doesn't work
             long toSkip = (long) (time * bytesPerSecond);
             long skipped = 0;
@@ -115,9 +109,7 @@ public class WAV implements AudioDecoder {
                 }
             }
             bytesPlayed = (long)(time * bytesPerSecond);
-        } catch (IOException e) {
-            // RIP
-        }
+        });
         skipping = false;
     }
 

@@ -18,6 +18,7 @@ import java.util.List;
 import audio.ID3Container;
 import model.AudioConversion;
 import model.DataManager;
+import model.ExceptionIgnore;
 import org.fusesource.jansi.*;
 
 import javax.imageio.ImageIO;
@@ -135,12 +136,9 @@ public class Main {
 
     static { // Disable jaudiotagger (library) logging
         java.util.logging.LogManager manager = java.util.logging.LogManager.getLogManager();
-        try {
-            manager.readConfiguration(new ByteArrayInputStream(("handlers=java.util.logging.ConsoleHandler\n"
-                    + "org.jaudiotagger.level=OFF").getBytes()));
-        } catch (IOException e) {
-            // Oops
-        }
+        ExceptionIgnore.ignoreExc(() -> manager.readConfiguration(
+                new ByteArrayInputStream(("handlers=java.util.logging.ConsoleHandler\n"
+                    + "org.jaudiotagger.level=OFF").getBytes())));
     }
 
     public static void main(String[] args) {
@@ -224,11 +222,8 @@ public class Main {
             mainWindow = new JFrame("AudioDex");
             mainWindow.setSize(900, 500);
             mainWindow.setResizable(true);
-            try {
-                mainWindow.setIconImage(ImageIO.read(new File("./data/spec/AppIcon.png")));
-            } catch (IOException e) {
-                // Whoops
-            }
+            ExceptionIgnore.ignoreExc(() -> mainWindow.setIconImage(
+                    ImageIO.read(new File("./data/spec/AppIcon.png"))));
             mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             updateGuiList();
             createPlaybackBar();
@@ -483,20 +478,22 @@ public class Main {
         private static void createMusicLayout() {
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
+            constraints.weighty = 1.0;
             constraints.gridy = 0;
             constraints.gridx = 2;
-            constraints.gridheight = 2;
+            constraints.gridheight = 3;
             layout.setConstraints(controlsView, constraints);
             constraints.gridx = 0;
             layout.setConstraints(musicArt, constraints);
             constraints.weightx = 1.0;
             constraints.gridheight = 1;
+            constraints.gridy = 1;
             constraints.gridx = 1;
             layout.setConstraints(fileLabel, constraints);
-            constraints.gridy = 1;
+            constraints.gridy = 2;
             layout.setConstraints(albumLabel, constraints);
             constraints.gridx = 0;
-            constraints.gridy = 2;
+            constraints.gridy = 3;
             constraints.fill = GridBagConstraints.HORIZONTAL;
             constraints.gridwidth = 4;
             layout.setConstraints(playbackStatusView, constraints);
@@ -655,29 +652,17 @@ public class Main {
 
             // Effects: join() but no try-catch
             public void safeJoin() {
-                try {
-                    join();
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join());
             }
 
             // Effects: join(long millis) but no try-catch
             public void safeJoin(long millis) {
-                try {
-                    join(millis);
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join(millis));
             }
 
             // Effects: join(long millis, int nanos) but no try-catch
             public void safeJoin(long millis, int nanos) {
-                try {
-                    join(millis, nanos);
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join(millis, nanos));
             }
 
             // Effects: plays audio in file loadedFile
@@ -707,31 +692,21 @@ public class Main {
                 showing = false;
             }
 
+
+
             // Effects: join() but no try-catch
             public void safeJoin() {
-                try {
-                    join();
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join());
             }
 
             // Effects: join(long millis) but no try-catch
             public void safeJoin(long millis) {
-                try {
-                    join(millis);
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join(millis));
             }
 
             // Effects: join(long millis, int nanos) but no try-catch
             public void safeJoin(long millis, int nanos) {
-                try {
-                    join(millis, nanos);
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join(millis, nanos));
             }
 
             // Effects: shows loading indicator window
@@ -762,10 +737,6 @@ public class Main {
             }
             Cli.doPlaybackStatusWrite();
         }
-
-        public static void println(Object in) {
-            AnsiConsole.out().println(in);
-        }
     }
 
     // CLI mode
@@ -795,29 +766,17 @@ public class Main {
 
             // Effects: join() but no try-catch
             public void safeJoin() {
-                try {
-                    join();
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join());
             }
 
             // Effects: join(long millis) but no try-catch
             public void safeJoin(long millis) {
-                try {
-                    join(millis);
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join(millis));
             }
 
             // Effects: join(long millis, int nanos) but no try-catch
             public void safeJoin(long millis, int nanos) {
-                try {
-                    join(millis, nanos);
-                } catch (InterruptedException e) {
-                    // lol
-                }
+                ExceptionIgnore.ignoreExc(() -> join(millis, nanos));
             }
 
             // Effects: plays audio in file loadedFile
@@ -1156,11 +1115,7 @@ public class Main {
 
         // Effects: wait for a set time
         private static void wait(int millis) {
-            try {
-                sleep(millis);
-            } catch (InterruptedException e) {
-                // Why?
-            }
+            ExceptionIgnore.ignoreExc(() -> sleep(millis));
         }
 
         /*private static void debug(Scanner scanner) {
@@ -1277,11 +1232,8 @@ public class Main {
                 AnsiConsole.out().println(w);
                 return;
             }
-            try {
-                writePlaybackState();
-            } catch (NullPointerException e) {
-                // Lol no
-            }
+
+            ExceptionIgnore.ignoreExc(() -> writePlaybackState());
         }
 
         // Modifies: Console
