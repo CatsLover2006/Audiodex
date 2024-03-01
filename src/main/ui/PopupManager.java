@@ -1,0 +1,256 @@
+package ui;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Date;
+
+import static java.io.File.separatorChar;
+
+// Static class
+public class PopupManager {
+
+    // Effects: returns true if arr contains item, false otherwise
+    //          this function is null-safe
+    private static boolean strArrContains(String[] arr, String item) {
+        if (arr == null) {
+            return true;
+        }
+        for (String cur : arr) {
+            if (cur.equals(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static final BufferedImage[] images;
+
+    // Gets images for popups
+    static {
+        BufferedImage[] myImages;
+        try {
+            myImages = new BufferedImage[]{
+                    ImageIO.read(new File("./data/spec/FolderIcon.png")),
+                    ImageIO.read(new File("./data/spec/FileIcon.png"))
+            };
+        } catch (Exception e) {
+            myImages = new BufferedImage[]{
+                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR)
+            };
+        }
+        images = myImages;
+    }
+
+    // Make a lambda for this
+    public interface PopupResponder {
+        void run(Popup popup);
+    }
+
+    public interface Popup {
+        Object getValue();
+    }
+
+    // public class for file selection popups
+    public static class FilePopupFrame implements Popup {
+        private String location;
+        private String[] filetypes;
+        private String file;
+        private JFrame selector;
+        private boolean allowOut = false;
+        private JTable fileTable = new JTable(new FileTableModel()) {
+            public boolean editCellAt(int row, int column, java.util.EventObject e) {
+                if (hasNoParent) {
+                    row++;
+                }
+                if (lastClicked == row) {
+                    if (row == 0) {
+                        doFileSelection(new File(location).getParentFile());
+                    } else {
+                        doFileSelection(dirList[row - 1]);
+                    }
+                } else {
+                    lastClicked = row;
+                    if (row != 0) {
+                        file = (String) getFileData(dirList[row - 1], "Filename");
+                    }
+                }
+                return false;
+            }
+        };
+        private JScrollPane fileList = new JScrollPane(fileTable);
+        private File[] dirList;
+        private PopupResponder responder;
+        private Boolean hasNoParent;
+
+        public Object getValue() {
+            return getFile();
+        }
+
+        // Effects: defaults everything
+        public FilePopupFrame(String defaultLoc, String[] filetypes, PopupResponder responder) {
+            location = defaultLoc;
+            this.filetypes = filetypes;
+            file = "";
+            try {
+                SwingUtilities.invokeLater(() -> setup());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            this.responder = responder;
+        }
+
+        // Effects: sets up window objects
+        private void setupWindowObjects() {
+            setupFiles();
+            selector.add(fileList);
+        }
+
+        private int lastClicked;
+        private static String[] columns = {
+                "Icon",
+                "Filename",
+                "Filesize",
+                "Filetype",
+                "Last Modified"
+        };
+
+        // Effects: gets file list and sets up file view
+        private void setupFiles() {
+            File where = new File(location);
+            dirList = where.listFiles(pathname -> !pathname.isHidden());
+            hasNoParent = where.getParentFile() == null;
+            fileTable.getColumnModel().getColumn(0).setMaxWidth(17);
+            fileTable.getColumnModel().getColumn(0).setMinWidth(17);
+            fileTable.setRowHeight(17);
+            lastClicked = -1;
+            fileList.updateUI();
+        }
+
+        // Table model to get around Jtable pain
+        private class FileTableModel extends DefaultTableModel {
+
+            // Gets table row count
+            @Override
+            public int getRowCount() {
+                if (dirList == null) {
+                    return 0;
+                }
+                return dirList.length + (hasNoParent ? 0 : 1);
+            }
+
+            // Gets table column count
+            @Override
+            public int getColumnCount() {
+                return columns.length;
+            }
+
+            // Gets table column
+            @Override
+            public String getColumnName(int columnIndex) {
+                return columns[columnIndex];
+            }
+
+            // Gets table column class
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return getValueAt(0, columnIndex).getClass();
+            }
+
+            // Prevents editing
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return false;
+            }
+
+            // Gets table value
+            @Override
+            public Object getValueAt(int rowIndex, int columnIndex) {
+                if (hasNoParent) {
+                    rowIndex++;
+                }
+                if (rowIndex == 0 && columnIndex == 1) {
+                    return "..";
+                }
+                if (rowIndex == 0) {
+                    return getFileData(new File(location).getParentFile(), columns[columnIndex]);
+                }
+                return getFileData(dirList[rowIndex - 1], columns[columnIndex]);
+            }
+        }
+
+        // Effects: gets the file data for the file list
+        private Object getFileData(File file, String type) {
+            switch (type) {
+                case "Filename":
+                    return file.getName();
+                case "Last Modified":
+                    return new Date(file.lastModified()).toString();
+                case "Filetype": {
+                    if (file.isDirectory() && file.getName().lastIndexOf(".") == -1) {
+                        return ".folder";
+                    } else if (file.getName().lastIndexOf(".") == -1) {
+                        return "file";
+                    } else {
+                        return file.getName().substring(file.getName().lastIndexOf(".") + 1);
+                    }
+                }
+                case "Icon":
+                    return new ImageIcon(file.isDirectory() ? images[0] : images[1]);
+                default:
+                    return String.valueOf(file.length());
+            }
+        }
+
+        // Effects: does file selection
+        private void doFileSelection(File file) {
+            if (file.isDirectory()) {
+                location = file.getPath();
+                this.file = "";
+                setupFiles();
+            } else if (strArrContains(filetypes, (String) getFileData(file, "Filetype"))) {
+                selector.setVisible(false);
+                responder.run(this);
+            }
+        }
+
+        // Effects: sets up window layout
+        private void setupWindowLayout() {
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.weightx = 1.0;
+            constraints.weighty = 1.0;
+            constraints.fill = GridBagConstraints.BOTH;
+            layout.setConstraints(fileList, constraints);
+            selector.setLayout(layout);
+        }
+
+        // Effects: does the work
+        private void setup() {
+            selector = new JFrame("File Selector Window");
+            selector.setSize(300, 300);
+            selector.setResizable(true);
+            setupWindowObjects();
+            setupWindowLayout();
+            System.out.println("Done objects...");
+            selector.pack();
+            selector.setAlwaysOnTop(true);
+            selector.setVisible(true);
+            allowOut = true;
+            System.out.println("Done");
+        }
+
+        // Effects: gets filename, returns null if it's not selected
+        public String getFile() {
+            if (!allowOut || selector.isVisible()) {
+                return null;
+            } else {
+                return location + separatorChar + file;
+            }
+        }
+    }
+}
