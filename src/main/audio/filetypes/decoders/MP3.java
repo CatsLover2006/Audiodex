@@ -201,7 +201,7 @@ public class MP3 implements AudioDecoder {
 
     // Effects: gets relevant ID3v2 tags
     private void getID3v2(MP3File f, ID3Container base) {
-        if (f.hasID3v2Tag()) {
+        if (!f.hasID3v2Tag()) {
             return;
         }
         ID3v24Tag v24tag = f.getID3v2TagAsv24();
@@ -260,8 +260,8 @@ public class MP3 implements AudioDecoder {
 
     // Effects: sets relevant ID3v2 tags
     private void setID3v2(MP3File f, ID3Container container) {
-        if (f.hasID3v2Tag()) {
-            return;
+        if (!f.hasID3v2Tag()) {
+            f.setID3v2Tag(new ID3v24Tag());
         }
         ID3v24Tag v24tag = f.getID3v2TagAsv24();
         if (v24tag == null) {
