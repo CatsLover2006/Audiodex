@@ -20,6 +20,9 @@ import org.fusesource.jansi.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.table.DefaultTableModel;
+
+import ui.PopupManager.*;
 
 import static java.lang.Math.floor;
 import static java.lang.Math.random;
@@ -171,7 +174,19 @@ public class App {
 
     // GUI mode
     private static class Gui {
-        private static LoadingFrameThread loadingFrame = null;
+        private static JFrame loadingFrame = new JFrame();
+
+        // Loading frame initialization
+        static {
+            loadingFrame.setSize(200, 150);
+            loadingFrame.setResizable(false);
+            loadingFrame.setUndecorated(true);
+            loadingFrame.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+            loadingFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            loadingFrame.add(new JLabel("Loading..."));
+            loadingFrame.repaint();
+        }
+
         private static JFrame mainWindow;
 
         private enum LoopType {
@@ -184,34 +199,86 @@ public class App {
         private static boolean shuffle = false;
 
         // Modifies: this
-        // Effects:  shows loading thread
+        // Effects:  shows loading pane
         public static void createLoadingThread() {
-            if (loadingFrame != null) {
-                return;
-            }
-            loadingFrame = new LoadingFrameThread();
-            loadingFrame.start();
+            loadingFrame.setVisible(true);
         }
 
         // Modifies: this
-        // Effects:  hides loading thread
+        // Effects:  hides loading pane
         private static void closeLoadingThread() {
-            if (loadingFrame == null) {
-                return;
-            }
-            while (!loadingFrame.showing) {
-                Cli.wait(1);
-            }
-            loadingFrame.doneLoading();
-            loadingFrame.safeJoin(250);
-            loadingFrame = null;
+            loadingFrame.setVisible(false);
         }
 
         private static String[] columns = {
                 "Title", "Artist", "Album", "Album Artist"
         };
 
-        private static JScrollPane musicList;
+
+        // Table model to get around Jtable pain
+        private static class MusicTableModel extends DefaultTableModel {
+
+            // Gets table row count
+            @Override
+            public int getRowCount() {
+                if (database == null) {
+                    return 0;
+                }
+                return database.audioListSize();
+            }
+
+            // Gets table column count
+            @Override
+            public int getColumnCount() {
+                return columns.length;
+            }
+
+            // Gets table column
+            @Override
+            public String getColumnName(int columnIndex) {
+                return columns[columnIndex];
+            }
+
+            // Gets table column class
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return getValueAt(0, columnIndex).getClass();
+            }
+
+            // Prevents editing
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return false;
+            }
+
+            // Gets table value
+            @Override
+            public Object getValueAt(int rowIndex, int columnIndex) {
+                if (database == null) {
+                    return "";
+                }
+                Object obj =
+                        database.getAudioFile(rowIndex).getId3Data().getID3Data(convertValue(columns[columnIndex]));
+                if (obj == null) {
+                    return "";
+                }
+                return obj;
+            }
+        }
+
+        private static JTable musicTable = new JTable(new MusicTableModel()) {
+            public boolean editCellAt(int row, int column, java.util.EventObject e) {
+                if (lastClicked == row) {
+                    queueFrom(row);
+                    updatePlaybackBar();
+
+                } else {
+                    lastClicked = row;
+                }
+                return false;
+            }
+        };
+        private static JScrollPane musicList = new JScrollPane(musicTable);
 
         // Modifies: this
         // Effects:  displays main window
@@ -310,8 +377,24 @@ public class App {
             JMenuItem item = new JMenuItem("Save database");
             item.addActionListener(e -> database.saveDatabaseFile());
             menu.add(item);
+            item = new JMenuItem("Add file");
+            item.addActionListener(e -> addFile());
+            menu.add(item);
             menuBar.add(menu);
             mainWindow.setJMenuBar(menuBar);
+        }
+
+        // Effects: adds file to database via popup
+        private static void addFile() {
+            new FilePopupFrame(System.getProperty("user.home"), null,
+                    popup -> {
+                        createLoadingThread();
+                        database.addFileToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
+                        database.sanitizeAudioDatabase();
+                        database.sortSongList("Album_Title");
+                        updateGuiList();
+                        closeLoadingThread();
+                    });
         }
 
         // Modifies: this
@@ -356,29 +439,8 @@ public class App {
         // Modifies: this
         // Effects:  updates the list
         public static void updateGuiList() {
-            Object[][] rowData = new Object[database.audioListSize()][columns.length];
-            String key;
-            for (int j = 0; j < columns.length; j++) {
-                key = convertValue(columns[j]); // Save time on lookup
-                for (int i = 0; i < database.audioListSize(); i++) {
-                    rowData[i][j] = database.getAudioFile(i).getId3Data().getID3Data(key);
-                }
-            }
-            JTable musicTable = new JTable(rowData, columns) {
-                public boolean editCellAt(int row, int column, java.util.EventObject e) {
-                    if (lastClicked == row) {
-                        queueFrom(row);
-                        updatePlaybackBar();
-
-                    } else {
-                        lastClicked = row;
-                    }
-                    return false;
-                }
-            };
-            musicList = new JScrollPane(musicTable);
             lastClicked = -1;
-            musicTable.setFillsViewportHeight(true);
+            musicList.updateUI();
         }
 
         private static JSlider playbackSlider = new JSlider(0, 0);
@@ -671,57 +733,6 @@ public class App {
                     }
                     updatePlaybackBarStatus(playbackManager.getCurrentTime());
                 }
-            }
-        }
-
-        // No other class needs to know this
-        // class for the thread which displays the loading menu
-        private static class LoadingFrameThread extends Thread {
-            private volatile boolean showing = true;
-
-            public boolean isShowing() {
-                return showing;
-            }
-
-            // Modifies: this
-            // Effects:  closes loading window by setting showing to false
-            public void doneLoading() {
-                showing = false;
-            }
-
-
-
-            // Effects: join() but no try-catch
-            public void safeJoin() {
-                ExceptionIgnore.ignoreExc(() -> join());
-            }
-
-            // Effects: join(long millis) but no try-catch
-            public void safeJoin(long millis) {
-                ExceptionIgnore.ignoreExc(() -> join(millis));
-            }
-
-            // Effects: join(long millis, int nanos) but no try-catch
-            public void safeJoin(long millis, int nanos) {
-                ExceptionIgnore.ignoreExc(() -> join(millis, nanos));
-            }
-
-            // Effects: shows loading indicator window
-            public void run() {
-                JFrame loadingFrame = new JFrame("Loading...");
-                loadingFrame.setSize(200, 150);
-                loadingFrame.setResizable(false);
-                loadingFrame.setUndecorated(true);
-                loadingFrame.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-                loadingFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-                loadingFrame.add(new JLabel("Loading..."));
-                loadingFrame.setVisible(true);
-                while (showing) {
-                    Cli.wait(100);
-                }
-                loadingFrame.setVisible(false);
-                loadingFrame.dispose();
-                showing = false;
             }
         }
     }

@@ -32,26 +32,26 @@ public class AudioFileLoader {
     // No documentation needed, effectively a getter
     public static AudioFileType getAudioFiletype(String filename) {
         try {
-            String filetype = filename.substring(filename.length() - 4);
+            String filetype = filename.substring(filename.lastIndexOf(".") + 1);
             switch (filetype.toLowerCase()) {
-                case ".wav":
+                case "wav":
                 case "wave":
                     return AudioFileType.PCM_WAV;
-                case ".aif":
+                case "aif":
                 case "aiff":
                 case "aifc":
                     return AudioFileType.AIFF;
-                case ".mp1":
-                case ".mp2":
-                case ".mp3":
+                case "mp1":
+                case "mp2":
+                case "mp3":
                     return AudioFileType.MP3;
-                case ".ogg":
-                case ".oga":
+                case "ogg":
+                case "oga":
                 case "mogg":
                     return oggAudioType(filename);
-                case ".mp4":
-                case ".m4b":
-                case ".m4a":
+                case "mp4":
+                case "m4b":
+                case "m4a":
                     return m4aAudioType(filename);
                 default:
                     return AudioFileType.EMPTY;
