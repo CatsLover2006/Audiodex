@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
+// MP3 file encoder class
 public class MP3 implements AudioEncoder {
     private AudioDecoder decoder;
     private int bitrate = 320;

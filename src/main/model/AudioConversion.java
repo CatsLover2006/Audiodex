@@ -2,7 +2,7 @@ package model;
 
 import audio.*;
 import audio.filetypes.encoders.*;
-import ui.Main;
+import ui.App;
 
 import java.io.File;
 import java.util.HashMap;
@@ -25,7 +25,7 @@ public class AudioConversion {
                     // Wait for decoder thread to finish, in case we've got a music queue
                     ExceptionIgnore.ignoreExc(() -> sleep(0, 1));
                 } while (converterThread != null);
-                Main.finishedEncode();
+                App.finishedEncode();
             }
         }
 
@@ -117,6 +117,7 @@ public class AudioConversion {
         return done;
     }
 
+    // returns true if there was an error and the conversion is done
     public boolean errorOccurred() {
         return error && done;
     }
@@ -125,6 +126,7 @@ public class AudioConversion {
         converterThread.safeJoin();
     }
 
+    // getter but null-safe
     public HashMap<String, List<String>> getOptions() {
         if (helper == null) {
             return null;

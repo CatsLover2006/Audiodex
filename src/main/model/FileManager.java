@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
+// Static class
 public class FileManager {
     // Modifies: file at filename
     // Effects:  writes string to file, overwriting previous contents

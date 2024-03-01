@@ -3,15 +3,13 @@ package audio;
 import audio.filetypes.decoders.*;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import ui.Main;
 
 import java.io.File;
-import java.lang.reflect.Array;
 
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler
 public class AudioFileLoader {
-    // No documentation needed, effectively a setter
+    // Loads an audio file from disk
     public static AudioDecoder loadFile(String filename) {
         switch (getAudioFiletype(filename)) {
             case AIFF:

@@ -3,7 +3,6 @@ package model;
 import audio.AudioDataStructure;
 import audio.ID3Container;
 import org.json.*;
-import ui.Main;
 
 import java.io.File;
 import java.io.IOException;

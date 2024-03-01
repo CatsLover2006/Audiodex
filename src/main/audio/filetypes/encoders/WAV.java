@@ -4,19 +4,15 @@ import audio.AudioDecoder;
 import audio.AudioEncoder;
 import audio.AudioSample;
 import org.tritonus.sampled.file.WaveAudioOutputStream;
-import org.tritonus.share.sampled.file.AudioOutputStream;
 import org.tritonus.share.sampled.file.TDataOutputStream;
 import org.tritonus.share.sampled.file.TNonSeekableDataOutputStream;
-import ui.Main;
 
-import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
 import java.util.List;
 
+// WAV file encoder class
 public class WAV implements AudioEncoder {
     AudioDecoder decoder;
 

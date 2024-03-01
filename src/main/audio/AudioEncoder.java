@@ -4,6 +4,7 @@ import javax.sound.sampled.AudioFormat;
 import java.util.HashMap;
 import java.util.List;
 
+// audio encoder interface
 public interface AudioEncoder {
     // Effects: Tells the audio encoder where we're encoding from
     void setSource(AudioDecoder from);

@@ -28,6 +28,7 @@ public class TagConversion {
     public static final HashMap<String, String> id3v2keyConv;
     public static final HashMap<String, String> id3v2valConv;
 
+    // Initalizes values since you can't do that at compile time for a hashmap
     static {
         FieldKey[] ignoreList = {
                 FieldKey.COPYRIGHT

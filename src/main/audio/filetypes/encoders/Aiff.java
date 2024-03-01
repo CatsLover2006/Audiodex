@@ -7,7 +7,6 @@ import audio.ID3Container;
 import org.tritonus.sampled.file.AiffAudioOutputStream;
 import org.tritonus.share.sampled.file.TDataOutputStream;
 import org.tritonus.share.sampled.file.TSeekableDataOutputStream;
-import ui.Main;
 
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioFormat;
@@ -15,6 +14,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
+// AIFF file encoder class
 public class Aiff implements AudioEncoder {
     AudioDecoder decoder;
 

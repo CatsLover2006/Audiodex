@@ -10,7 +10,7 @@ import static java.io.File.separatorChar;
 import org.json.*;
 
 // Audio data structure class
-// Will be used for the database
+// Used for the database
 public class AudioDataStructure {
 
     private final String filename;

@@ -8,7 +8,6 @@ import model.ExceptionIgnore;
 
 import javax.sound.sampled.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 // Backend for allowing interactions between the UI and filesystem
 // Specific to decoding audio
@@ -28,7 +27,7 @@ public class AudioFilePlaybackBackend {
                     // Wait for decoder thread to finish, in case we've got a music queue
                     ExceptionIgnore.ignoreExc(() -> sleep(0, 1));
                 }
-                Main.finishedSong();
+                App.finishedSong();
             }
         }
 
@@ -221,7 +220,7 @@ public class AudioFilePlaybackBackend {
         } else {
             decoderThread.start();
         }
-        Main.CliInterface.updatePlaybackStatus();
+        App.CliInterface.updatePlaybackStatus();
     }
 
     // Modifies: this
@@ -232,7 +231,7 @@ public class AudioFilePlaybackBackend {
             decoderThread.suspend();
             line.stop();
         }
-        Main.CliInterface.updatePlaybackStatus();
+        App.CliInterface.updatePlaybackStatus();
     }
 
     // Requires: 0 <= time <= audio length
@@ -240,7 +239,7 @@ public class AudioFilePlaybackBackend {
     // Effects:  sets playback pointer to the specified time
     public void seekTo(double time) {
         loadedFile.goToTime(time);
-        Main.CliInterface.updatePlaybackStatus();
+        App.CliInterface.updatePlaybackStatus();
     }
 
     // Effects: waits for audio playback to finish
