@@ -3,6 +3,7 @@ package audio.filetypes.encoders;
 import audio.AudioDecoder;
 import audio.AudioEncoder;
 import audio.filetypes.decoders.Aiff;
+import model.ExceptionIgnore;
 import org.junit.jupiter.api.Test;
 import ui.AudioFilePlaybackBackend;
 
@@ -32,6 +33,7 @@ public class AiffTest {
         assertNull(encoder.getEncoderSpecificSelectors());
         assertEquals(0, encoder.encodedPercent());
         EncodeThread thread = new EncodeThread();
+        (new PercentDisp(() -> encoder.encodedPercent())).start();
         thread.start();
         assertEquals(0, encoder.encodedPercent());
         while (thread.isAlive()) {
@@ -51,6 +53,7 @@ public class AiffTest {
         player.loadAudio("./data/out/scarlet.aif");
         player.startAudioDecoderThread();
         player.playAudio();
+        (new PercentDisp(() -> player.getPercentPlayed())).start();
         player.waitForAudioFinish();
         player.cleanBackend();
     }
@@ -66,5 +69,26 @@ public class AiffTest {
         assertEquals(0, encoder.encodedPercent());
         assertNull(encoder.getEncoderSpecificSelectors()); // Japanese directory name
         assertFalse(encoder.encodeAudio("./data/\u3042/scarlet.aif"));
+    }
+
+    // Make a lambda for this
+    private interface RunnableFloat {
+        double run();
+    }
+
+    // Percentage display class using lambda
+    private class PercentDisp extends Thread {
+        RunnableFloat thing;
+        PercentDisp(RunnableFloat yay) {
+            thing = yay;
+        }
+
+        public void run() {
+            while (true) {
+                ExceptionIgnore.ignoreExc(() -> sleep(1000));
+                System.out.println(thing.run() * 100 + "%");
+                if (thing.run() >= 1) return;
+            }
+        }
     }
 }

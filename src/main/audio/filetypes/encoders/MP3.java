@@ -17,6 +17,7 @@ import java.util.Objects;
 // MP3 file encoder class
 public class MP3 implements AudioEncoder {
     private AudioDecoder decoder;
+    private boolean done = false;
     private int bitrate = 320;
     private boolean useVBR = false;
     private boolean stereo = false;
@@ -94,6 +95,9 @@ public class MP3 implements AudioEncoder {
     // Effects: gets an approximate percent for how far along the encoding is
     //          output ranges from 0.0 to 1.0
     public double encodedPercent() {
+        if (done) {
+            return 1;
+        }
         if (decoder == null || !decoder.isReady()) {
             return 0;
         }
@@ -112,6 +116,7 @@ public class MP3 implements AudioEncoder {
         id3Updater.setArtwork(decoder.getArtwork());
         id3Updater.closeAudioFile();
         decoder.closeAudioFile();
+        done = true;
         return true;
     }
 }

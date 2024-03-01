@@ -13,6 +13,7 @@ import java.awt.image.BufferedImage;
 // Specific to decoding audio
 // This class is incapable of automated testing: multithreading over several
 public class AudioFilePlaybackBackend {
+    private boolean done = false;
 
     // No other class needs to know this
     // This is the audio decoding thread
@@ -171,6 +172,9 @@ public class AudioFilePlaybackBackend {
     // Effects: returns a number between 0.0 and 1.0 relating to how much of the audio is played
     //          will return 0.0 if no audio is loaded
     public double getPercentPlayed() {
+        if (done) {
+            return 1;
+        }
         if (loadedFile == null) {
             return 0;
         }
@@ -261,6 +265,7 @@ public class AudioFilePlaybackBackend {
         if (loadedFile != null) {
             loadedFile.closeAudioFile();
         }
+        done = true;
     }
 
     // Effects: returns true if audio is loaded

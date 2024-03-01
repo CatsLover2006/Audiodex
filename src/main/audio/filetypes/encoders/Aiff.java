@@ -17,6 +17,7 @@ import java.util.List;
 // AIFF file encoder class
 public class Aiff implements AudioEncoder {
     AudioDecoder decoder;
+    private boolean done = false;
 
     // Effects: Tells the audio encoder where we're encoding from
     public void setSource(AudioDecoder from) {
@@ -69,12 +70,16 @@ public class Aiff implements AudioEncoder {
         id3Updater.setArtwork(decoder.getArtwork());
         id3Updater.closeAudioFile();
         decoder.closeAudioFile();
+        done = true;
         return true;
     }
 
     // Effects: gets an approximate percent for how far along the encoding is
     //          output ranges from 0.0 to 1.0
     public double encodedPercent() {
+        if (done) {
+            return 1;
+        }
         if (decoder == null || !decoder.isReady()) {
             return 0;
         }

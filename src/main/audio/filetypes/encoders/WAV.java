@@ -15,6 +15,7 @@ import java.util.List;
 // WAV file encoder class
 public class WAV implements AudioEncoder {
     AudioDecoder decoder;
+    private boolean done = false;
 
     // Effects: Tells the audio encoder where we're encoding from
     public void setSource(AudioDecoder from) {
@@ -47,6 +48,7 @@ public class WAV implements AudioEncoder {
                 out.write(sample.getData(), 0, sample.getLength());
             }
             out.close();
+            done = true;
             return true;
         } catch (Exception e) {
             return false;
@@ -56,6 +58,9 @@ public class WAV implements AudioEncoder {
     // Effects: gets an approximate percent for how far along the encoding is
     //          output ranges from 0.0 to 1.0
     public double encodedPercent() {
+        if (done) {
+            return 1;
+        }
         if (decoder == null || !decoder.isReady()) {
             return 0;
         }
