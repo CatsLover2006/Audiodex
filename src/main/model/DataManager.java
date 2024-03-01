@@ -218,14 +218,14 @@ public class DataManager {
     public void loadDatabaseFile() {
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         JSONArray array;
-        System.out.println(readFile(filename));
+        String file = readFile(filename);
         try {
-            JSONObject decoded = new JSONObject(readFile(filename));
+            JSONObject decoded = new JSONObject(file);
             settings = new ApplicationSettings((JSONObject) decoded.get("settings"));
             array = (JSONArray) decoded.get("files");
         } catch (JSONException e) {
             try {
-                array = new JSONArray(readFile(filename));
+                array = new JSONArray(file);
                 System.out.println("Legacy-style database.");
             } catch (JSONException e2) {
                 System.out.println("Error while decoding database.");

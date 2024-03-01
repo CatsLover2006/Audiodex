@@ -61,6 +61,7 @@ public class MP3 implements AudioDecoder {
     public void prepareToPlayAudio() {
         try {
             File file = new File(filename);
+            file.getCanonicalFile(); // Create IOException on invalid paths
             InputStream input = new FileInputStream(file);
             MpegAudioFileReader fileReader = new MpegAudioFileReader();
             duration = (Long)(fileReader.getAudioFileFormat(input, file.length()).properties().get("duration"));
@@ -74,6 +75,7 @@ public class MP3 implements AudioDecoder {
             System.out.println("MP3 decoder ready!");
             ready = true;
         } catch (FileNotFoundException e) {
+            System.out.println("Error in encoding");
             return; // We don't set ready flag
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -164,6 +166,9 @@ public class MP3 implements AudioDecoder {
 
     // Effects: returns decoded ID3 data
     public ID3Container getID3() {
+        if (!ready) {
+            return null;
+        } // We readyn't
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
         MP3File f = (MP3File)getAudioFile(filename);
@@ -205,7 +210,7 @@ public class MP3 implements AudioDecoder {
                 Date d = Date.from(Instant.parse(v24tag.getFirst(entry.getKey())));
                 base.setID3Long(entry.getValue(), String.valueOf(1900 + d.getYear()));
             } catch (Exception e) {
-                base.setID3Long(entry.getValue(), v24tag.getFirst(entry.getKey()));
+                ExceptionIgnore.ignoreExc(() -> base.setID3Long(entry.getValue(), v24tag.getFirst(entry.getKey())));
             }
         }
     }
@@ -237,7 +242,7 @@ public class MP3 implements AudioDecoder {
 
     // Effects: sets relevant ID3v1 tags
     private void setID3v1(MP3File f, ID3Container container) {
-        Tag tag = f.getTag();
+        Tag tag = f.getTagOrCreateAndSetDefault();
         if (tag == null) {
             return;
         }
@@ -265,14 +270,11 @@ public class MP3 implements AudioDecoder {
         for (Map.Entry<String, String> entry : id3v2valConv.entrySet()) {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
-                while (v24tag.hasFrame(entry.getValue())) {
-                    v24tag.removeFrame(entry.getValue());
-                }
                 ID3v24Frame frame = v24tag.createFrame(entry.getValue());
                 frame.setContent(data.toString());
+                v24tag.mergeDuplicateFrames(frame);
             }
         }
-        v24tag.createStructure();
     }
 
     // Effects: returns filename without directories

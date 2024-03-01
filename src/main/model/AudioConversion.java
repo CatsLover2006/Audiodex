@@ -123,7 +123,7 @@ public class AudioConversion {
     }
 
     public void waitForEncoderFinish() {
-        converterThread.safeJoin();
+        ExceptionIgnore.ignoreExc(() -> converterThread.safeJoin());
     }
 
     // getter but null-safe
