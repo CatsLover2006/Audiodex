@@ -102,8 +102,8 @@ _I'm a really lucky person ain't I?_
   - As a user, I want to play my music library nonstop for an extended period of time
   - As a user, I don't expect my music playback history and queue to persist after closing the program
 - As a user, I want to be able to convert my music to a different format
-- As a user, I want to manage my music library
-  - As a user, I expect my music library to automatically be listed when I launch the program after importing the first time
+- As a user, I want to view, edit, and add songs to my music library, which is a list of songs
+  - As a user, I expect my music library to automatically be loaded when I launch the program after importing the first time
   - As a user, I expect my music library to not disappear if I move the application<br>I expect my music library to be stored as a part of my user, and not alongside the application
   - As a user, I expect to be able to revert my music library to a previous version if I do something I didn't intend to do
 

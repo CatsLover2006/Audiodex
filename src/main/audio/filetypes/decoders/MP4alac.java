@@ -14,16 +14,10 @@ import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
-import ui.Main;
-import vavi.sound.sampled.alac.AlacAudioFileReader;
 
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
@@ -32,6 +26,7 @@ import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
 import static java.lang.Thread.sleep;
 
+// ALAC file decoder class
 public class MP4alac implements AudioDecoder {
     private String filename;
     private AudioFormat format;

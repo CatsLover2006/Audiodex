@@ -7,6 +7,7 @@ public class AudioSample {
     private final byte[] data;
     private final int length;
 
+    // Empty audio sample (zero bytes long and zero data)
     public AudioSample() {
         data = new byte[] {};
         length = 0;

@@ -23,12 +23,15 @@ import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.id3.AbstractID3v2Tag;
+import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.id3.ID3v24Frame;
+import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
+import org.jaudiotagger.tag.id3.framebody.FrameBodyAENC;
+import org.jaudiotagger.tag.id3.framebody.FrameBodyDeprecated;
 import org.jaudiotagger.tag.images.Artwork;
-import ui.Main;
 
-import static audio.filetypes.TagConversion.keyConv;
+import static audio.filetypes.TagConversion.*;
 import static java.io.File.separatorChar;
 
 // MPEG-type audio file decoder class
@@ -197,8 +200,13 @@ public class MP3 implements AudioDecoder {
             return;
         }
         ID3v24Tag v24tag = f.getID3v2TagAsv24();
-        for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
-
+        for (Map.Entry<String, String> entry: id3v2keyConv.entrySet()) {
+            try {
+                Date d = Date.from(Instant.parse(v24tag.getFirst(entry.getKey())));
+                base.setID3Long(entry.getValue(), String.valueOf(1900 + d.getYear()));
+            } catch (Exception e) {
+                base.setID3Long(entry.getValue(), v24tag.getFirst(entry.getKey()));
+            }
         }
     }
 
@@ -214,14 +222,26 @@ public class MP3 implements AudioDecoder {
     // Modifies: file on filesystem
     // Effects:  updates ID3 data
     public void setID3(ID3Container container) {
-        AudioFile f = null;
-        try {
-            f = AudioFileIO.read(new File(filename));
-        } catch (Exception e) {
+        MP3File f = (MP3File)getAudioFile(filename);
+        if (f == null) {
             return;
         }
-        Tag tag = f.getTagOrCreateAndSetDefault();
-        for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
+        setID3v1(f, container);
+        setID3v2(f, container);
+        try {
+            f.commit();
+        } catch (CannotWriteException e) {
+            System.out.println("Failed to write to file.");
+        }
+    }
+
+    // Effects: sets relevant ID3v1 tags
+    private void setID3v1(MP3File f, ID3Container container) {
+        Tag tag = f.getTag();
+        if (tag == null) {
+            return;
+        }
+        for (Map.Entry<String, FieldKey> entry : valConv.entrySet()) {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
                 try {
@@ -231,11 +251,28 @@ public class MP3 implements AudioDecoder {
                 }
             }
         }
-        try {
-            f.commit();
-        } catch (CannotWriteException e) {
-            System.out.println("Failed to write to file.");
+    }
+
+    // Effects: sets relevant ID3v2 tags
+    private void setID3v2(MP3File f, ID3Container container) {
+        if (f.hasID3v2Tag()) {
+            return;
         }
+        ID3v24Tag v24tag = f.getID3v2TagAsv24();
+        if (v24tag == null) {
+            return;
+        }
+        for (Map.Entry<String, String> entry : id3v2valConv.entrySet()) {
+            Object data = container.getID3Data(entry.getKey());
+            if (data != null) {
+                while (v24tag.hasFrame(entry.getValue())) {
+                    v24tag.removeFrame(entry.getValue());
+                }
+                ID3v24Frame frame = v24tag.createFrame(entry.getValue());
+                frame.setContent(data.toString());
+            }
+        }
+        v24tag.createStructure();
     }
 
     // Effects: returns filename without directories
@@ -269,6 +306,9 @@ public class MP3 implements AudioDecoder {
     public void setArtwork(Artwork image) {
         ExceptionIgnore.ignoreExc(() ->  {
             AudioFile f = AudioFileIO.read(new File(filename));
+            while (!f.getTag().getArtworkList().isEmpty()) {
+                f.getTag().deleteArtworkField();
+            } // It duplicates artwork if I don't do this and idk why
             f.getTag().setField(image);
             f.commit();
         });

@@ -15,12 +15,10 @@ import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
-import ui.Main;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;

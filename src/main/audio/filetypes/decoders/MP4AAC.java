@@ -17,14 +17,11 @@ import net.sourceforge.jaad.mp4.api.Track;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.exceptions.CannotWriteException;
-import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
-import ui.Main;
 
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -36,9 +33,7 @@ import java.util.Map;
 import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
 
-// Audio decoder for the MP4 file type
-// Only supports AAC MP4 files but to my knowledge there are no other
-// audio formats that use MP4 as a primary
+// Audio decoder for the MP4 file type with an AAC codec
 public class MP4AAC implements AudioDecoder {
     Frame frame;
     private AudioTrack tracks;
