@@ -20,7 +20,7 @@ public class AudioDataStructureTest {
         assertEquals(16, structure.getSamplesize());
         assertEquals(1411, structure.getBitrate() / 1000);
         try {
-            assertEquals((new File("./data/scarlet.aif")).getCanonicalPath(), structure.getFilename());
+            assertEquals(new File("./data/scarlet.aif").getCanonicalPath(), structure.getFilename());
         } catch (IOException e) {
             fail("Where dis file at?");
         }
@@ -35,14 +35,14 @@ public class AudioDataStructureTest {
 
     @Test
     public void loadFromKnownData() {
-        JSONObject json = (new AudioDataStructure("./data/scarlet.aif")).encode();
+        JSONObject json = new AudioDataStructure("./data/scarlet.aif").encode();
         structure = AudioDataStructure.decode(json);
         assertEquals(25751698, structure.getFilesize());
         assertFalse(structure.isEmpty());
         assertEquals(16, structure.getSamplesize());
         assertEquals(1411, structure.getBitrate() / 1000);
         try {
-            assertEquals((new File("./data/scarlet.aif")).getCanonicalPath(), structure.getFilename());
+            assertEquals(new File("./data/scarlet.aif").getCanonicalPath(), structure.getFilename());
         } catch (IOException e) {
             fail("Where dis file at?");
         }

@@ -16,6 +16,7 @@ public class MP3Test {
     AudioEncoder encoder;
 
     private class EncodeThread extends Thread {
+        @Override
         public void run() {
             assertTrue(encoder.encodeAudio("./data/out/scarlet.mp3"));
         }
@@ -35,7 +36,7 @@ public class MP3Test {
         assertEquals(0, encoder.encodedPercent());
         assertNotNull(encoder.getEncoderSpecificSelectors());
         EncodeThread thread = new EncodeThread();
-        (new PercentDisp(() -> encoder.encodedPercent())).start();
+        new PercentDisp(() -> encoder.encodedPercent()).start();
         thread.start();
         assertEquals(0, encoder.encodedPercent());
         while (thread.isAlive()) {
@@ -55,7 +56,7 @@ public class MP3Test {
         player.loadAudio("./data/out/scarlet.mp3");
         player.startAudioDecoderThread();
         player.playAudio();
-        (new PercentDisp(() -> player.getPercentPlayed())).start();
+        new PercentDisp(() -> player.getPercentPlayed()).start();
         player.waitForAudioFinish();
         player.cleanBackend();
     }
@@ -82,12 +83,13 @@ public class MP3Test {
     }
 
     // Percentage display class using lambda
-    private class PercentDisp extends Thread {
-        RunnableFloat thing;
+    private static class PercentDisp extends Thread {
+        final RunnableFloat thing;
         PercentDisp(RunnableFloat yay) {
             thing = yay;
         }
 
+        @Override
         public void run() {
             while (true) {
                 ExceptionIgnore.ignoreExc(() -> sleep(1000));

@@ -27,6 +27,7 @@ public class AudioConversionTest {
     public void aifOutTest() {
         converter = new AudioConversion(new AudioDataStructure("data/scarlet.aif"),
                 "data/out/scarlet.conv.aif");
+        assertNull(converter.getOptions());
     }
 
     @Test

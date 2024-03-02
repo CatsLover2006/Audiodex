@@ -23,12 +23,8 @@ import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.TagOptionSingleton;
 import org.jaudiotagger.tag.id3.ID3v24Frame;
-import org.jaudiotagger.tag.id3.ID3v24Frames;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
-import org.jaudiotagger.tag.id3.framebody.FrameBodyAENC;
-import org.jaudiotagger.tag.id3.framebody.FrameBodyDeprecated;
 import org.jaudiotagger.tag.images.Artwork;
 
 import static audio.filetypes.TagConversion.*;
@@ -36,7 +32,7 @@ import static java.io.File.separatorChar;
 
 // MPEG-type audio file decoder class
 public class MP3 implements AudioDecoder {
-    private String filename;
+    private final String filename;
     private AudioFormat format;
     private DecodedMpegAudioInputStream decoded;
     private AudioInputStream in;
@@ -48,6 +44,7 @@ public class MP3 implements AudioDecoder {
     private boolean skipping = false;
 
     // Effects: returns true if audio can be decoded currently
+    @Override
     public boolean isReady() {
         return ready;
     }
@@ -58,13 +55,14 @@ public class MP3 implements AudioDecoder {
 
     // Modifies: this
     // Effects:  loads audio and makes all other functions valid
+    @Override
     public void prepareToPlayAudio() {
         try {
             File file = new File(filename);
             file.getCanonicalFile(); // Create IOException on invalid paths
             InputStream input = new FileInputStream(file);
             MpegAudioFileReader fileReader = new MpegAudioFileReader();
-            duration = (Long)(fileReader.getAudioFileFormat(input, file.length()).properties().get("duration"));
+            duration = (Long) fileReader.getAudioFileFormat(input, file.length()).properties().get("duration");
             in = fileReader.getAudioInputStream(file);
             AudioFormat baseFormat = in.getFormat();
             format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
@@ -86,6 +84,7 @@ public class MP3 implements AudioDecoder {
     // Modifies: this
     // Effects:  unloads audio file, to save memory
     //           getAudioOutputFormat() and atEndOfFile() remain valid
+    @Override
     public void closeAudioFile() {
         ready = false;
         ExceptionIgnore.ignoreExc(() ->  {
@@ -96,12 +95,14 @@ public class MP3 implements AudioDecoder {
 
     // Effects: returns true if goToTime() is running
     //          only exists due to having multiple threads
+    @Override
     public boolean skipInProgress() {
         return skipping;
     }
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
+    @Override
     public AudioSample getNextSample() {
         while (moreSamples()) {
             try {
@@ -123,6 +124,7 @@ public class MP3 implements AudioDecoder {
     //           0 <= time <= audio length
     // Modifies: this
     // Effects:  moves audio to a different point of the file
+    @Override
     public void goToTime(double time) {
         skipping = true;
         long toSkip = (long)(time * audioFrameRate) // Target frame
@@ -140,6 +142,7 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: returns the current time in the audio in seconds
+    @Override
     public double getCurrentTime() {
         if (decoded == null) {
             return -1;
@@ -148,23 +151,27 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: returns the duration of the audio in seconds
+    @Override
     public double getFileDuration() {
         return duration * 0.000001; // javax uses microseconds
     }
 
     // Requires: prepareToPlayAudio() called once
     // Effects:  returns the audio format of the file
+    @Override
     public AudioFormat getAudioOutputFormat() {
         return format;
     }
 
     // Effects:  returns true if there are more samples to be played
     //           will return false is no file is loaded
+    @Override
     public boolean moreSamples() {
         return numberBytesRead != -1;
     }
 
     // Effects: returns decoded ID3 data
+    @Override
     public ID3Container getID3() {
         if (!ready) {
             return null;
@@ -184,7 +191,7 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: gets relevant ID3v1 tags
-    private void getID3v1(MP3File f, ID3Container base) {
+    private static void getID3v1(MP3File f, ID3Container base) {
         Tag tag = f.getTag();
         if (tag == null) {
             return;
@@ -200,7 +207,7 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: gets relevant ID3v2 tags
-    private void getID3v2(MP3File f, ID3Container base) {
+    private static void getID3v2(MP3File f, ID3Container base) {
         if (!f.hasID3v2Tag()) {
             return;
         }
@@ -216,7 +223,7 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: returns AudioFile class
-    private AudioFile getAudioFile(String filename) {
+    private static AudioFile getAudioFile(String filename) {
         try {
             return AudioFileIO.read(new File(filename));
         } catch (Exception e) {
@@ -226,6 +233,7 @@ public class MP3 implements AudioDecoder {
 
     // Modifies: file on filesystem
     // Effects:  updates ID3 data
+    @Override
     public void setID3(ID3Container container) {
         MP3File f = (MP3File)getAudioFile(filename);
         if (f == null) {
@@ -241,7 +249,7 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: sets relevant ID3v1 tags
-    private void setID3v1(MP3File f, ID3Container container) {
+    private static void setID3v1(MP3File f, ID3Container container) {
         Tag tag = f.getTagOrCreateAndSetDefault();
         if (tag == null) {
             return;
@@ -259,7 +267,7 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: sets relevant ID3v2 tags
-    private void setID3v2(MP3File f, ID3Container container) {
+    private static void setID3v2(MP3File f, ID3Container container) {
         if (!f.hasID3v2Tag()) {
             f.setID3v2Tag(new ID3v24Tag());
         }
@@ -278,18 +286,21 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: returns filename without directories
+    @Override
     public String getFileName() {
         String[] dirList = filename.split(String.valueOf(separatorChar));
         return dirList[dirList.length - 1];
     }
 
+    @Override
     public AudioFileType getFileType() {
         return AudioFileType.MP3;
     }
 
     // Effects: returns album artwork if possible
+    @Override
     public Artwork getArtwork() {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
             Tag tag = f.getTag();
@@ -305,6 +316,7 @@ public class MP3 implements AudioDecoder {
     }
 
     // Effects: sets the album artwork if possible
+    @Override
     public void setArtwork(Artwork image) {
         ExceptionIgnore.ignoreExc(() ->  {
             AudioFile f = AudioFileIO.read(new File(filename));
@@ -318,8 +330,9 @@ public class MP3 implements AudioDecoder {
 
     // Effects: returns replaygain value
     //          defaults to -6
+    @Override
     public float getReplayGain() {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
             return TagConversion.getReplayGain(f.getTag());

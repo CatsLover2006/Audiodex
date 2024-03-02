@@ -9,6 +9,11 @@ import java.io.File;
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler
 public class AudioFileLoader {
+    public static final String[] KNOWN_FILENAMES = {
+            "wav", "wave", "aif", "aiff", "aifc", "mp1", "mp2", "mp3",
+            "ogg", "oga", "mogg", "mp4", "m4b", "m4a"
+    };
+
     // Loads an audio file from disk
     public static AudioDecoder loadFile(String filename) {
         switch (getAudioFiletype(filename)) {
@@ -32,7 +37,7 @@ public class AudioFileLoader {
     // No documentation needed, effectively a getter
     public static AudioFileType getAudioFiletype(String filename) {
         try {
-            String filetype = filename.substring(filename.lastIndexOf(".") + 1);
+            String filetype = filename.substring(filename.lastIndexOf('.') + 1);
             switch (filetype.toLowerCase()) {
                 case "wav":
                 case "wave":
@@ -63,7 +68,7 @@ public class AudioFileLoader {
 
     // Effects: detects if a .m4a file is ALAC or AAC
     private static AudioFileType m4aAudioType(String filename) {
-        File file = null;
+        File file;
         try {
             file = new File(filename);
             AudioFile audio = AudioFileIO.read(file);
@@ -81,7 +86,7 @@ public class AudioFileLoader {
 
     // Effects: detects encoding of a .ogg-like file
     private static AudioFileType oggAudioType(String filename) {
-        File file = null;
+        File file;
         try {
             file = new File(filename);
             AudioFile audio = AudioFileIO.read(file);

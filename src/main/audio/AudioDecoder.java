@@ -3,7 +3,6 @@ package audio;
 import org.jaudiotagger.tag.images.Artwork;
 
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
 
 // Audio decoder interface
 // Most functions explain themselves

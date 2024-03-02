@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.logging.LogManager;
 
 import audio.ID3Container;
 import model.AudioConversion;
@@ -52,30 +53,15 @@ public class App {
 
     // Effects: Counts currently converting audio files
     private static int activeAudioConversions() {
-        int i = 0;
-        for (AudioConversion converter : audioConverterList) {
-            if (converter.isFinished()) {
-                continue;
-            }
-            if (converter.errorOccurred()) {
-                continue;
-            }
-            i++;
-        }
+        int i = (int) audioConverterList.stream().filter(converter -> !converter.isFinished())
+                .filter(converter -> !converter.errorOccurred()).count();
         return i;
     }
 
     // Effects: Counts failed audio file conversions
     private static int deadAudioConversions() {
-        int i = 0;
-        for (AudioConversion converter : audioConverterList) {
-            if (converter.isFinished()) {
-                continue;
-            }
-            if (converter.errorOccurred()) {
-                i++;
-            }
-        }
+        int i = (int) audioConverterList.stream().filter(converter -> !converter.isFinished())
+                .filter(AudioConversion::errorOccurred).count();
         return i;
     }
 
@@ -88,12 +74,7 @@ public class App {
     // Effects: returns true if arr contains item, false otherwise
     //          this function is null-safe
     private static boolean strArrContains(String[] arr, String item) {
-        for (String cur : arr) {
-            if (cur.equals(item)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(arr).anyMatch(cur -> cur.equals(item));
     }
 
     // Modifies: this
@@ -135,7 +116,7 @@ public class App {
     }
 
     static { // Disable jaudiotagger (library) logging
-        java.util.logging.LogManager manager = java.util.logging.LogManager.getLogManager();
+        LogManager manager = LogManager.getLogManager();
         ExceptionIgnore.ignoreExc(() -> manager.readConfiguration(
                 new ByteArrayInputStream(("handlers=java.util.logging.ConsoleHandler\n"
                     + "org.jaudiotagger.level=OFF").getBytes())));
@@ -174,7 +155,7 @@ public class App {
 
     // GUI mode
     private static class Gui {
-        private static JFrame loadingFrame = new JFrame();
+        private static final JFrame loadingFrame = new JFrame();
 
         // Loading frame initialization
         static {
@@ -195,8 +176,8 @@ public class App {
             ALL
         }
 
-        private static LoopType loop = LoopType.NO;
-        private static boolean shuffle = false;
+        private static final LoopType loop = LoopType.NO;
+        private static final boolean shuffle = false;
 
         // Modifies: this
         // Effects:  shows loading pane
@@ -210,7 +191,7 @@ public class App {
             loadingFrame.setVisible(false);
         }
 
-        private static String[] columns = {
+        private static final String[] columns = {
                 "Title", "Artist", "Album", "Album Artist"
         };
 
@@ -266,8 +247,9 @@ public class App {
             }
         }
 
-        private static JTable musicTable = new JTable(new MusicTableModel()) {
-            public boolean editCellAt(int row, int column, java.util.EventObject e) {
+        private static final JTable musicTable = new JTable(new MusicTableModel()) {
+            @Override
+            public boolean editCellAt(int row, int column, EventObject e) {
                 if (lastClicked == row) {
                     queueFrom(row);
                     updatePlaybackBar();
@@ -278,7 +260,7 @@ public class App {
                 return false;
             }
         };
-        private static JScrollPane musicList = new JScrollPane(musicTable);
+        private static final JScrollPane musicList = new JScrollPane(musicTable);
 
         // Modifies: this
         // Effects:  displays main window
@@ -386,7 +368,7 @@ public class App {
 
         // Effects: adds file to database via popup
         private static void addFile() {
-            new FilePopupFrame(System.getProperty("user.home"), null,
+            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"), null,
                     popup -> {
                         createLoadingThread();
                         database.addFileToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
@@ -443,15 +425,15 @@ public class App {
             musicList.updateUI();
         }
 
-        private static JSlider playbackSlider = new JSlider(0, 0);
-        private static JLabel leftPlaybackLabel = new JLabel("X:XX");
-        private static JLabel rightPlaybackLabel = new JLabel("X:XX");
-        private static JPanel playbackStatusView = new JPanel(true);
-        private static JPanel musicPlaybackView = new JPanel(true);
-        private static JPanel controlsView = new JPanel(true);
-        private static JLabel musicArt = new JLabel();
-        private static JLabel fileLabel = new JLabel();
-        private static JLabel albumLabel = new JLabel();
+        private static final JSlider playbackSlider = new JSlider(0, 0);
+        private static final JLabel leftPlaybackLabel = new JLabel("X:XX");
+        private static final JLabel rightPlaybackLabel = new JLabel("X:XX");
+        private static final JPanel playbackStatusView = new JPanel(true);
+        private static final JPanel musicPlaybackView = new JPanel(true);
+        private static final JPanel controlsView = new JPanel(true);
+        private static final JLabel musicArt = new JLabel();
+        private static final JLabel fileLabel = new JLabel();
+        private static final JLabel albumLabel = new JLabel();
         private static BufferedImage placeholder;
         private static BufferedImage skip;
         private static BufferedImage prev;
@@ -459,9 +441,9 @@ public class App {
         private static BufferedImage prevInactive;
         private static BufferedImage paused;
         private static BufferedImage playing;
-        private static JButton skipButton;
-        private static JButton prevButton;
-        private static JButton playButton;
+        private static final JButton skipButton;
+        private static final JButton prevButton;
+        private static final JButton playButton;
 
         static {
             try {
@@ -597,6 +579,7 @@ public class App {
 
         // Thread to update album artwork
         private static class AlbumArtworkUpdater extends Thread {
+            @Override
             public void run() {
                 musicArt.setIcon(new ImageIcon(placeholder));
                 BufferedImage bufferedImage = playbackManager.getArtwork();
@@ -725,6 +708,7 @@ public class App {
             }
 
             // Effects: plays audio in file loadedFile
+            @Override
             public void run() {
                 while (run) {
                     Cli.wait(20);
@@ -788,6 +772,7 @@ public class App {
             }
 
             // Effects: plays audio in file loadedFile
+            @Override
             public void run() {
                 if (AnsiConsole.getTerminalWidth() == 0) {
                     return;
@@ -834,7 +819,7 @@ public class App {
             StringBuilder fileOut = new StringBuilder();
             for (int i = 0; i < database.audioListSize(); i++) {
                 AnsiConsole.out().println(database.getAudioFile(i).getPlaybackString());
-                fileOut.append(database.getAudioFile(i).getPlaybackString() + "\n");
+                fileOut.append(database.getAudioFile(i).getPlaybackString()).append("\n");
             }
             FileManager.writeToFile(System.getProperty("user.home") + "/audiodex/files.txt", fileOut.toString());
             AnsiConsole.out().println("\nA file has been output to " + System.getProperty("user.home")
@@ -855,13 +840,13 @@ public class App {
                     AnsiConsole.out().println("Couldn't find the file " + database.getAudioFile(index).getFilename()
                             + ", update index? (Y/n)");
                     in = inputScanner.nextLine().toLowerCase().trim();
-                    if (in == "n") {
+                    if (in.equals("n")) {
                         break;
                     }
                     AnsiConsole.out().println("Please enter the new filename.");
                     database.updateAudioFile(index, inputScanner.nextLine().trim());
                 } while (database.getAudioFile(index).isEmpty()
-                        || !(new File(database.getAudioFile(index).getFilename())).exists());
+                        || !new File(database.getAudioFile(index).getFilename()).exists());
             }
         }
 
@@ -895,14 +880,12 @@ public class App {
                 songQueue.removeFirst();
             }
             switch (Cli.state) {
-                case CLI_BROWSEMENU: {
+                case CLI_BROWSEMENU:
                     Cli.printBrowseMenu();
                     break;
-                }
-                case CLI_MAINMENU: {
+                case CLI_MAINMENU:
                     Cli.printMenu();
                     break;
-                }
             }
             Cli.doPlaybackStatusWrite();
         }
@@ -926,85 +909,66 @@ public class App {
         private static void cliMain(Scanner inputScanner, String selected) {
             state = MenuState.CLI_OTHER;
             switch (selected.toLowerCase()) {
-                case "1": {
+                case "1":
                     playFile(inputScanner);
                     break;
-                }
-                case "2": {
+                case "2":
                     addDatabaseFile(inputScanner);
                     break;
-                }
-                case "3": {
+                case "3":
                     addDatabaseDir(inputScanner);
                     break;
-                }
-                case "4": {
+                case "4":
                     browseMenu(inputScanner);
                     break;
-                }
-                case "5": {
+                case "5":
                     database.saveDatabaseFile();
                     break;
-                }
-                case "6": {
+                case "6":
                     startEncoder(inputScanner);
                     break;
-                }
-                case "c": {
+                case "c":
                     playbackManager.playAudio();
                     break;
-                }
-                case "p": {
+                case "p":
                     playbackManager.pauseAudio();
                     break;
-                }
-                case "m": {
+                case "m":
                     dbMenu(inputScanner);
                     break;
-                }
-                case "9": {
+                case "9":
                     listFiles();
                     break;
-                }
-                case "s": {
+                case "s":
                     seekAudio(inputScanner);
                     break;
-                }
-                case "<": {
+                case "<":
                     playPrevious();
                     break;
-                }
-                case ">": {
+                case ">":
                     playNext();
                     break;
-                }
-                case "q": {
+                case "q":
                     cleanup();
                     return;
-                }
-                case "d": { // Database uses absolute file paths, otherwise it would fail to load audio
+                case "d":  // Database uses absolute file paths, otherwise it would fail to load audio
                     database.addFileToSongDatabase((new File(filename)).getAbsolutePath());
                     return;
-                }
-                case "r": {
+                case "r":
                     shuffleDatabase();
                     break;
-                }
-                case "l": {
+                case "l":
                     loop = !loop;
                     break;
-                }
-                case "z": {
+                case "z":
                     updateMetadata();
                     break;
-                }
                 /*case "}": {
                     debug(inputScanner);
                     return;
                 } //*///
-                default: {
+                default:
                     unknownCommandError();
-                }
             }
         }
 
@@ -1316,10 +1280,9 @@ public class App {
                 } catch (InputMismatchException e) {
                     if (inputScanner.nextLine().equalsIgnoreCase("q")) {
                         return;
-                    } else {
-                        AnsiConsole.out().print(Ansi.ansi().cursorUpLine());
-                        AnsiConsole.out().println("That's not a time; enter \"Q\" to leave this menu.");
                     }
+                    AnsiConsole.out().print(Ansi.ansi().cursorUpLine());
+                    AnsiConsole.out().println("That's not a time; enter \"Q\" to leave this menu.");
                 }
             }
         }
@@ -1423,32 +1386,26 @@ public class App {
         // Effects:  handles the switch case for browseMenu()
         private static int browseSwitch(String in, int idx, Scanner scanner) {
             switch (in.toLowerCase()) {
-                case "1": {
+                case "1":
                     return -1;
-                }
-                case "2": {
+                case "2":
                     return 1;
-                }
-                case "p": {
+                case "p":
                     playDbFile(database.getAudioFile(idx));
                     break;
-                }
                 case "c":
                     playDbFile(database.getAudioFile(idx));
                 case "q":
                     return 7000;
-                case "r": {
+                case "r":
                     togglePlayback();
                     break;
-                }
-                case "l": {
+                case "l":
                     songQueue.add(database.getAudioFile(idx));
                     break;
-                }
-                case "e": {
+                case "e":
                     encodeDatabaseFile(database.getAudioFile(idx), scanner);
                     break;
-                }
             }
             return 0;
         }
@@ -1524,22 +1481,18 @@ public class App {
             printDbMenu();
             String selected = inputScanner.nextLine();
             switch (selected.toLowerCase()) {
-                case "1": {
+                case "1":
                     database.revertDb();
                     break;
-                }
-                case "2": {
-                    database.cleanDb(inputScanner.nextLine().trim());
+                case "2":
+                    DataManager.cleanDb(inputScanner.nextLine().trim());
                     break;
-                }
-                case "3": {
+                case "3":
                     database.cleanOldDb();
                     break;
-                }
-                case "r": {
+                case "r":
                     database.cleanDbFldr();
                     break;
-                }
             }
             AnsiConsole.out().print(Ansi.ansi().fgDefault());
         }
