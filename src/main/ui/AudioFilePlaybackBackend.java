@@ -23,6 +23,7 @@ public class AudioFilePlaybackBackend {
         // This quite literally just offloads the task of telling
         // the main thread that this thread is done so I can kill this thread
         private class FinishedSongThread extends Thread {
+            @Override
             public void run() {
                 while (decoderThread != null) {
                     // Wait for decoder thread to finish, in case we've got a music queue
@@ -46,6 +47,7 @@ public class AudioFilePlaybackBackend {
         }
 
         // Effects: plays audio in file loadedFile
+        @Override
         public void run() {
             AudioSample sample;
             while (run && loadedFile.moreSamples()) {
@@ -56,7 +58,7 @@ public class AudioFilePlaybackBackend {
             loadedFile.closeAudioFile();
             loadedFile = null;
             // This might be cursed, but whatever
-            (new FinishedSongThread()).start();
+            new FinishedSongThread().start();
             decoderThread = null;
         }
     }

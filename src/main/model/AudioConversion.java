@@ -20,6 +20,7 @@ public class AudioConversion {
         // This quite literally just offloads the task of telling
         // the main thread that this thread is done
         private class FinishedEncodeThread extends Thread {
+            @Override
             public void run() {
                 do {
                     // Wait for decoder thread to finish, in case we've got a music queue
@@ -35,6 +36,7 @@ public class AudioConversion {
         }
 
         // Effects: plays audio in file loadedFile
+        @Override
         public void run() {
             if (isFinished()) {
                 return;
@@ -43,7 +45,7 @@ public class AudioConversion {
             done = true;
             source.closeAudioFile();
             source = null;
-            (new FinishedEncodeThread()).start();
+            new FinishedEncodeThread().start();
             converterThread = null;
         }
     }
@@ -57,14 +59,14 @@ public class AudioConversion {
 
     // Effects: everything is ready
     public AudioConversion(AudioDataStructure sourceFile, String targetFile) {
-        source = AudioFileLoader.loadFile((new File(sourceFile.getFilename())).getAbsolutePath());
+        source = AudioFileLoader.loadFile(new File(sourceFile.getFilename()).getAbsolutePath());
         if (source == null) {
             error = true;
             done = true;
             this.targetFile = "";
             return;
         }
-        this.targetFile = (new File(targetFile)).getAbsolutePath();
+        this.targetFile = new File(targetFile).getAbsolutePath();
         setHelper(this.targetFile);
         if (helper == null) {
             error = true;
@@ -85,23 +87,19 @@ public class AudioConversion {
     //           otherwise it sets the error flags and leaves
     private void setHelper(String filename) {
         switch (getAudioFiletype(filename)) {
-            case PCM_WAV: {
+            case PCM_WAV:
                 helper = new WAV();
                 break;
-            }
-            case AIFF: {
+            case AIFF:
                 helper = new Aiff();
                 break;
-            }
-            case MP3: {
+            case MP3:
                 helper = new MP3();
                 break;
-            }
-            default: { // We done here
+            default:  // We done here
                 error = true;
                 done = true;
                 break;
-            }
         }
     }
 

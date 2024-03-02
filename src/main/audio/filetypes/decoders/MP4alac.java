@@ -28,7 +28,7 @@ import static java.lang.Thread.sleep;
 
 // ALAC file decoder class
 public class MP4alac implements AudioDecoder {
-    private String filename;
+    private final String filename;
     private AudioFormat format;
     private double bytesPerSecond;
     private Alac alac;
@@ -40,6 +40,7 @@ public class MP4alac implements AudioDecoder {
     private long bytesPlayed = 0;
 
     // Effects: returns true if audio can be decoded currently
+    @Override
     public boolean isReady() {
         return ready;
     }
@@ -50,6 +51,7 @@ public class MP4alac implements AudioDecoder {
 
     // Modifies: this
     // Effects:  loads audio and makes all other functions valid
+    @Override
     public void prepareToPlayAudio() {
         try {
             File file = new File(filename);
@@ -75,9 +77,11 @@ public class MP4alac implements AudioDecoder {
     // Modifies: this
     // Effects:  unloads audio file, to save memory
     //           getAudioOutputFormat() and atEndOfFile() remain valid
+    @Override
     public void closeAudioFile() {
         ready = false;
     }
+
 
     // Effects: wait for a set time
     private static void wait(int nanos) {
@@ -89,6 +93,7 @@ public class MP4alac implements AudioDecoder {
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
+    @Override
     public AudioSample getNextSample() {
         while (!allowSampleReads) {
             wait(1);
@@ -106,6 +111,7 @@ public class MP4alac implements AudioDecoder {
 
     // Effects: returns true if goToTime() is running
     //          only exists due to having multiple threads
+    @Override
     public boolean skipInProgress() {
         return !allowSampleReads;
     }
@@ -114,6 +120,8 @@ public class MP4alac implements AudioDecoder {
     //           0 <= time <= audio length
     // Modifies: this
     // Effects:  moves audio to a different point of the file
+    @Override
+    @SuppressWarnings("methodlength") // Checkstyle reads comment as part of length
     public void goToTime(double time) {
         allowSampleReads = false;
         if (getCurrentTime() > time) {
@@ -122,42 +130,58 @@ public class MP4alac implements AudioDecoder {
             bytesPlayed = 0;
         }
         while (getCurrentTime() < time) {
-            numberBytesRead = alac.decode(decodeBuffer, data);
-            if (numberBytesRead <= 0) {
-                break;
-            } // Yes I have to do this to track time
-            bytesPlayed += numberBytesRead;
+            try {
+                numberBytesRead = alac.decode(decodeBuffer, data);
+                if (numberBytesRead <= 0) {
+                    break;
+                } // Yes I have to do this to track time
+                bytesPlayed += numberBytesRead;
+            } catch (ArrayIndexOutOfBoundsException e) {
+                prepareToPlayAudio(); // Reset
+                decodeBuffer = new int[1024 * 24 * 3]; // Reset decoding buffer
+                bytesPlayed = 0;
+                goToTime(time);
+                return;
+                /* If we encounter this, we don't know what went wrong.
+                 * Best to assume that the error we encountered is fatal
+                 * and just restart decoding from the beginning. */
+            }
         }
         allowSampleReads = true;
     }
 
     // Effects: returns the current time in the audio in seconds
+    @Override
     public double getCurrentTime() {
         return bytesPlayed / bytesPerSecond;
     }
 
     // Effects: returns the duration of the audio in seconds
+    @Override
     public double getFileDuration() {
         return totalSamples / format.getSampleRate();
     }
 
     // Requires: prepareToPlayAudio() called once
     // Effects:  returns the audio format of the file
+    @Override
     public AudioFormat getAudioOutputFormat() {
         return format;
     }
 
     // Effects:  returns true if there are more samples to be played
     //           will return false is no file is loaded
+    @Override
     public boolean moreSamples() {
         return numberBytesRead > 0;
     }
 
     // Effects: returns decoded ID3 data
+    @Override
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "NO");
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
         } catch (Exception e) {
@@ -179,8 +203,9 @@ public class MP4alac implements AudioDecoder {
 
     // Modifies: file on filesystem
     // Effects:  updates ID3 data
+    @Override
     public void setID3(ID3Container container) {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
         } catch (Exception e) {
@@ -205,18 +230,21 @@ public class MP4alac implements AudioDecoder {
     }
 
     // Effects: returns filename without directories
+    @Override
     public String getFileName() {
         String[] dirList = filename.split(String.valueOf(separatorChar));
         return dirList[dirList.length - 1];
     }
 
+    @Override
     public AudioFileType getFileType() {
         return AudioFileType.ALAC_MP4;
     }
 
     // Effects: returns album artwork if possible
+    @Override
     public Artwork getArtwork() {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
             Tag tag = f.getTag();
@@ -232,6 +260,7 @@ public class MP4alac implements AudioDecoder {
     }
 
     // Effects: sets the album artwork if possible
+    @Override
     public void setArtwork(Artwork image) {
         ExceptionIgnore.ignoreExc(() -> {
             AudioFile f = AudioFileIO.read(new File(filename));
@@ -256,8 +285,9 @@ public class MP4alac implements AudioDecoder {
 
     // Effects: returns replaygain value
     //          defaults to -6
+    @Override
     public float getReplayGain() {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
             return TagConversion.getReplayGain(f.getTag());

@@ -26,20 +26,20 @@ public class AudioDataStructure {
     public AudioDataStructure(String filename) {
         String fileSystemFilename;
         try {
-            fileSystemFilename = (new File(filename)).getCanonicalPath();
+            fileSystemFilename = new File(filename).getCanonicalPath();
         } catch (IOException e) {
             fileSystemFilename = filename;
         }
         this.filename = fileSystemFilename;
         AudioDecoder audioDecoder = AudioFileLoader.loadFile(fileSystemFilename);
-        if (audioDecoder == null || !(new File(filename)).exists()) {
+        if (audioDecoder == null || !new File(filename).exists()) {
             bitrate = -1;
             sampleSize = -1;
             fileSize = -1;
             audioFileType = AudioFileType.EMPTY;
             return;
         }
-        fileSize = (new File(filename)).length(); // Will exist
+        fileSize = new File(filename).length(); // Will exist
         audioDecoder.prepareToPlayAudio();
         audioFileType = audioDecoder.getFileType();
         AudioFormat format = audioDecoder.getAudioOutputFormat();

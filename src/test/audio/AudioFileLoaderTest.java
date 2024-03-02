@@ -1,7 +1,6 @@
 package audio;
 
 import audio.filetypes.decoders.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static audio.AudioFileLoader.*;

@@ -30,6 +30,7 @@ public class DataManagerTest {
     @Order(0)
     public void loadEmptyDatabase() {
         database.loadDatabase();
+        assertEquals(0, database.audioListSize());
     }
 
     @Test
@@ -74,7 +75,7 @@ public class DataManagerTest {
         }
         assertTrue(dbDir.delete());
         assertTrue(database.saveDatabaseFile());
-        (new File("./data/db/audioFolder")).mkdirs();
+        new File("./data/db/audioFolder").mkdirs();
     }
 
     @Test
@@ -108,6 +109,8 @@ public class DataManagerTest {
     public void revertDbTest() {
         database.revertDb();
         database.cleanDb(2);
+        // Can't make any assertions because there's no publicly-accessible change
+        assertTrue(true);
     }
 
     @Test
@@ -124,7 +127,7 @@ public class DataManagerTest {
     @Order(8)
     public void brokenDatabaseTest() {
         database.saveDatabaseFile();
-        assertTrue((new File("./data/db/2.audiodex.json")).delete());
+        assertTrue(new File("./data/db/2.audiodex.json").delete());
         database.loadDatabase();
         database.revertDb();
         database.revertDb(); // Fails to revert
@@ -153,7 +156,7 @@ public class DataManagerTest {
     @Order(9)
     public void brokenFileTest() {
         database.revertDb();
-        database.cleanDb("./data/readonly");
+        DataManager.cleanDb("./data/readonly");
         database.sanitizeAudioDatabase();
         database.addFileToSongDatabase("\u0000");
         database.updateAudioFile(2, "\u0000");

@@ -61,14 +61,14 @@ public class DataManager {
             return;
         }
         System.out.println("Sorting database by " + type + "...");
-        bubble(sortBy, 0, songFilelist.size());
+        bubble(sortBy, songFilelist.size());
     }
 
     // Modifies: this
     // Effects:  sorts music list (uses the bubble sort algorithm)
-    private void bubble(SortingTypes sortBy, int start, int end) {
+    private void bubble(SortingTypes sortBy, int end) {
         for (int i = end - 1; i > 0; i--) {
-            for (int j = start; j < i; j++) {
+            for (int j = 0; j < i; j++) {
                 if (outOfOrder(sortBy, songFilelist.get(j), songFilelist.get(j + 1))) {
                     swap(j, j + 1);
                 }
@@ -87,30 +87,27 @@ public class DataManager {
     // Effects: returns true if audio files are out of order
     private boolean outOfOrder(SortingTypes sortBy, AudioDataStructure a, AudioDataStructure b) {
         switch (sortBy) {
-            case Album_Title: {
+            case Album_Title:
                 int albumSort = getSortingValue("Album", a).compareTo(getSortingValue("Album", b));
                 if (albumSort == 0) {
                     return getSortingValue("Title", a)
                             .compareTo(getSortingValue("Title", b)) > 0;
                 }
                 return albumSort > 0;
-            }
             case AlbumArtist:
             case Artist:
             case Title:
-            case Album: {
+            case Album:
                 return getSortingValue(sortBy.toString(), a)
                         .compareTo(getSortingValue(sortBy.toString(), b)) > 0;
-            }
-            case Filesize: {
+            case Filesize:
                 return a.getFilesize() > b.getFilesize();
-            }
         }
         return false;
     }
 
     // Effects: gets album value for sorting
-    private String getSortingValue(String type, AudioDataStructure file) {
+    private static String getSortingValue(String type, AudioDataStructure file) {
         ID3Container id3 = file.getId3Data();
         Object s = id3.getID3Data(type + "-Sort");
         if (s == null || s.toString().equals("null") || s.toString().isEmpty()) {
@@ -137,22 +134,12 @@ public class DataManager {
 
     // Effects: returns true if database contains file, false otherwise
     private boolean songDbContainsFile(String filename) {
-        for (AudioDataStructure data : songFilelist) {
-            if (data.getFilename().equals(filename)) {
-                return true;
-            }
-        }
-        return false;
+        return songFilelist.stream().anyMatch(data -> data.getFilename().equals(filename));
     }
 
     // Effects: returns true if database contains two of this file, false otherwise
     private boolean songDbContainsDuplicate(String filename) {
-        int i = 0;
-        for (AudioDataStructure data : songFilelist) {
-            if (data.getFilename().equals(filename)) {
-                i++;
-            }
-        }
+        int i = (int) songFilelist.stream().filter(data -> data.getFilename().equals(filename)).count();
         return i >= 2;
     }
 
@@ -160,7 +147,7 @@ public class DataManager {
     // Effects:  adds specified file to database
     public void addFileToSongDatabase(String filename) {
         try {
-            if (songDbContainsFile((new File(filename)).getCanonicalPath())) {
+            if (songDbContainsFile(new File(filename).getCanonicalPath())) {
                 System.out.println("File already in database, skipping.");
                 return;
             }
@@ -248,7 +235,7 @@ public class DataManager {
     public boolean saveDatabaseFile() {
         File userDirFile = new File(userDir);
         if (!userDirFile.exists()) {
-            userDirFile.mkdirs();
+            assert userDirFile.mkdirs();
         }
         dbIndex++;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
@@ -280,7 +267,7 @@ public class DataManager {
     public void revertDb() {
         dbIndex--;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
-        if ((new File(filename)).exists()) {
+        if (new File(filename).exists()) {
             loadDatabaseFile();
             saveDatabaseIndex();
             System.out.println("Successfully reverted database!");
@@ -292,8 +279,8 @@ public class DataManager {
 
     // Modifies: database files
     // Effects:  cleans (deletes all files for) database with specified filename
-    public void cleanDb(String filename) {
-        if ((new File(filename)).exists()) {
+    public static void cleanDb(String filename) {
+        if (new File(filename).exists()) {
             System.out.println("Cleaning database at " + filename + "...");
             ExceptionIgnore.ignoreExc(() -> delete(Paths.get(filename)));
         } else {
@@ -320,7 +307,7 @@ public class DataManager {
     //           and saves the database again
     public void cleanDbFldr() {
         dbIndex = 0;
-        File[] fileList = (new File(userDir)).listFiles();
+        File[] fileList = new File(userDir).listFiles();
         if (fileList == null) {
             return;
         }
@@ -378,7 +365,7 @@ public class DataManager {
     // Effects:  updates file pointer for index
     public void updateAudioFile(int i, String newFileName) {
         try {
-            if (songDbContainsFile((new File(newFileName)).getCanonicalPath())) {
+            if (songDbContainsFile(new File(newFileName).getCanonicalPath())) {
                 System.out.println("File already in database, skipping.");
                 return;
             }

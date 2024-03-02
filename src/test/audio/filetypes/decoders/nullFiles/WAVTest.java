@@ -1,14 +1,10 @@
 package audio.filetypes.decoders.nullFiles;
 
 import audio.AudioDecoder;
-import audio.AudioFileType;
-import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.decoders.WAV;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import javax.sound.sampled.AudioFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 

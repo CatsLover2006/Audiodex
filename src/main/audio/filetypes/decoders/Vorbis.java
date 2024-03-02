@@ -29,7 +29,7 @@ import static java.lang.Thread.sleep;
 
 // Vorbis-type audio file decoder class
 public class Vorbis implements AudioDecoder {
-    private String filename;
+    private final String filename;
     private AudioFormat format;
     private DecodedVorbisAudioInputStream decoded;
     private AudioInputStream in;
@@ -42,6 +42,7 @@ public class Vorbis implements AudioDecoder {
     private double duration;
 
     // Effects: returns true if audio can be decoded currently
+    @Override
     public boolean isReady() {
         return ready;
     }
@@ -52,6 +53,7 @@ public class Vorbis implements AudioDecoder {
 
     // Modifies: this
     // Effects:  loads audio and makes all other functions valid
+    @Override
     public void prepareToPlayAudio() {
         try {
             File file = new File(filename);
@@ -80,6 +82,7 @@ public class Vorbis implements AudioDecoder {
     // Modifies: this
     // Effects:  unloads audio file, to save memory
     //           getAudioOutputFormat() and atEndOfFile() remain valid
+    @Override
     public void closeAudioFile() {
         ready = false;
         ExceptionIgnore.ignoreExc(() ->  {
@@ -90,6 +93,7 @@ public class Vorbis implements AudioDecoder {
 
     // Effects: returns true if goToTime() is running
     //          only exists due to having multiple threads
+    @Override
     public boolean skipInProgress() {
         return !allowSampleReads;
     }
@@ -101,6 +105,7 @@ public class Vorbis implements AudioDecoder {
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
+    @Override
     public AudioSample getNextSample() {
         while (!allowSampleReads) {
             wait(1);
@@ -121,6 +126,7 @@ public class Vorbis implements AudioDecoder {
     //           0 <= time <= audio length
     // Modifies: this
     // Effects:  moves audio to a different point of the file
+    @Override
     public void goToTime(double time) {
         ExceptionIgnore.ignoreExc(() ->  {
             long toSkip = (long) (time * bytesPerSecond) - bytesPlayed;
@@ -145,28 +151,33 @@ public class Vorbis implements AudioDecoder {
     }
 
     // Effects: returns the current time in the audio in seconds
+    @Override
     public double getCurrentTime() {
         return bytesPlayed / bytesPerSecond;
     }
 
     // Effects: returns the duration of the audio in seconds
+    @Override
     public double getFileDuration() {
         return duration;
     }
 
     // Requires: prepareToPlayAudio() called once
     // Effects:  returns the audio format of the file
+    @Override
     public AudioFormat getAudioOutputFormat() {
         return format;
     }
 
     // Effects:  returns true if there are more samples to be played
     //           will return false is no file is loaded
+    @Override
     public boolean moreSamples() {
         return numberBytesRead != -1;
     }
 
     // Effects: returns decoded ID3 data
+    @Override
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
@@ -193,6 +204,7 @@ public class Vorbis implements AudioDecoder {
 
     // Modifies: file on filesystem
     // Effects:  updates ID3 data
+    @Override
     public void setID3(ID3Container container) {
         AudioFile f;
         try {
@@ -219,18 +231,21 @@ public class Vorbis implements AudioDecoder {
     }
 
     // Effects: returns filename without directories
+    @Override
     public String getFileName() {
         String[] dirList = filename.split(String.valueOf(separatorChar));
         return dirList[dirList.length - 1];
     }
 
+    @Override
     public AudioFileType getFileType() {
         return AudioFileType.VORBIS;
     }
 
     // Effects: returns album artwork if possible
+    @Override
     public Artwork getArtwork() {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
             Tag tag = f.getTag();
@@ -246,6 +261,7 @@ public class Vorbis implements AudioDecoder {
     }
 
     // Effects: sets the album artwork if possible
+    @Override
     public void setArtwork(Artwork image) {
         ExceptionIgnore.ignoreExc(() -> {
             AudioFile f = AudioFileIO.read(new File(filename));
@@ -270,8 +286,9 @@ public class Vorbis implements AudioDecoder {
 
     // Effects: returns replaygain value
     //          defaults to -6
+    @Override
     public float getReplayGain() {
-        AudioFile f = null;
+        AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));
             return TagConversion.getReplayGain(f.getTag());

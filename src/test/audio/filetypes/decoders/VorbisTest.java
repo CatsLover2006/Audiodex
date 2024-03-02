@@ -15,6 +15,7 @@ public class VorbisTest {
     Vorbis vorbisDecoder;
 
     private class ForcePauseThread extends Thread {
+        @Override
         public void run() {
             vorbisDecoder.forceDisableDecoding();
             try {
@@ -80,7 +81,7 @@ public class VorbisTest {
             // Vorbis decoding doesn't always have a same
             // length sample, so I've had to improvise
             for (int i = 0; i < sample.getLength(); i++) {
-                if ((i + wavOffset) == 4096) {
+                if (i + wavOffset == 4096) {
                     wavSample = wavDecoder.getNextSample();
                     wavOffset = -i; // this works, trust me
                 }
@@ -88,7 +89,7 @@ public class VorbisTest {
                     faults++;
                 }
                 if (i == wavOffset) {
-                    (new ForcePauseThread()).start();
+                    new ForcePauseThread().start();
                 }
             }
             wavOffset += sample.getLength();

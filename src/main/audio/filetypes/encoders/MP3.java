@@ -23,12 +23,14 @@ public class MP3 implements AudioEncoder {
     private boolean stereo = false;
 
     // Effects: Tells the audio encoder where we're encoding from
+    @Override
     public void setSource(AudioDecoder from) {
         decoder = from;
     }
 
     // Effects: Gets encoder specific selectors
     //          e.g: compression ratio
+    @Override
     public HashMap<String, List<String>> getEncoderSpecificSelectors() {
         HashMap<String, List<String>> options = new HashMap<>();
         List<String> valid = new ArrayList<>();
@@ -53,6 +55,7 @@ public class MP3 implements AudioEncoder {
 
     // Modifies: this
     // Effects:  sets the target audio format for encoder
+    @Override
     public void setAudioFormat(AudioFormat format, HashMap<String, String> encoderSpecificValues) {
         if (Objects.equals(encoderSpecificValues.get("stereo"), "Yes")) {
             stereo = true;
@@ -66,6 +69,7 @@ public class MP3 implements AudioEncoder {
 
     // Modifies: filesystem
     // Effects:  encodes audio to specific file
+    @Override
     public boolean encodeAudio(String to) {
         try {
             decoder.prepareToPlayAudio();
@@ -94,6 +98,7 @@ public class MP3 implements AudioEncoder {
 
     // Effects: gets an approximate percent for how far along the encoding is
     //          output ranges from 0.0 to 1.0
+    @Override
     public double encodedPercent() {
         if (done) {
             return 1;

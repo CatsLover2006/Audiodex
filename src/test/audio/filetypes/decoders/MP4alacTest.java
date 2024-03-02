@@ -15,6 +15,7 @@ public class MP4alacTest {
     MP4alac alacDecoder;
 
     private class ForcePauseThread extends Thread {
+        @Override
         public void run() {
             alacDecoder.forceDisableDecoding();
             try {
@@ -77,13 +78,13 @@ public class MP4alacTest {
         while (alacDecoder.moreSamples()) {
             // Different sample size fixing
             for (int i = 0; i < sample.getLength(); i++) {
-                if ((i + wavOffset) == 4096) {
+                if (i + wavOffset == 4096) {
                     wavSample = wavDecoder.getNextSample();
                     wavOffset = -i; // this works, trust me
                 }
                 assertEquals(sample.getData()[i], wavSample.getData()[i + wavOffset]);
                 if (i == wavOffset) {
-                    (new MP4alacTest.ForcePauseThread()).start();
+                    new ForcePauseThread().start();
                 }
             }
             wavOffset += sample.getLength();

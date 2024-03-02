@@ -5,6 +5,7 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagField;
 import org.jaudiotagger.tag.id3.ID3v24Frames;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -15,12 +16,7 @@ import java.util.regex.Pattern;
 public class TagConversion {
     // Effects: returns true if arr contains item
     private static boolean arrContains(Object[] arr, Object item) {
-        for (Object arrI : arr) {
-            if (arrI.equals(item)) {
-                return true;
-            }
-        }
-        return false;
+        return Arrays.stream(arr).anyMatch(arrI -> arrI.equals(item));
     }
 
     public static final HashMap<FieldKey, String> keyConv;
@@ -59,7 +55,6 @@ public class TagConversion {
         keyConv.put(FieldKey.RATING, "Rating");
         keyConv.put(FieldKey.ARRANGER, "Arranger");
         keyConv.put(FieldKey.IS_COMPILATION, "IsCompilation");
-        keyConv.put(FieldKey.ARRANGER, "Arranger");
         keyConv.put(FieldKey.ARRANGER_SORT, "Arranger-Sort");
         keyConv.put(FieldKey.TITLE_SORT, "Title-Sort");
         keyConv.put(FieldKey.ARTIST_SORT, "Artist-Sort");
@@ -90,7 +85,7 @@ public class TagConversion {
         id3v2keyConv.put(ID3v24Frames.FRAME_ID_IS_COMPILATION, "IsCompilation");
         // id3v2keyConv.put(null, "Arranger-Sort"); // Field doesn't exist
         id3v2keyConv.put(ID3v24Frames.FRAME_ID_TITLE_SORT_ORDER, "Title-Sort");
-        id3v2keyConv.put(ID3v24Frames.FRAME_ID_ARTIST, "Artist-Sort");
+        id3v2keyConv.put(ID3v24Frames.FRAME_ID_ARTIST_SORT_ORDER, "Artist-Sort");
         id3v2keyConv.put(ID3v24Frames.FRAME_ID_ALBUM_SORT_ORDER, "Album-Sort");
         id3v2keyConv.put(ID3v24Frames.FRAME_ID_ALBUM_ARTIST_SORT_ORDER_ITUNES, "AlbumArtist-Sort");
         valConv = new HashMap<>();
@@ -118,14 +113,15 @@ public class TagConversion {
                 TagField field = fields.next();
                 if ((field.getId() + field.toString()).contains("replaygain_track_gain")) {
                     Matcher m = gainPattern.matcher(field.toString());
-                    m.find();
-                    float replaygain = Float.parseFloat(m.group());
-                    return replaygain;
+                    if (m.find()) {
+                        return Float.parseFloat(m.group());
+                    }
                 }
                 if ((field.getId() + field.toString()).contains("replaygain_album_gain")) {
                     Matcher m = gainPattern.matcher(field.toString());
-                    m.find();
-                    albumGain = Float.parseFloat(m.group());
+                    if (m.find()) {
+                        albumGain = Float.parseFloat(m.group());
+                    }
                 }
             }
         } catch (Exception e) {

@@ -16,6 +16,7 @@ public class AiffTest {
     AudioEncoder encoder;
 
     private class EncodeThread extends Thread {
+        @Override
         public void run() {
             assertTrue(encoder.encodeAudio("./data/out/scarlet.aif"));
         }
@@ -33,7 +34,7 @@ public class AiffTest {
         assertNull(encoder.getEncoderSpecificSelectors());
         assertEquals(0, encoder.encodedPercent());
         EncodeThread thread = new EncodeThread();
-        (new PercentDisp(() -> encoder.encodedPercent())).start();
+        new PercentDisp(() -> encoder.encodedPercent()).start();
         thread.start();
         assertEquals(0, encoder.encodedPercent());
         while (thread.isAlive()) {
@@ -53,7 +54,7 @@ public class AiffTest {
         player.loadAudio("./data/out/scarlet.aif");
         player.startAudioDecoderThread();
         player.playAudio();
-        (new PercentDisp(() -> player.getPercentPlayed())).start();
+        new PercentDisp(() -> player.getPercentPlayed()).start();
         player.waitForAudioFinish();
         player.cleanBackend();
     }
@@ -77,12 +78,13 @@ public class AiffTest {
     }
 
     // Percentage display class using lambda
-    private class PercentDisp extends Thread {
-        RunnableFloat thing;
+    private static class PercentDisp extends Thread {
+        final RunnableFloat thing;
         PercentDisp(RunnableFloat yay) {
             thing = yay;
         }
 
+        @Override
         public void run() {
             while (true) {
                 ExceptionIgnore.ignoreExc(() -> sleep(1000));
