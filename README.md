@@ -38,6 +38,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] WAV
 - [x] AIFF
 - [ ] FLAC
+  - [_Found library!_](https://github.com/drogatkin/JustFLAC/)
 - [x] M4A: ALAC
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
