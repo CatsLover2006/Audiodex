@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.List;
 import java.util.logging.LogManager;
 
+import audio.AudioFileLoader;
 import audio.ID3Container;
 import model.AudioConversion;
 import model.DataManager;
@@ -368,8 +369,8 @@ public class App {
 
         // Effects: adds file to database via popup
         private static void addFile() {
-            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"), null,
-                    popup -> {
+            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
+                    AudioFileLoader.KNOWN_FILETYPES, popup -> {
                         createLoadingThread();
                         database.addFileToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
                         database.sanitizeAudioDatabase();
