@@ -9,7 +9,7 @@ import java.io.File;
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler
 public class AudioFileLoader {
-    public static final String[] KNOWN_FILENAMES = {
+    public static final String[] KNOWN_FILETYPES = {
             "wav", "wave", "aif", "aiff", "aifc", "mp1", "mp2", "mp3",
             "ogg", "oga", "mogg", "mp4", "m4b", "m4a"
     };

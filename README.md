@@ -71,6 +71,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - No way to fix this, it's entirely dependent on implementation
 - Due to no way to test on Windows or Linux, there's no way to test if a system config specific to macOS will crash Windows/Linux systems
   - Specific to GUI interface
+- If audio encodes too fast, it ends up skipping some code (AudioEncoder.encodedPercent never is checked during encoding)<br>There is no fix (it's impossible to tell if I'm doing a test or in prod) and I'm not going to intentionally slow down encoding, so I'll just have to live with the reduced code coverage
 
 ## Lucky Breaks
 - jaudiotagger handles most of the ID3 metadata I care about

@@ -240,7 +240,7 @@ public class MP3 implements AudioDecoder {
             return;
         }
         setID3v1(f, container);
-        setID3v2(f, container);
+        //setID3v2(f, container); // Unimplemented in library
         try {
             f.commit();
         } catch (CannotWriteException e) {
@@ -266,7 +266,7 @@ public class MP3 implements AudioDecoder {
         }
     }
 
-    // Effects: sets relevant ID3v2 tags
+    /* Effects: sets relevant ID3v2 tags
     private static void setID3v2(MP3File f, ID3Container container) {
         if (!f.hasID3v2Tag()) {
             f.setID3v2Tag(new ID3v24Tag());
@@ -283,7 +283,7 @@ public class MP3 implements AudioDecoder {
                 v24tag.mergeDuplicateFrames(frame);
             }
         }
-    }
+    }//*///
 
     // Effects: returns filename without directories
     @Override
