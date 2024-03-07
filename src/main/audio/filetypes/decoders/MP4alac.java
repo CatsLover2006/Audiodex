@@ -121,7 +121,6 @@ public class MP4alac implements AudioDecoder {
     // Modifies: this
     // Effects:  moves audio to a different point of the file
     @Override
-    @SuppressWarnings("methodlength") // Checkstyle reads comment as part of length
     public void goToTime(double time) {
         allowSampleReads = false;
         if (getCurrentTime() > time) {
@@ -141,10 +140,7 @@ public class MP4alac implements AudioDecoder {
                 decodeBuffer = new int[1024 * 24 * 3]; // Reset decoding buffer
                 bytesPlayed = 0;
                 goToTime(time);
-                return;
-                /* If we encounter this, we don't know what went wrong.
-                 * Best to assume that the error we encountered is fatal
-                 * and just restart decoding from the beginning. */
+                return; // Likely a fatal error, assume the worst
             }
         }
         allowSampleReads = true;
