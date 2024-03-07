@@ -3,6 +3,7 @@ package audio.filetypes.encoders;
 import audio.AudioDecoder;
 import audio.AudioEncoder;
 import audio.filetypes.decoders.Aiff;
+import audio.filetypes.decoders.MP4alac;
 import model.ExceptionIgnore;
 import org.junit.jupiter.api.Test;
 import ui.AudioFilePlaybackBackend;
@@ -24,7 +25,7 @@ public class MP3Test {
 
     @Test
     public void doEncodeTest() {
-        decoder = new Aiff("./data/scarlet.aif");
+        decoder = new MP4alac("./data/scarlet.alac.m4a");
         encoder = new MP3();
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
@@ -92,7 +93,7 @@ public class MP3Test {
         @Override
         public void run() {
             while (true) {
-                ExceptionIgnore.ignoreExc(() -> sleep(1000));
+                ExceptionIgnore.ignoreExc(() -> sleep(100));
                 System.out.println(thing.run() * 100 + "%");
                 if (thing.run() >= 1) return;
             }

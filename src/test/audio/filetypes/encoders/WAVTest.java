@@ -24,7 +24,7 @@ public class WAVTest {
 
     @Test
     public void doEncodeTest() {
-        decoder = new Aiff("./data/scarlet.aif");
+        decoder = new Aiff("./data/scarlet.alac.m4a");
         encoder = new WAV();
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
@@ -85,7 +85,7 @@ public class WAVTest {
         @Override
         public void run() {
             while (true) {
-                ExceptionIgnore.ignoreExc(() -> sleep(1000));
+                ExceptionIgnore.ignoreExc(() -> sleep(100));
                 System.out.println(thing.run() * 100 + "%");
                 if (thing.run() >= 1) return;
             }
