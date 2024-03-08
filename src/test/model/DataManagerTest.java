@@ -52,17 +52,17 @@ public class DataManagerTest {
         database.updateAudioFile(0,"./data/scarlet.wav.lmao");
         assertEquals(1, database.audioListSize());
         database.addDirToSongDatabase("./data/");
-        assertEquals(20, database.audioListSize());
+        assertEquals(22, database.audioListSize());
         database.addDirToSongDatabase("./data/db/audiofolder");
-        assertEquals(20, database.audioListSize());
+        assertEquals(22, database.audioListSize());
         database.sanitizeAudioDatabase();
-        assertEquals(20, database.audioListSize());
+        assertEquals(22, database.audioListSize());
         database.removeSongIndex(0);
-        assertEquals(19, database.audioListSize());
+        assertEquals(21, database.audioListSize());
         database.addFileToSongDatabase("./data/scarlet.wav");
-        assertEquals(20, database.audioListSize());
+        assertEquals(22, database.audioListSize());
         database.sanitizeAudioDatabase();
-        assertEquals(20, database.audioListSize());
+        assertEquals(22, database.audioListSize());
     }
 
     @Test
@@ -96,12 +96,12 @@ public class DataManagerTest {
         database.sortSongList("Album-Title"); // I used to use this
         database.sortSongList("Album_Title");
         database.sanitizeAudioDatabase();
-        assertEquals(20, database.audioListSize());
+        assertEquals(22, database.audioListSize());
         assertNull(database.getAudioFile(-1));
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 22; i++) {
             assertNotNull(database.getAudioFile(i));
         }
-        assertNull(database.getAudioFile(20));
+        assertNull(database.getAudioFile(22));
     }
 
     @Test
@@ -164,11 +164,11 @@ public class DataManagerTest {
         new FileManager();
         FileManager.writeToFile("\u0000", "This fails");
         database.updateAudioFile(1, new AudioDataStructure("/data/scarlet.lol.mp3"));
-        assertEquals(20, database.audioListSize());
+        assertEquals(22, database.audioListSize());
         assertEquals(1, database.getRemovedAudioFiles().size());
         assertEquals(1, database.getRemovedAudioFiles().get(0));
         database.removeEmptyAudioFiles();
-        assertEquals(19, database.audioListSize());
+        assertEquals(21, database.audioListSize());
         assertEquals(0, database.getRemovedAudioFiles().size());
         manager = new DataManager();
         manager.setUserDir("./data/db/null");

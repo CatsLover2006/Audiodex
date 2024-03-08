@@ -79,6 +79,7 @@ public class MP4AAC implements AudioDecoder {
             System.out.println("AAC decoder ready!");
         } catch (IOException e) {
             ready = false;
+            throw new RuntimeException(e);
         }
     }
 

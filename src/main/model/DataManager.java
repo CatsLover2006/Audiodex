@@ -176,7 +176,7 @@ public class DataManager {
             }
             for (File file : fileList) { // Database uses absolute file paths, otherwise it would fail to load audio
                 if (file.isFile()) {
-                    addFileToSongDatabase(file.getAbsolutePath());
+                    ExceptionIgnore.ignoreExc(() -> addFileToSongDatabase(file.getAbsolutePath()));
                 } else if (file.isDirectory()) {
                     addDirToSongDatabase(file.getAbsolutePath());
                 }

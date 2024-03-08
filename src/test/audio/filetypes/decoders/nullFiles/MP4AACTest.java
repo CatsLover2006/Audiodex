@@ -19,8 +19,12 @@ public class MP4AACTest {
 
     @Test // Test ID3 data
     public void id3Test() {
-        assertFalse(aacDecoder.isReady());
-        aacDecoder.prepareToPlayAudio();
+        assertFalse(aacDecoder.isReady());try {
+            aacDecoder.prepareToPlayAudio();
+            fail("That's not a valid path!");
+        } catch (RuntimeException e) {
+            // Well that worked
+        }
         assertFalse(aacDecoder.isReady());
         ID3Container id3 = null;
         try {

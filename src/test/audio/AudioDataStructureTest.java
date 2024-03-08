@@ -15,7 +15,7 @@ public class AudioDataStructureTest {
     @Test
     public void createFromFile() {
         structure = new AudioDataStructure("./data/scarlet.aif");
-        assertEquals(25751698, structure.getFilesize());
+        assertEquals(new File("./data/scarlet.aif").length(), structure.getFilesize());
         assertFalse(structure.isEmpty());
         assertEquals(16, structure.getSamplesize());
         assertEquals(1411, structure.getBitrate() / 1000);
@@ -37,7 +37,7 @@ public class AudioDataStructureTest {
     public void loadFromKnownData() {
         JSONObject json = new AudioDataStructure("./data/scarlet.aif").encode();
         structure = AudioDataStructure.decode(json);
-        assertEquals(25751698, structure.getFilesize());
+        assertEquals(new File("./data/scarlet.aif").length(), structure.getFilesize());
         assertFalse(structure.isEmpty());
         assertEquals(16, structure.getSamplesize());
         assertEquals(1411, structure.getBitrate() / 1000);
