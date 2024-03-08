@@ -582,6 +582,7 @@ public class App {
         private static class AlbumArtworkUpdater extends Thread {
             @Override
             public void run() {
+                Thread.currentThread().setPriority(2);
                 musicArt.setIcon(new ImageIcon(placeholder));
                 BufferedImage bufferedImage = playbackManager.getArtwork();
                 if (bufferedImage != null) {

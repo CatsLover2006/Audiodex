@@ -1376,6 +1376,11 @@
     </inspection_tool>
     <inspection_tool class="ResultOfObjectAllocationIgnored" enabled="true" level="ERROR" enabled_by_default="true">
       <scope name="Tests" level="ERROR" enabled="false" />
+      <option name="ignoredClasses">
+        <set>
+          <option value="ui.PopupManager.ErrorPopupFrame" />
+        </set>
+      </option>
     </inspection_tool>
     <inspection_tool class="ResultSetIndexZero" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="ReturnFromFinallyBlock" enabled="true" level="TYPO" enabled_by_default="true" />

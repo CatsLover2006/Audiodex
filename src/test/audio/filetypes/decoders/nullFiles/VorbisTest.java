@@ -13,6 +13,7 @@ public class VorbisTest {
     @BeforeEach
     public void prepare() {
         vorbisDecoder = new Vorbis("data/\u0000/scarlet.vorbis.ogg");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test ID3 data

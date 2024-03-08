@@ -40,5 +40,6 @@
     <orderEntry type="library" name="java-vorbis-support (1.2.1)" level="project" />
     <orderEntry type="library" name="Java LAME 3.98.4" level="project" />
     <orderEntry type="library" name="JSON 2021/03/07" level="project" />
+    <orderEntry type="library" name="JustFLAC 0.0.1 (Self-Compiled)" level="project" />
   </component>
 </module>

@@ -17,6 +17,7 @@ public class MP4AACTest {
     @BeforeEach
     public void prepare() {
         aacDecoder = new MP4AAC("data/scarlet.aac.m4a");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work

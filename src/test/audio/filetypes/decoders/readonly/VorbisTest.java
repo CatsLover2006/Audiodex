@@ -32,6 +32,7 @@ public class VorbisTest {
     @BeforeEach
     public void prepare() {
         vorbisDecoder = new Vorbis("data/readonly/scarlet.vorbis.ogg");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work

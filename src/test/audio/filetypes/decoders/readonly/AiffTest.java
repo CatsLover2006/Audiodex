@@ -19,6 +19,7 @@ public class AiffTest {
     @BeforeEach
     public void prepare() {
         aiffDecoder = new Aiff("data/readonly/scarlet.aif");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work

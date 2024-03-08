@@ -2,18 +2,22 @@ package audio;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 // Container for ID3 data
 public class ID3Container {
-    private final JSONObject id3data;
+    private final Map<String, Object> id3data;
 
     // Effects: creates an empty JSON object to place data
     public ID3Container() {
-        id3data = new JSONObject();
+        id3data = new HashMap<>();
     }
 
     // Effects: use ds an existing JSON object
     public ID3Container(JSONObject obj) {
-        id3data = obj;
+        id3data = new HashMap<>();
+        id3data.putAll(obj.toMap());
     }
 
     // Effects: gets the data at a specified key
@@ -23,11 +27,7 @@ public class ID3Container {
     //          Long and String, everything else is up
     //          to somebody else
     public Object getID3Data(String key) {
-        try {
-            return id3data.get(key);
-        } catch (Exception e) {
-            return null; // I can't assume shit
-        }
+        return id3data.get(key);
     }
 
     // Modifies: this
@@ -62,6 +62,6 @@ public class ID3Container {
     // Effects: encodes data into string
     //          yes I'm making one of these myself
     public JSONObject encode() {
-        return id3data;
+        return new JSONObject(id3data);
     }
 }

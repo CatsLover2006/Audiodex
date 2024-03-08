@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.EventObject;
 
+import static java.awt.GridBagConstraints.BOTH;
+import static java.awt.GridBagConstraints.HORIZONTAL;
 import static java.io.File.separatorChar;
 
 // Static class
@@ -26,7 +28,18 @@ public class PopupManager {
         return Arrays.stream(arr).anyMatch(cur -> cur.equals(item));
     }
 
-    private static final BufferedImage[] images;
+    private static final BufferedImage[] FILE_BROWSER_IMAGES;
+    private static final BufferedImage[] ERROR_IMAGES;
+
+    public enum ErrorImageTypes {
+        ERROR(0);
+
+        public final int iconIndex;
+
+        ErrorImageTypes(int iconIndex) {
+            this.iconIndex = iconIndex;
+        }
+    }
 
     // Gets images for popups
     static {
@@ -39,7 +52,8 @@ public class PopupManager {
                     ImageIO.read(new File("./data/spec/FileIcon_AAC.png")),
                     ImageIO.read(new File("./data/spec/FileIcon_MPEG.png")),
                     ImageIO.read(new File("./data/spec/FileIcon_Vorbis.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon_ALAC.png"))
+                    ImageIO.read(new File("./data/spec/FileIcon_ALAC.png")),
+                    ImageIO.read(new File("./data/spec/FileIcon_FLAC.png"))
             };
         } catch (Exception e) {
             myImages = new BufferedImage[]{
@@ -49,10 +63,21 @@ public class PopupManager {
                     new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
                     new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
                     new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
                     new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR)
             };
         }
-        images = myImages;
+        FILE_BROWSER_IMAGES = myImages;
+        try {
+            myImages = new BufferedImage[]{
+                    ImageIO.read(new File("./data/spec/ErrorIcon.png"))
+            };
+        } catch (Exception e) {
+            myImages = new BufferedImage[]{
+                    new BufferedImage(32, 32, BufferedImage.TYPE_3BYTE_BGR)
+            };
+        }
+        ERROR_IMAGES = myImages;
     }
 
     // Make a lambda for this
@@ -221,8 +246,8 @@ public class PopupManager {
                         return file.getName().substring(file.getName().lastIndexOf(".") + 1);
                     }
                 case "Icon":
-                    return new ImageIcon(file.isDirectory() ? images[0] :
-                            images[AudioFileLoader.getAudioFiletype(file.getAbsolutePath()).iconIndex + 1]);
+                    return new ImageIcon(file.isDirectory() ? FILE_BROWSER_IMAGES[0] : FILE_BROWSER_IMAGES[
+                                    AudioFileLoader.getAudioFiletype(file.getAbsolutePath()).iconIndex + 1]);
                 default:
                     return String.valueOf(file.length());
             }
@@ -237,6 +262,11 @@ public class PopupManager {
             } else if (strArrContains(filetypes, (String) getFileData(file, "Filetype"))) {
                 selector.setVisible(false);
                 responder.run(this);
+            } else {
+                new ErrorPopupFrame("Cannot select this type of file.", ErrorImageTypes.ERROR,
+                        temp -> {
+                            // Do nothing
+                        });
             }
         }
 
@@ -252,7 +282,7 @@ public class PopupManager {
             constraints.weighty = 1.0;
             constraints.gridwidth = 2;
             constraints.gridy = 0;
-            constraints.fill = GridBagConstraints.BOTH;
+            constraints.fill = BOTH;
             layout.setConstraints(fileList, constraints);
             selector.setLayout(layout);
         }
@@ -275,6 +305,79 @@ public class PopupManager {
         // Effects: gets filename, returns null if it's not selected
         public String getFile() {
             return !allowOut || selector.isVisible() ? null : location + separatorChar + file.getText();
+        }
+    }
+
+    // public class for file selection popups
+    public static class ErrorPopupFrame implements Popup {
+        private JButton okButton = new JButton("Ok");
+        private JLabel errorText;
+        private JLabel errorImg;
+        private JFrame selector;
+        private PopupResponder responder;
+
+        { // Initialize open commands
+            okButton.addActionListener(e -> {
+                selector.setVisible(false);
+                responder.run(this);
+            });
+        }
+
+        @Override
+        public Object getValue() {
+            return true;
+        }
+
+        // Effects: defaults everything
+        public ErrorPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder) {
+            this.errorText = new JLabel(errorText);
+            errorImg = new JLabel(new ImageIcon(ERROR_IMAGES[image.iconIndex]));
+            try {
+                SwingUtilities.invokeLater(() -> setup());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            this.responder = responder;
+        }
+
+        // Effects: sets up window objects
+        private void setupWindowObjects() {
+            selector.add(okButton);
+            selector.add(errorImg);
+            selector.add(errorText);
+        }
+
+        // Effects: sets up window layout
+        private void setupWindowLayout() {
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridx = 0;
+            constraints.gridy = 0;
+            layout.setConstraints(errorImg, constraints);
+            constraints.weightx = 1;
+            constraints.gridy = 1;
+            constraints.fill = HORIZONTAL;
+            constraints.gridwidth = 2;
+            layout.setConstraints(okButton, constraints);
+            constraints.gridwidth = 1;
+            constraints.weighty = 1;
+            constraints.gridx = 1;
+            constraints.gridy = 0;
+            constraints.fill = BOTH;
+            layout.setConstraints(errorText, constraints);
+            selector.setLayout(layout);
+        }
+
+        // Effects: does the work
+        private void setup() {
+            selector = new JFrame("Error");
+            selector.setSize(150, 100);
+            selector.setResizable(false);
+            setupWindowObjects();
+            setupWindowLayout();
+            selector.pack();
+            selector.setAlwaysOnTop(true);
+            selector.setVisible(true);
         }
     }
 }

@@ -14,6 +14,7 @@ public class AiffTest {
     @BeforeEach
     public void prepare() {
         aiffDecoder = new Aiff("data/\u0000/scarlet.aif");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test ID3 data

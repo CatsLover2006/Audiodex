@@ -215,6 +215,7 @@ public class Aiff implements AudioDecoder {
         return dirList[dirList.length - 1];
     }
 
+    // Returns filetype of decoder
     @Override
     public AudioFileType getFileType() {
         return AudioFileType.AIFF;

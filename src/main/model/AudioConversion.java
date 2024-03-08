@@ -41,6 +41,8 @@ public class AudioConversion {
             if (isFinished()) {
                 return;
             }
+            // This is lower priority than the main thread
+            Thread.currentThread().setPriority(MIN_PRIORITY);
             error = !helper.encodeAudio(targetFile);
             done = true;
             source.closeAudioFile();
