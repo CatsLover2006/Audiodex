@@ -233,6 +233,29 @@ public class App {
         private static final LoopType loop = LoopType.NO;
         private static final boolean shuffle = false;
 
+        // Song right click menu
+        private static class RightClickSongMenu extends JPopupMenu {
+            RightClickSongMenu(int row) {
+                JMenuItem item = new JMenuItem("Re-encode song");
+                item.addActionListener(e ->
+                        new ConversionPopupFrame(database.getAudioFile(row), popup -> {
+                            audioConverterList.add((AudioConversion) popup.getValue());
+                            ((AudioConversion) popup.getValue()).start();
+                        }));
+                this.add(item);
+                item = new JMenuItem("Remove song");
+                item.addActionListener(e ->
+                        new ConfirmationPopupFrame("Are you sure you want to remove this song?",
+                                ErrorImageTypes.WARNING, popup -> {
+                            if ((Boolean) popup.getValue()) {
+                                database.removeSongIndex(row);
+                                musicList.updateUI();
+                            }
+                        }));
+                this.add(item);
+            }
+        }
+
         // Modifies: this
         // Effects:  shows loading pane
         public static void createLoadingThread() {
@@ -389,10 +412,8 @@ public class App {
                             }
                         } else if (evt.getButton() == 3) {
                             System.out.println("Right click!");
-                            new ConversionPopupFrame(database.getAudioFile(row), popup -> {
-                                audioConverterList.add((AudioConversion) popup.getValue());
-                                ((AudioConversion) popup.getValue()).start();
-                            });
+                            RightClickSongMenu rightClickSongMenu = new RightClickSongMenu(row);
+                            rightClickSongMenu.show(evt.getComponent(), evt.getX(), evt.getY());
                         }
                     }
                 }
@@ -432,6 +453,7 @@ public class App {
             mainWindow.add(musicList);
             setupMainWindowLayout();
             setupMenubar();
+            updatePlaybackBar();
             mainWindow.setVisible(true);
             closeLoadingThread();
         }

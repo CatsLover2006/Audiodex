@@ -426,6 +426,91 @@ public class PopupManager {
         }
     }
 
+    // public class for error popups
+    public static class ConfirmationPopupFrame implements Popup {
+        private JButton cancelButton = new JButton("Cancel");
+        private JButton okButton = new JButton("Ok");
+        private JLabel errorText;
+        private JLabel errorImg;
+        private JFrame selector;
+        private PopupResponder responder;
+        private Boolean yes = false;
+
+        { // Initialize open commands
+            cancelButton.addActionListener(e -> {
+                selector.setVisible(false);
+                responder.run(this);
+            });
+            okButton.addActionListener(e -> {
+                yes = true;
+                selector.setVisible(false);
+                responder.run(this);
+            });
+        }
+
+        @Override
+        public Object getValue() {
+            return yes;
+        }
+
+        // Effects: defaults everything
+        public ConfirmationPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder) {
+            this.errorText = new JLabel(String.format("<html>%s</html>", errorText));
+            errorImg = new JLabel(new ImageIcon(ERROR_IMAGES[image.iconIndex]));
+            try {
+                SwingUtilities.invokeLater(() -> setup());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            this.responder = responder;
+        }
+
+        // Effects: sets up window objects
+        private void setupWindowObjects() {
+            selector.add(cancelButton);
+            selector.add(okButton);
+            selector.add(errorImg);
+            selector.add(errorText);
+            errorText.setBorder(new EmptyBorder(4,4,4,4));
+            errorImg.setBorder(new EmptyBorder(4,4,4,4));
+        }
+
+        // Effects: sets up window layout
+        private void setupWindowLayout() {
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridx = 0;
+            constraints.gridy = 0;
+            layout.setConstraints(errorImg, constraints);
+            constraints.weightx = 1;
+            constraints.gridy = 1;
+            constraints.fill = HORIZONTAL;
+            constraints.gridwidth = 2;
+            layout.setConstraints(cancelButton, constraints);
+            constraints.gridx = 2;
+            layout.setConstraints(okButton, constraints);
+            constraints.gridx = 1;
+            constraints.weighty = 1;
+            constraints.gridy = 0;
+            constraints.fill = BOTH;
+            constraints.gridwidth = 3;
+            layout.setConstraints(errorText, constraints);
+            selector.setLayout(layout);
+        }
+
+        // Effects: does the work
+        private void setup() {
+            selector = new JFrame("Confirmation");
+            selector.setResizable(false);
+            setupWindowObjects();
+            setupWindowLayout();
+            selector.pack();
+            selector.setAlwaysOnTop(true);
+            selector.setSize(200, 150);
+            selector.setVisible(true);
+        }
+    }
+
     // public class for audio conversion
     public static class ConversionPopupFrame implements Popup {
         private JButton startButton = new JButton("Start!");
