@@ -18,7 +18,7 @@ public class AudioConversionTest {
                 "data/out/scarlet.conv.wav");
         converter.setAudioSettings(new HashMap<>());
         assertNull(converter.getOptions());
-        assertEquals(new File("data/out/scarlet.conv.wav").getCanonicalFile(), converter.getTarget());
+        assertEquals(new File("data/out/scarlet.conv.wav").getCanonicalPath(), converter.getTarget());
         assertFalse(converter.isFinished());
         assertFalse(converter.errorOccurred());
         converter.start();
@@ -32,7 +32,7 @@ public class AudioConversionTest {
         converter = new AudioConversion(new AudioDataStructure("data/scarlet.aif"),
                 "data/out/scarlet.conv.aif");
         assertNull(converter.getOptions());
-        assertEquals(new File("data/out/scarlet.conv.aif").getCanonicalFile(), converter.getTarget());
+        assertEquals(new File("data/out/scarlet.conv.aif").getCanonicalPath(), converter.getTarget());
     }
 
     @Test
