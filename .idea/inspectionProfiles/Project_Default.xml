@@ -1741,6 +1741,7 @@
       <scope name="Tests" level="ERROR" enabled="false" />
       <option name="ignoredClasses">
         <set>
+          <option value="ui.PopupManager.ConfirmationPopupFrame" />
           <option value="ui.PopupManager.ConversionPopupFrame" />
           <option value="ui.PopupManager.ErrorPopupFrame" />
         </set>
