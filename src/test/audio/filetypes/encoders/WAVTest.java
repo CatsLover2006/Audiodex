@@ -3,6 +3,7 @@ package audio.filetypes.encoders;
 import audio.AudioDecoder;
 import audio.AudioEncoder;
 import audio.filetypes.decoders.Aiff;
+import audio.filetypes.decoders.MP4alac;
 import model.ExceptionIgnore;
 import org.junit.jupiter.api.Test;
 import ui.AudioFilePlaybackBackend;
@@ -24,7 +25,7 @@ public class WAVTest {
 
     @Test
     public void doEncodeTest() {
-        decoder = new Aiff("./data/scarlet.alac.m4a");
+        decoder = new MP4alac("./data/scarlet.alac.m4a");
         encoder = new WAV();
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();

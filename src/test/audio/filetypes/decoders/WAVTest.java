@@ -28,7 +28,7 @@ public class  WAVTest {
         wavDecoder.closeAudioFile();
         assertFalse(wavDecoder.isReady());
         assertEquals("scarlet.wav", wavDecoder.getFileName());
-        assertEquals(142, Math.floor(wavDecoder.getFileDuration()));
+        assertEquals(143, Math.floor(wavDecoder.getFileDuration()));
         assertEquals(AudioFileType.PCM_WAV, wavDecoder.getFileType());
     }
 
