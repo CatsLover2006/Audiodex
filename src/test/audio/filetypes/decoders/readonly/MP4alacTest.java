@@ -32,6 +32,7 @@ public class MP4alacTest {
     @BeforeEach
     public void prepare() {
         alacDecoder = new MP4alac("data/readonly/scarlet.alac.m4a");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work

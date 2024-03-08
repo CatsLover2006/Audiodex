@@ -10,22 +10,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MP4alacTest {
     MP4alac alacDecoder;
 
-    private class ForcePauseThread extends Thread {
-        @Override
-        public void run() {
-            alacDecoder.forceDisableDecoding();
-            try {
-                sleep(10);
-            } catch (InterruptedException e) {
-                // no
-            }
-            alacDecoder.forceEnableDecoding();
-        }
-    }
-
     @BeforeEach
     public void prepare() {
         alacDecoder = new MP4alac("data/\u0000/scarlet.alac.m4a");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test ID3 data

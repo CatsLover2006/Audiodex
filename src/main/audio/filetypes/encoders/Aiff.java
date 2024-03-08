@@ -88,6 +88,9 @@ public class Aiff implements AudioEncoder {
         if (decoder == null || !decoder.isReady()) {
             return 0;
         }
+        if (!decoder.moreSamples()) {
+            return 1;
+        }
         return decoder.getCurrentTime() / decoder.getFileDuration();
     }
 }

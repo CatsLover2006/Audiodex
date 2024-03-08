@@ -76,7 +76,7 @@ public class MP4alac implements AudioDecoder {
     // Requires: prepareToPlayAudio() called
     // Modifies: this
     // Effects:  unloads audio file, to save memory
-    //           getAudioOutputFormat() and atEndOfFile() remain valid
+    //           getAudioOutputFormat() remains valid
     @Override
     public void closeAudioFile() {
         ready = false;
@@ -232,6 +232,7 @@ public class MP4alac implements AudioDecoder {
         return dirList[dirList.length - 1];
     }
 
+    // Returns filetype of decoder
     @Override
     public AudioFileType getFileType() {
         return AudioFileType.ALAC_MP4;

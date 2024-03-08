@@ -17,6 +17,7 @@ public class  WAVTest {
     @BeforeEach
     public void prepare() {
         wavDecoder = new WAV("data/scarlet.wav");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test if prepareToPlayAudio and closeAudioFile work

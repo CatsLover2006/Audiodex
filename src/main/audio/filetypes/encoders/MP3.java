@@ -1,6 +1,7 @@
 package audio.filetypes.encoders;
 
 import audio.*;
+import audio.filetypes.decoders.MpegType;
 import net.sourceforge.lame.lowlevel.LameEncoder;
 import net.sourceforge.lame.mp3.Lame;
 import net.sourceforge.lame.mp3.MPEGMode;
@@ -106,6 +107,9 @@ public class MP3 implements AudioEncoder {
         if (decoder == null || !decoder.isReady()) {
             return 0;
         }
+        if (!decoder.moreSamples()) {
+            return 1;
+        }
         return decoder.getCurrentTime() / decoder.getFileDuration();
     }
 
@@ -114,7 +118,7 @@ public class MP3 implements AudioEncoder {
     private boolean updateID3(String filename) {
         decoder.prepareToPlayAudio();
         ID3Container container = decoder.getID3();
-        audio.filetypes.decoders.MP3 id3Updater = new audio.filetypes.decoders.MP3(filename);
+        MpegType id3Updater = new MpegType(filename);
         id3Updater.prepareToPlayAudio();
         container.setID3Data("Encoder", "Audiodex");
         id3Updater.setID3(container);

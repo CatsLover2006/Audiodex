@@ -14,6 +14,7 @@ public class MP4AACTest {
     @BeforeEach
     public void prepare() {
         aacDecoder = new MP4AAC("data/\u0000/scarlet.aac.m4a");
+        Thread.currentThread().setPriority(2);
     }
 
     @Test // Test ID3 data

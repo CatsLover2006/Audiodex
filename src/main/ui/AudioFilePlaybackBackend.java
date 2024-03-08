@@ -49,6 +49,7 @@ public class AudioFilePlaybackBackend {
         // Effects: plays audio in file loadedFile
         @Override
         public void run() {
+            Thread.currentThread().setPriority(MAX_PRIORITY);
             AudioSample sample;
             while (run && loadedFile.moreSamples()) {
                 sample = loadedFile.getNextSample();

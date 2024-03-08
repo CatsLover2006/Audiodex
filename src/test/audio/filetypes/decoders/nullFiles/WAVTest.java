@@ -14,7 +14,9 @@ public class WAVTest {
     @BeforeEach
     public void prepare() {
         wavDecoder = new WAV("data/\u0000/scarlet.wav");
+        Thread.currentThread().setPriority(2);
     }
+
     @Test // Test ID3 data
     public void id3Test() {
         ID3Container id3 = wavDecoder.getID3();

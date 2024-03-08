@@ -45,6 +45,7 @@ public class AiffTest {
                 // LMAO next
             }
         }
+        assertEquals(1, encoder.encodedPercent());
         decoder.closeAudioFile();
         decoder = new audio.filetypes.decoders.Aiff("./data/out/scarlet.aif");
         decoder.prepareToPlayAudio();
@@ -62,7 +63,7 @@ public class AiffTest {
 
     @Test
     public void failEncodeTest() {
-        decoder = new Aiff("./data/scarlet.aif");
+        decoder = new MP4alac("./data/scarlet.alac.m4a");
         encoder = new audio.filetypes.encoders.Aiff();
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();

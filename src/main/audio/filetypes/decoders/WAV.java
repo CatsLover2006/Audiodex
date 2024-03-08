@@ -177,6 +177,7 @@ public class WAV implements AudioDecoder {
         // lol wat
     }
 
+    // Returns filetype of decoder
     @Override
     public AudioFileType getFileType() {
         return AudioFileType.PCM_WAV;
