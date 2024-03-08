@@ -113,10 +113,14 @@ public class AudioDataStructure {
         JSONObject out = new JSONObject();
         out.put("filename", filename);
         out.put("filetype", audioFileType.toString());
-        out.put("ID3data", id3Data.encode());
         out.put("bitrate", bitrate);
         out.put("samplesize", sampleSize);
         out.put("filesize", fileSize);
+        try {
+            out.put("ID3data", id3Data.encode());
+        } catch (Exception e) {
+            out.put("ID3data", new JSONObject());
+        }
         return out;
     }
 
