@@ -91,6 +91,52 @@ public class MpegTypeTest {
         id3.setID3Data("Encoder", "Audiodex");
         mp3Decoder.setID3(id3);
         mp3Decoder.setArtwork(mp3Decoder.getArtwork());
+        // Error range due to math errors in scanning program
+        assertTrue(Math.abs(-9.6 - mp3Decoder.getReplayGain()) < 0.05);
+        mp3Decoder.closeAudioFile();
+    }
+
+    @Test // Test if decoding works
+    public void mp2DecodeTest() {
+        mp3Decoder = new MpegType("data/scarlet.mp2");
+        AudioDecoder wavDecoder = new WAV("data/scarlet.mp2.wav");
+        assertFalse(mp3Decoder.isReady());
+        mp3Decoder.prepareToPlayAudio();
+        assertTrue(mp3Decoder.isReady());
+        AudioFormat format = mp3Decoder.getAudioOutputFormat();
+        assertEquals(2, format.getChannels());
+        assertEquals(16, format.getSampleSizeInBits());
+        assertEquals(44100, format.getSampleRate());
+        AudioSample sample = mp3Decoder.getNextSample();
+        assertEquals(4096, sample.getLength());
+        wavDecoder.prepareToPlayAudio();
+        AudioSample wavSample = wavDecoder.getNextSample();
+        while (mp3Decoder.moreSamples()) {
+            if (sample.getLength() == 0 || wavSample.getLength() == 0) {
+                return; // We're done now!
+            }
+            assertArrayEquals(wavSample.getData(), sample.getData());
+            wavSample = wavDecoder.getNextSample();
+            sample = mp3Decoder.getNextSample();
+        }
+        mp3Decoder.closeAudioFile();
+    }
+
+    @Test // Test ID3 data
+    public void mp2ID3Test() {
+        mp3Decoder = new MpegType("data/scarlet.mp2");
+        assertFalse(mp3Decoder.isReady());
+        mp3Decoder.prepareToPlayAudio();
+        assertTrue(mp3Decoder.isReady());
+        ID3Container id3 = mp3Decoder.getID3();
+        assertEquals("Scarlet Fire", id3.getID3Data("Title"));
+        assertEquals("Otis McDonald", id3.getID3Data("Artist"));
+        assertEquals("YouTube Audio Library", id3.getID3Data("Album"));
+        assertEquals(2015L, id3.getID3Data("Year"));
+        id3.setID3Data("Encoder", "Audiodex");
+        mp3Decoder.setID3(id3);
+        mp3Decoder.setArtwork(mp3Decoder.getArtwork());
+        // Default Value
         assertEquals(-6, mp3Decoder.getReplayGain());
         mp3Decoder.closeAudioFile();
     }

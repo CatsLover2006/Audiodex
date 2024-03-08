@@ -92,6 +92,7 @@ public class FlacTest {
         id3.setID3Data("Encoder", "Audiodex");
         flacDecoder.setID3(id3);
         flacDecoder.setArtwork(flacDecoder.getArtwork());
+        // Default Value (fails to get from file for some reason)
         assertEquals(-6, flacDecoder.getReplayGain());
     }
 }

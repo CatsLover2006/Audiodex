@@ -20,7 +20,6 @@ import org.jaudiotagger.audio.mp3.MP3File;
 import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.id3.ID3v24Frame;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.images.Artwork;
 
@@ -222,7 +221,7 @@ public class MpegType implements AudioDecoder {
     // Effects: returns AudioFile class
     private static AudioFile getAudioFile(String filename) {
         try {
-            return AudioFileIO.read(new File(filename));
+            return AudioFileIO.readAs(new File(filename), "mp3");
         } catch (Exception e) {
             return null;
         }
@@ -300,7 +299,7 @@ public class MpegType implements AudioDecoder {
     public Artwork getArtwork() {
         AudioFile f;
         try {
-            f = AudioFileIO.read(new File(filename));
+            f = AudioFileIO.readAs(new File(filename), "mp3");
             Tag tag = f.getTag();
             for (Artwork art : tag.getArtworkList()) {
                 if (art.getPictureType() == 0) {
@@ -317,7 +316,7 @@ public class MpegType implements AudioDecoder {
     @Override
     public void setArtwork(Artwork image) {
         ExceptionIgnore.ignoreExc(() ->  {
-            AudioFile f = AudioFileIO.read(new File(filename));
+            AudioFile f = AudioFileIO.readAs(new File(filename), "mp3");
             while (!f.getTag().getArtworkList().isEmpty()) {
                 f.getTag().deleteArtworkField();
             } // It duplicates artwork if I don't do this and idk why

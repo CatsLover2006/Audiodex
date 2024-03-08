@@ -1,19 +1,22 @@
 package ui;
 
+import audio.AudioDataStructure;
 import audio.AudioFileLoader;
+import model.AudioConversion;
+import model.ExceptionIgnore;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.EventObject;
+import java.util.HashMap;
 
-import static java.awt.GridBagConstraints.BOTH;
-import static java.awt.GridBagConstraints.HORIZONTAL;
+import static java.awt.GridBagConstraints.*;
 import static java.io.File.separatorChar;
 
 // Static class
@@ -32,7 +35,8 @@ public class PopupManager {
     private static final BufferedImage[] ERROR_IMAGES;
 
     public enum ErrorImageTypes {
-        ERROR(0);
+        ERROR(0),
+        WARNING(1);
 
         public final int iconIndex;
 
@@ -44,38 +48,62 @@ public class PopupManager {
     // Gets images for popups
     static {
         BufferedImage[] myImages;
+        ClassLoader classLoader = Main.class.getClassLoader();
         try {
             myImages = new BufferedImage[]{
-                    ImageIO.read(new File("./data/spec/FolderIcon.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon_RAW.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon_AAC.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon_MPEG.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon_Vorbis.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon_ALAC.png")),
-                    ImageIO.read(new File("./data/spec/FileIcon_FLAC.png"))
+                    ImageIO.read(classLoader.getResourceAsStream("data/FolderIcon.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_RAW.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_AAC.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_MPEG.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_Vorbis.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_ALAC.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_FLAC.png"))
             };
         } catch (Exception e) {
-            myImages = new BufferedImage[]{
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                    new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR)
-            };
+            try {
+                System.out.println("Not running in JAR");
+                myImages = new BufferedImage[]{
+                        ImageIO.read(new File("data/spec/FolderIcon.png")),
+                        ImageIO.read(new File("data/spec/FileIcon.png")),
+                        ImageIO.read(new File("data/spec/FileIcon_RAW.png")),
+                        ImageIO.read(new File("data/spec/FileIcon_AAC.png")),
+                        ImageIO.read(new File("data/spec/FileIcon_MPEG.png")),
+                        ImageIO.read(new File("data/spec/FileIcon_Vorbis.png")),
+                        ImageIO.read(new File("data/spec/FileIcon_ALAC.png")),
+                        ImageIO.read(new File("./data/spec/FileIcon_FLAC.png"))
+                };
+            } catch (Exception ex) {
+                myImages = new BufferedImage[]{
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR)
+                };
+            }
         }
         FILE_BROWSER_IMAGES = myImages;
         try {
             myImages = new BufferedImage[]{
-                    ImageIO.read(new File("./data/spec/ErrorIcon.png"))
+                    ImageIO.read(classLoader.getResourceAsStream("data/ErrorIcon.png")),
+                    ImageIO.read(classLoader.getResourceAsStream("data/WarningIcon.png"))
             };
         } catch (Exception e) {
-            myImages = new BufferedImage[]{
-                    new BufferedImage(32, 32, BufferedImage.TYPE_3BYTE_BGR)
-            };
+            try {
+                myImages = new BufferedImage[]{
+                        ImageIO.read(new File("./data/spec/ErrorIcon.png")),
+                        ImageIO.read(new File("./data/spec/WarningIcon.png"))
+                };
+            } catch (Exception ex) {
+                myImages = new BufferedImage[]{
+                        new BufferedImage(32, 32, BufferedImage.TYPE_3BYTE_BGR),
+                        new BufferedImage(32, 32, BufferedImage.TYPE_3BYTE_BGR)
+                };
+            }
         }
         ERROR_IMAGES = myImages;
     }
@@ -95,41 +123,60 @@ public class PopupManager {
         private final String[] filetypes;
         private JTextField file = new JTextField();
         private JButton openButton = new JButton("Open");
+        private boolean forceDirCheck = false;
 
         { // Initialize open commands
-            file.addActionListener(e -> doFileSelection(new File(location
-                    + separatorChar + e.getActionCommand())));
-            openButton.addActionListener(e -> doFileSelection(new File(location
-                    + separatorChar + file.getText())));
+            file.addActionListener(e -> {
+                forceDirCheck = false;
+                doFileSelection(new File(location
+                        + separatorChar + e.getActionCommand()));
+            });
+            openButton.addActionListener(e -> {
+                forceDirCheck = true;
+                doFileSelection(new File(location
+                        + separatorChar + file.getText()));
+            });
         }
 
         private JFrame selector;
         private boolean allowOut = false;
-        private final JTable fileTable = new JTable(new FileTableModel()) {
-            @Override
-            public boolean editCellAt(int row, int column, EventObject e) {
-                if (hasNoParent) {
-                    row++;
-                }
-                if (lastClicked == row) {
-                    if (row == 0) {
-                        doFileSelection(new File(location).getParentFile());
-                    } else {
-                        doFileSelection(dirList[row - 1]);
-                    }
-                } else {
-                    lastClicked = row;
-                    if (row != 0) {
-                        file.setText((String) getFileData(dirList[row - 1], "Filename"));
-                    }
-                }
-                return false;
-            }
-        };
+        private final JTable fileTable = new JTable(new FileTableModel());
         private final JScrollPane fileList = new JScrollPane(fileTable);
         private File[] dirList;
         private PopupResponder responder;
         private Boolean hasNoParent;
+
+        // Setup file table events
+        {
+            fileTable.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int row = fileTable.rowAtPoint(evt.getPoint());
+                    int col = fileTable.columnAtPoint(evt.getPoint());
+                    if (row >= 0 && col >= 0) {
+                        forceDirCheck = false;
+                        if (hasNoParent) {
+                            row++;
+                        }
+                        if (evt.getButton() == 1) {
+                            if (evt.getClickCount() == 2) {
+                                if (row == 0) {
+                                    doFileSelection(new File(location).getParentFile());
+                                } else {
+                                    doFileSelection(dirList[row - 1]);
+                                }
+                            } else if (evt.getClickCount() == 1) {
+                                ExceptionIgnore.ignoreExc(() ->
+                                        file.setText((String) getFileData(dirList[fileTable.rowAtPoint(evt.getPoint())
+                                                - (hasNoParent ? 0 : 1)], "Filename")));
+                            }
+                        } else if (evt.getButton() == 3) {
+                            System.out.println("Right click!");
+                        }
+                    }
+                }
+            });
+        }
 
         @Override
         public Object getValue() {
@@ -144,7 +191,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
             this.responder = responder;
         }
@@ -157,7 +204,6 @@ public class PopupManager {
             selector.add(openButton);
         }
 
-        private int lastClicked;
         private static final String[] columns = {
                 "Icon",
                 "Filename",
@@ -174,7 +220,6 @@ public class PopupManager {
             fileTable.getColumnModel().getColumn(0).setMaxWidth(17);
             fileTable.getColumnModel().getColumn(0).setMinWidth(17);
             fileTable.setRowHeight(17);
-            lastClicked = -1;
             fileList.updateUI();
         }
 
@@ -245,9 +290,9 @@ public class PopupManager {
                     } else {
                         return file.getName().substring(file.getName().lastIndexOf(".") + 1);
                     }
-                case "Icon":
-                    return new ImageIcon(file.isDirectory() ? FILE_BROWSER_IMAGES[0] : FILE_BROWSER_IMAGES[
-                                    AudioFileLoader.getAudioFiletype(file.getAbsolutePath()).iconIndex + 1]);
+                case "Icon": // Thanks IntelliJ!
+                    return new ImageIcon(FILE_BROWSER_IMAGES[file.isDirectory() ? 0 :
+                            AudioFileLoader.getAudioFiletype(file.getAbsolutePath()).iconIndex + 1]);
                 default:
                     return String.valueOf(file.length());
             }
@@ -255,7 +300,7 @@ public class PopupManager {
 
         // Effects: does file selection
         private void doFileSelection(File file) {
-            if (file.isDirectory()) {
+            if (file.isDirectory() && !forceDirCheck) {
                 location = file.getPath();
                 this.file.setText("");
                 setupFiles();
@@ -263,10 +308,8 @@ public class PopupManager {
                 selector.setVisible(false);
                 responder.run(this);
             } else {
-                new ErrorPopupFrame("Cannot select this type of file.", ErrorImageTypes.ERROR,
-                        temp -> {
-                            // Do nothing
-                        });
+                new ErrorPopupFrame("Cannot select this type of file.", ErrorImageTypes.WARNING,
+                        temp -> { });
             }
         }
 
@@ -308,7 +351,7 @@ public class PopupManager {
         }
     }
 
-    // public class for file selection popups
+    // public class for error popups
     public static class ErrorPopupFrame implements Popup {
         private JButton okButton = new JButton("Ok");
         private JLabel errorText;
@@ -330,12 +373,12 @@ public class PopupManager {
 
         // Effects: defaults everything
         public ErrorPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder) {
-            this.errorText = new JLabel(errorText);
+            this.errorText = new JLabel(String.format("<html>%s</html>", errorText));
             errorImg = new JLabel(new ImageIcon(ERROR_IMAGES[image.iconIndex]));
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
             this.responder = responder;
         }
@@ -345,6 +388,8 @@ public class PopupManager {
             selector.add(okButton);
             selector.add(errorImg);
             selector.add(errorText);
+            errorText.setBorder(new EmptyBorder(4,4,4,4));
+            errorImg.setBorder(new EmptyBorder(4,4,4,4));
         }
 
         // Effects: sets up window layout
@@ -371,13 +416,118 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             selector = new JFrame("Error");
-            selector.setSize(150, 100);
             selector.setResizable(false);
             setupWindowObjects();
             setupWindowLayout();
             selector.pack();
             selector.setAlwaysOnTop(true);
+            selector.setSize(200, 150);
             selector.setVisible(true);
+        }
+    }
+
+    // public class for audio conversion
+    public static class ConversionPopupFrame implements Popup {
+        private JButton startButton = new JButton("Start!");
+        private JFrame selector;
+        private PopupResponder responder;
+        private AudioConversion converter;
+        private JPanel optionsPanel = new JPanel(true);
+        private HashMap<String, JComboBox> options = new HashMap<>();
+
+
+        { // Initialize open commands
+            startButton.addActionListener(e -> {
+                selector.setVisible(false);
+                responder.run(this);
+            });
+        }
+
+        @Override
+        public Object getValue() {
+            HashMap<String, String> selected = new HashMap<>();
+            options.forEach((key, value) -> {
+                selected.put(key, (String) value.getSelectedItem());
+            });
+            converter.setAudioSettings(selected);
+            return converter;
+        }
+
+        // Effects: defaults everything
+        public ConversionPopupFrame(AudioDataStructure source, PopupResponder responder) {
+            getFileToWrite(source);
+            this.responder = responder;
+        }
+
+        // Effects: sets up window objects
+        private void setupWindowObjects() {
+            selector.add(optionsPanel);
+            selector.add(startButton);
+            if (options.size() == 0) {
+                optionsPanel.add(new JLabel("Encoder has no options."));
+                optionsPanel.updateUI();
+            } else {
+                setupOptions();
+            }
+            optionsPanel.setBorder(new EmptyBorder(0, 4, 0, 0));
+        }
+
+        // Effects: sets up options panel UI
+        private void setupOptions() {
+            GridBagLayout optionsLayout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridy = 0;
+            constraints.fill = HORIZONTAL;
+            options.forEach((key, value) -> {
+                constraints.weightx = 0;
+                constraints.gridx = 0;
+                JLabel keyLabel = new JLabel(key);
+                optionsPanel.add(keyLabel);
+                optionsLayout.setConstraints(keyLabel, constraints);
+                constraints.weightx = 1;
+                constraints.gridx = 1;
+                optionsPanel.add(value);
+                optionsLayout.setConstraints(value, constraints);
+                value.setSelectedIndex(value.getItemCount() - 1);
+                constraints.gridy++;
+            });
+            optionsPanel.setLayout(optionsLayout);
+            optionsPanel.updateUI();
+        }
+
+        // Effects: sets up window layout
+        private void setupWindowLayout() {
+            selector.setLayout(new GridBagLayout());
+        }
+
+        // Effects: does the work
+        private void setup() {
+            selector = new JFrame("Converter");
+            selector.setResizable(false);
+            selector.setSize(200, 150);
+            ExceptionIgnore.ignoreExc(() -> converter.getOptions().forEach((key, value) ->
+                    options.put(key, new JComboBox<>(value.toArray()))));
+            setupWindowObjects();
+            setupWindowLayout();
+            selector.pack();
+            selector.setAlwaysOnTop(true);
+            selector.setVisible(true);
+        }
+
+        // Effects: gets file to write to
+        private void getFileToWrite(AudioDataStructure source) {
+            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"), null, popup -> {
+                converter = new AudioConversion(source, (String) popup.getValue());
+                if (converter.errorOccurred() || new File((String) popup.getValue()).exists()) {
+                    new ErrorPopupFrame("Cannot use file.", ErrorImageTypes.ERROR, t -> getFileToWrite(source));
+                } else {
+                    try {
+                        SwingUtilities.invokeLater(() -> setup());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
         }
     }
 }

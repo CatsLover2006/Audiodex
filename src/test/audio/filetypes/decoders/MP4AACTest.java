@@ -95,6 +95,7 @@ public class MP4AACTest {
         System.out.println(id3.encode().toString());
         aacDecoder.setID3(id3);
         aacDecoder.setArtwork(aacDecoder.getArtwork());
-        assertEquals(-6, aacDecoder.getReplayGain());
+        // Error range due to math errors in scanning program
+        assertTrue(Math.abs(-9.6 - aacDecoder.getReplayGain()) < 0.05);
     }
 }

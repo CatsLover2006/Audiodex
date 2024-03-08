@@ -35,12 +35,12 @@ public class MP3 implements AudioEncoder {
     public HashMap<String, List<String>> getEncoderSpecificSelectors() {
         HashMap<String, List<String>> options = new HashMap<>();
         List<String> valid = new ArrayList<>();
-        valid.add("Yes");
         valid.add("No");
-        options.put("variable bit rate", valid);
+        valid.add("Yes");
+        //options.put("VBR", valid); // Critical bug found in library
         decoder.prepareToPlayAudio();
         if (decoder.getAudioOutputFormat().getChannels() != 1) {
-            options.put("stereo", valid);
+            options.put("Stereo", valid);
         }
         decoder.closeAudioFile();
         valid = new ArrayList<>();
@@ -48,9 +48,9 @@ public class MP3 implements AudioEncoder {
                 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160
         };
         for (int bitrate : bitrates) {
-            valid.add(bitrate + " kbps");
+            valid.add(bitrate + " kbps/channel");
         }
-        options.put("mono bitrate", valid);
+        options.put("Bitrate", valid);
         return options;
     }
 
@@ -58,13 +58,13 @@ public class MP3 implements AudioEncoder {
     // Effects:  sets the target audio format for encoder
     @Override
     public void setAudioFormat(AudioFormat format, HashMap<String, String> encoderSpecificValues) {
-        if (Objects.equals(encoderSpecificValues.get("stereo"), "Yes")) {
+        if (Objects.equals(encoderSpecificValues.get("Stereo"), "Yes")) {
             stereo = true;
         }
-        if (Objects.equals(encoderSpecificValues.get("variable bit rate"), "Yes")) {
+        /* if (Objects.equals(encoderSpecificValues.get("variable bit rate"), "Yes")) {
             useVBR = true;
-        }
-        String[] bitrate = encoderSpecificValues.get("mono bitrate").split(" ");
+        } //*/// Critical bug found in library
+        String[] bitrate = encoderSpecificValues.get("Bitrate").split(" ");
         this.bitrate = Integer.parseInt(bitrate[0]);
     }
 

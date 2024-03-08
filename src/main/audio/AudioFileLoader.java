@@ -3,11 +3,8 @@ package audio;
 import audio.filetypes.decoders.*;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import org.kc7bfi.jflac.FLACDecoder;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler

@@ -87,6 +87,7 @@ public class AiffTest {
         id3.setID3Data("Encoder", "Audiodex");
         aiffDecoder.setID3(id3);
         aiffDecoder.setArtwork(aiffDecoder.getArtwork());
-        assertEquals(-6, aiffDecoder.getReplayGain());
+        // Error range due to math errors in scanning program
+        assertTrue(Math.abs(-9.6 - aiffDecoder.getReplayGain()) < 0.05);
     }
 }

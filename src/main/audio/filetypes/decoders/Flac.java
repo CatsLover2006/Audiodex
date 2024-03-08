@@ -13,9 +13,6 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
 import org.kc7bfi.jflac.FLACDecoder;
-import org.kc7bfi.jflac.FrameDecodeException;
-import org.kc7bfi.jflac.PCMProcessor;
-import org.kc7bfi.jflac.frame.Frame;
 import org.kc7bfi.jflac.metadata.StreamInfo;
 import org.kc7bfi.jflac.sound.spi.FlacAudioFormat;
 import org.kc7bfi.jflac.util.ByteData;
@@ -23,12 +20,9 @@ import org.kc7bfi.jflac.util.ByteData;
 import javax.sound.sampled.AudioFormat;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import static audio.filetypes.TagConversion.keyConv;
@@ -37,10 +31,13 @@ import static java.io.File.separatorChar;
 // FLAC decoder class
 // TODO: implement skipping
 public class Flac implements AudioDecoder {
-    StreamInfo info;
-    String filename;
-    FLACDecoder decoder;
-    long bytesPlayed = 0;
+    private StreamInfo info;
+    private String filename;
+    private FLACDecoder decoder;
+    private long bytesPlayed = 0;
+    private boolean skipping = false;
+    private FileInputStream in;
+
 
     // Decode a single frame and converts the returned ByteData to an AudioSample (not hard lmao)
     private AudioSample decodeFrame() {
@@ -62,7 +59,8 @@ public class Flac implements AudioDecoder {
     @Override
     public void prepareToPlayAudio() {
         try {
-            decoder = new FLACDecoder(new FileInputStream(filename));
+            in = new FileInputStream(filename);
+            decoder = new FLACDecoder(in);
             try {
                 info = decoder.readStreamInfo();
             } catch (IOException e) {
@@ -118,6 +116,9 @@ public class Flac implements AudioDecoder {
     // Effects:  decodes and returns the next audio sample
     @Override
     public AudioSample getNextSample() {
+        while (skipping) {
+            ExceptionIgnore.ignoreExc(() -> wait(0, 1));
+        }
         if (moreSamples()) {
             AudioSample sample = decodeFrame();
             bytesPlayed += sample.getLength();
@@ -138,7 +139,22 @@ public class Flac implements AudioDecoder {
     // Effects:  moves audio to a different point of the file
     @Override
     public void goToTime(double time) {
-        // Unimplemented
+        skipping = true;
+        if (getCurrentTime() > time) {
+            try {
+                decoder.seek(0);
+            } catch (IOException e) {
+                prepareToPlayAudio();
+            }
+            bytesPlayed = 0;
+        }
+        while (time > getCurrentTime()) {
+            bytesPlayed += decodeFrame().getLength();
+            if (time >= getFileDuration()) {
+                break;
+            }
+        }
+        skipping = false;
     }
 
     // Effects: returns the duration of the audio in seconds
@@ -151,7 +167,7 @@ public class Flac implements AudioDecoder {
     //          only exists due to having multiple threads
     @Override
     public boolean skipInProgress() {
-        return false; // Skip unimplemented
+        return skipping;
     }
 
     // Effects: returns replaygain value
