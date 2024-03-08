@@ -7,11 +7,21 @@ import java.io.IOException;
 
 import static java.io.File.separatorChar;
 
+import org.jaudiotagger.tag.TagOptionSingleton;
+import org.jaudiotagger.tag.reference.ID3V2Version;
 import org.json.*;
 
 // Audio data structure class
 // Used for the database
 public class AudioDataStructure {
+
+    // Setup up JAudiotagger values here, there's nowhere else where it's guaranteed
+    static {
+        TagOptionSingleton tagSavingOptions = TagOptionSingleton.getInstance();
+        // Prefer ID3v2.3 over ID3v2.4 for compatibilty reasons
+        tagSavingOptions.setID3V2Version(ID3V2Version.ID3_V23);
+        tagSavingOptions.setFilenameTagSave(false); // Why save filename?
+    }
 
     private final String filename;
     private final long bitrate;

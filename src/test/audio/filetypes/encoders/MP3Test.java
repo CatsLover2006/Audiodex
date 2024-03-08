@@ -4,6 +4,7 @@ import audio.AudioDecoder;
 import audio.AudioEncoder;
 import audio.filetypes.decoders.Aiff;
 import audio.filetypes.decoders.MP4alac;
+import audio.filetypes.decoders.MpegType;
 import model.ExceptionIgnore;
 import org.junit.jupiter.api.Test;
 import ui.AudioFilePlaybackBackend;
@@ -30,9 +31,9 @@ public class MP3Test {
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
         HashMap<String, String> options = new HashMap<>();
-        options.put("mono bitrate", "160 kbps");
-        options.put("variable bit rate", "No");
-        options.put("stereo", "Yes");
+        options.put("Bitrate", "160 kbps");
+        options.put("VBR", "No");
+        options.put("Stereo", "Yes");
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertEquals(0, encoder.encodedPercent());
         assertNotNull(encoder.getEncoderSpecificSelectors());
@@ -48,7 +49,7 @@ public class MP3Test {
             }
         }
         decoder.closeAudioFile();
-        decoder = new audio.filetypes.decoders.MP3("./data/out/scarlet.mp3");
+        decoder = new MpegType("./data/out/scarlet.mp3");
         decoder.prepareToPlayAudio();
         assertEquals("Scarlet Fire", decoder.getID3().getID3Data("Title"));
         decoder.closeAudioFile();
@@ -69,9 +70,9 @@ public class MP3Test {
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
         HashMap<String, String> options = new HashMap<>();
-        options.put("mono bitrate", "16 kbps");
-        options.put("variable bit rate", "Yes");
-        options.put("stereo", "No"); // LMAO settings
+        options.put("Bitrate", "16 kbps");
+        options.put("VBR", "Yes");
+        options.put("Stereo", "No"); // LMAO settings
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertEquals(0, encoder.encodedPercent());
         assertNull(encoder.getEncoderSpecificSelectors()); // Japanese directory name

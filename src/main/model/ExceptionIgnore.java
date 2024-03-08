@@ -9,6 +9,7 @@ public class ExceptionIgnore {
             run.run();
         } catch (Exception e) {
             // The point is to ignore it
+            e.printStackTrace();
         }
     }
 

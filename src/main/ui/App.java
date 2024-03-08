@@ -22,7 +22,9 @@ import org.fusesource.jansi.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
 
 import ui.PopupManager.*;
 
@@ -35,7 +37,7 @@ public class App {
     private static boolean notMain = true;
     private static ID3Container id3;
     private static AudioFilePlaybackBackend playbackManager;
-    private static boolean USE_CLI = true;
+    private static boolean USE_CLI = false;
     private static boolean end = false;
     private static String filename = "";
     private static DataManager database;
@@ -109,10 +111,30 @@ public class App {
         if (end || notMain) {
             return;
         }
+        for (int i = audioConverterList.size() - 1; i >= 0; i--) {
+            if (audioConverterList.get(i).isFinished() && !audioConverterList.get(i).errorOccurred()) {
+                audioConverterList.remove(i); // No need to update index, we're decrementing
+            }
+        }
         if (USE_CLI) {
             Cli.finishedEncode();
         } else {
-            // Do GUI stuff
+            Gui.updateConverterView();
+        }
+    }
+
+    // Modifies: this
+    // Effects:  Is run when replaygain fails to run
+    public static void replaygainFailure() {
+        if (end || notMain) {
+            return;
+        }
+        if (USE_CLI) {
+            // Do CLI stuff
+        } else {
+            new PopupManager.ErrorPopupFrame("Cannot use Replaygain with currently playing song on this computer."
+                    + "\nSound will not be the correct volume.",
+                    ErrorImageTypes.WARNING, obj -> { });
         }
     }
 
@@ -124,9 +146,11 @@ public class App {
     }
 
     public static void main(String[] args) {
+        audioConverterList = new ArrayList<>();
         notMain = false;
-        if (strArrContains(args, "--gui")) {
-            USE_CLI = false;
+        if (strArrContains(args, "--cli")) {
+            USE_CLI = true;
+        } else {
             Gui.createLoadingThread();
         }
         played = new LinkedList<>();
@@ -135,7 +159,6 @@ public class App {
         database.loadDatabase();
         database.sortSongList("Album_Title");
         playbackManager = new AudioFilePlaybackBackend();
-        audioConverterList = new ArrayList<>();
         playbackManager.setReplayGain(database.getSettings().doSoundCheck());
         if (USE_CLI) {
             Cli.cli(args);
@@ -170,6 +193,36 @@ public class App {
         }
 
         private static JFrame mainWindow;
+        private static JFrame activeConversionsView = new JFrame("Active Conversions");
+        private static JTable activeConversionsTable = new JTable(new ConverterTableModel());
+
+        // Setup conversion view
+        static {
+            activeConversionsView.add(activeConversionsTable);
+            activeConversionsView.setResizable(false);
+            activeConversionsView.setAlwaysOnTop(true);
+            activeConversionsTable.setRowHeight(32);
+            activeConversionsTable.getColumnModel().getColumn(0).setMaxWidth(144);
+            activeConversionsTable.getColumnModel().getColumn(0).setMinWidth(144);
+            activeConversionsTable.getColumnModel().getColumn(1).setMaxWidth(192);
+            activeConversionsTable.getColumnModel().getColumn(1).setMinWidth(192);
+            activeConversionsTable.getColumnModel().getColumn(1).setCellRenderer(new ProgressCellRender());
+        }
+
+        // Effects: hides active conversion view if there are no active conversions, otherwise updates the view
+        public static void updateConverterView() {
+            if (audioConverterList.isEmpty()) {
+                activeConversionsView.setVisible(false);
+            } else {
+                SwingUtilities.invokeLater(() -> {
+                    activeConversionsTable.updateUI();
+                    activeConversionsView.pack();
+                    if (!activeConversionsView.isVisible()) {
+                        activeConversionsView.setVisible(true);
+                    }
+                });
+            }
+        }
 
         private enum LoopType {
             NO,
@@ -196,6 +249,27 @@ public class App {
                 "Title", "Artist", "Album", "Album Artist"
         };
 
+        // Table cell renderer for a progress bar
+        public static class ProgressCellRender extends JProgressBar implements TableCellRenderer {
+            ProgressCellRender() {
+                super(0, 1000);
+            }
+
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                           boolean hasFocus, int row, int column) {
+                int progress = 0;
+                if (value instanceof Double) {
+                    progress = Math.toIntExact(Math.round(((Double) value) * 1000.0));
+                } else if (value instanceof Float) {
+                    progress = Math.round(((Float) value) * 1000f);
+                } else if (value instanceof Integer) {
+                    progress = (int) value;
+                }
+                setValue(progress);
+                return this;
+            }
+        }
 
         // Table model to get around Jtable pain
         private static class MusicTableModel extends DefaultTableModel {
@@ -224,7 +298,10 @@ public class App {
             // Gets table column class
             @Override
             public Class<?> getColumnClass(int columnIndex) {
-                return getValueAt(0, columnIndex).getClass();
+                if (columnIndex == 0) {
+                    return String.class;
+                }
+                return ProgressCellRender.class;
             }
 
             // Prevents editing
@@ -248,20 +325,94 @@ public class App {
             }
         }
 
-        private static final JTable musicTable = new JTable(new MusicTableModel()) {
-            @Override
-            public boolean editCellAt(int row, int column, EventObject e) {
-                if (lastClicked == row) {
-                    queueFrom(row);
-                    updatePlaybackBar();
+        // Table model to get around Jtable pain
+        private static class ConverterTableModel extends DefaultTableModel {
 
-                } else {
-                    lastClicked = row;
+            // Gets table row count
+            @Override
+            public int getRowCount() {
+                return audioConverterList.size();
+            }
+
+            // Gets table column count
+            @Override
+            public int getColumnCount() {
+                return 2;
+            }
+
+            // Gets table column
+            @Override
+            public String getColumnName(int columnIndex) {
+                if (columnIndex == 0) {
+                    return "Filename";
                 }
+                return "Progress";
+            }
+
+            // Gets table column class
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return getValueAt(0, columnIndex).getClass();
+            }
+
+            // Prevents editing
+            @Override
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return false;
             }
-        };
+
+            // Gets table value
+            @Override
+            public Object getValueAt(int rowIndex, int columnIndex) {
+                if (columnIndex == 0) {
+                    return new File(audioConverterList.get(rowIndex).getTarget()).getName();
+                }
+                return audioConverterList.get(rowIndex).getComplete();
+            }
+        }
+
+        private static final JTable musicTable = new JTable(new MusicTableModel());
         private static final JScrollPane musicList = new JScrollPane(musicTable);
+
+        // Setup music table events
+        static {
+            musicTable.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int row = musicTable.rowAtPoint(evt.getPoint());
+                    int col = musicTable.columnAtPoint(evt.getPoint());
+                    if (row >= 0 && col >= 0) {
+                        if (evt.getButton() == 1) {
+                            if (evt.getClickCount() == 2) {
+                                queueFrom(row);
+                                updatePlaybackBar();
+                            }
+                        } else if (evt.getButton() == 3) {
+                            System.out.println("Right click!");
+                            new ConversionPopupFrame(database.getAudioFile(row), popup -> {
+                                audioConverterList.add((AudioConversion) popup.getValue());
+                                ((AudioConversion) popup.getValue()).start();
+                            });
+                        }
+                    }
+                }
+            });
+        }
+
+        // Effects: loads image from data directory (/data/spec or (jar)/data)
+        private static BufferedImage loadImage(String filename) throws IOException {
+            try {
+                BufferedImage img = ImageIO.read(Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+                System.out.println(img);
+                return img;
+            } catch (Exception ex) {
+                try {
+                    return ImageIO.read(new File("data/spec/" + filename));
+                } catch (Exception e) {
+                    throw new IOException("Couldn't load image: " + e.getMessage() + " and " + ex.getMessage());
+                }
+            }
+        }
 
         // Modifies: this
         // Effects:  displays main window
@@ -269,8 +420,7 @@ public class App {
             mainWindow = new JFrame("AudioDex");
             mainWindow.setSize(900, 500);
             mainWindow.setResizable(true);
-            ExceptionIgnore.ignoreExc(() -> mainWindow.setIconImage(
-                    ImageIO.read(new File("./data/spec/AppIcon.png"))));
+            ExceptionIgnore.ignoreExc(() -> mainWindow.setIconImage(loadImage("AppIcon.png")));
             mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             updateGuiList();
             createPlaybackBar();
@@ -360,8 +510,11 @@ public class App {
             JMenuItem item = new JMenuItem("Save database");
             item.addActionListener(e -> database.saveDatabaseFile());
             menu.add(item);
-            item = new JMenuItem("Add file");
+            item = new JMenuItem("Add file to database");
             item.addActionListener(e -> addFile());
+            menu.add(item);
+            item = new JMenuItem("Add directory to database");
+            item.addActionListener(e -> addDir());
             menu.add(item);
             menuBar.add(menu);
             mainWindow.setJMenuBar(menuBar);
@@ -378,6 +531,19 @@ public class App {
                         updateGuiList();
                         closeLoadingThread();
                     });
+        }
+
+        // Effects: adds directory to database via popup
+        private static void addDir() {
+            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
+                    new String[]{".folder"}, popup -> {
+                createLoadingThread();
+                database.addDirToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
+                database.sanitizeAudioDatabase();
+                database.sortSongList("Album_Title");
+                updateGuiList();
+                closeLoadingThread();
+            });
         }
 
         // Modifies: this
@@ -416,13 +582,9 @@ public class App {
             }
         }
 
-        // List management stuff
-        private static int lastClicked = -1;
-
         // Modifies: this
         // Effects:  updates the list
         public static void updateGuiList() {
-            lastClicked = -1;
             musicList.updateUI();
         }
 
@@ -448,14 +610,15 @@ public class App {
 
         static {
             try {
-                placeholder = ImageIO.read(new File("data/spec/AppIcon.png"));
-                skip = ImageIO.read(new File("data/spec/NextIcon.png"));
-                skipInactive = ImageIO.read(new File("data/spec/NextIconInactive.png"));
-                prev = ImageIO.read(new File("data/spec/PrevIcon.png"));
-                prevInactive = ImageIO.read(new File("data/spec/PrevIconInactive.png"));
-                paused = ImageIO.read(new File("data/spec/PauseIcon.png"));
-                playing = ImageIO.read(new File("data/spec/PlayIcon.png"));
+                placeholder = loadImage("AppIcon.png");
+                skip = loadImage("NextIcon.png");
+                skipInactive = loadImage("NextIconInactive.png");
+                prev = loadImage("PrevIcon.png");
+                prevInactive = loadImage("PrevIconInactive.png");
+                paused = loadImage("PauseIcon.png");
+                playing = loadImage("PlayIcon.png");
             } catch (IOException e) {
+                e.printStackTrace();
                 placeholder = new BufferedImage(48, 48, BufferedImage.TYPE_3BYTE_BGR);
                 skip = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
                 prev = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
@@ -557,7 +720,7 @@ public class App {
         // Effects: updates music playback view
         public static void updatePlaybackBar() {
             if (updater != null && updater.isAlive()) {
-                updater.stop();
+                ExceptionIgnore.ignoreExc(() -> updater.join());
             }
             updater = new AlbumArtworkUpdater();
             updater.start();
@@ -618,6 +781,7 @@ public class App {
             playbackStatusView.add(playbackSlider);
             playbackStatusView.add(rightPlaybackLabel);
             setupPlaybackBarLayout();
+            playbackStatusView.setBorder(new EmptyBorder(0,4,0,4));
         }
 
         // Modifies: this
@@ -718,6 +882,7 @@ public class App {
                         continue;
                     }
                     updatePlaybackBarStatus(playbackManager.getCurrentTime());
+                    updateConverterView(); // Do this here bc why not
                 }
             }
         }
@@ -895,11 +1060,6 @@ public class App {
         // Modifies: this
         // Effects:  finishedEncode() extension for CLI
         private static void finishedEncode() {
-            for (int i = audioConverterList.size() - 1; i >= 0; i--) {
-                if (audioConverterList.get(i).isFinished() && !audioConverterList.get(i).errorOccurred()) {
-                    audioConverterList.remove(i); // No need to update index, we're decrementing
-                }
-            }
             if (Objects.requireNonNull(Cli.state) == MenuState.CLI_MAINMENU) {
                 Cli.printMenu();
             }

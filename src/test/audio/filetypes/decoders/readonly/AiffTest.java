@@ -87,6 +87,7 @@ public class AiffTest {
         assertEquals("YouTube Audio Library", id3.getID3Data("Album"));
         assertEquals(2015L, id3.getID3Data("Year")); // Lmao
         aiffDecoder.setID3(id3);
-        aiffDecoder.setArtwork(aiffDecoder.getArtwork());
+        // Error range due to math errors in scanning program
+        assertTrue(Math.abs(-9.6 - aiffDecoder.getReplayGain()) < 0.05);
     }
 }

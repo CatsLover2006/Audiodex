@@ -46,12 +46,29 @@ public class AudioFilePlaybackBackend {
             ExceptionIgnore.ignoreExc(() -> join());
         }
 
+        // Effects: pauses audio
+        public void pause() {
+            pause = true;
+            line.stop();
+        }
+
+        // Effects: pauses audio
+        public void play() {
+            line.start();
+            pause = false;
+        }
+
+        private volatile boolean pause = false;
+
         // Effects: plays audio in file loadedFile
         @Override
         public void run() {
             Thread.currentThread().setPriority(MAX_PRIORITY);
             AudioSample sample;
             while (run && loadedFile.moreSamples()) {
+                while (pause) {
+                    ExceptionIgnore.ignoreExc(() -> sleep(1, 0));
+                }
                 sample = loadedFile.getNextSample();
                 line.write(sample.getData(), 0, sample.getLength());
             }
@@ -96,6 +113,7 @@ public class AudioFilePlaybackBackend {
             }
         } catch (Exception e) {
             failedReplayGainSet = true;
+            App.replaygainFailure();
         }
         for (Control control : line.getControls()) {
             System.out.println(control.toString());
@@ -223,7 +241,7 @@ public class AudioFilePlaybackBackend {
         paused = false;
         line.start();
         if (decoderThread.isAlive()) {
-            decoderThread.resume();
+            decoderThread.play();
         } else {
             decoderThread.start();
         }
@@ -234,10 +252,7 @@ public class AudioFilePlaybackBackend {
     // Effects:  pauses audio (if it isn't already paused)
     public void pauseAudio() {
         paused = true;
-        if (decoderThread.isAlive()) {
-            decoderThread.suspend();
-            line.stop();
-        }
+        decoderThread.pause();
         App.CliInterface.updatePlaybackStatus();
     }
 

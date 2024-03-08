@@ -106,6 +106,7 @@ public class MP4alacTest {
         id3.setID3Data("Encoder", "Audiodex");
         alacDecoder.setID3(id3);
         alacDecoder.setArtwork(alacDecoder.getArtwork());
-        assertEquals(-6, alacDecoder.getReplayGain());
+        // Error range due to math errors in scanning program
+        assertTrue(Math.abs(-9.6 - alacDecoder.getReplayGain()) < 0.05);
     }
 }

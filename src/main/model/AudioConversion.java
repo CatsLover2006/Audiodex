@@ -78,10 +78,25 @@ public class AudioConversion {
         helper.setSource(source);
     }
 
+    // Effects: gets target string
+    public String getTarget() {
+        return targetFile;
+    }
+
+    // Effects: gets completion percent [0.0, 1.0]
+    public double getComplete() {
+        if (helper == null) {
+            return 0;
+        }
+        return helper.encodedPercent();
+    }
+
     // Modifies: this
     // Effects:  sets audio encoder settings, if relevant
     public void setAudioSettings(HashMap<String, String> settings) {
+        source.prepareToPlayAudio();
         helper.setAudioFormat(source.getAudioOutputFormat(), settings);
+        source.closeAudioFile();
     }
 
     // Modifies: this
