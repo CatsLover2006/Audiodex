@@ -3,6 +3,7 @@ package audio;
 // Represents an audio sample
 // This class only exists so that different audio decoders
 // can cooperate better with each other
+// No dedicated test class since it's used LITERALLY everywhere
 public class AudioSample {
     private final byte[] data;
     private final int length;

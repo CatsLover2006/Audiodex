@@ -116,8 +116,8 @@ public class Flac implements AudioDecoder {
     // Effects:  decodes and returns the next audio sample
     @Override
     public AudioSample getNextSample() {
-        while (skipping) {
-            ExceptionIgnore.ignoreExc(() -> wait(0, 1));
+        if (skipping) {
+            return new AudioSample();
         }
         if (moreSamples()) {
             AudioSample sample = decodeFrame();
@@ -141,11 +141,7 @@ public class Flac implements AudioDecoder {
     public void goToTime(double time) {
         skipping = true;
         if (getCurrentTime() > time) {
-            try {
-                decoder.seek(0);
-            } catch (IOException e) {
-                prepareToPlayAudio();
-            }
+            prepareToPlayAudio();
             bytesPlayed = 0;
         }
         while (time > getCurrentTime()) {
@@ -217,6 +213,7 @@ public class Flac implements AudioDecoder {
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
+        base.setID3Data("Title", getFileName());
         AudioFile f;
         try {
             base.setID3Data("bitRate", info.getBitsPerSample());

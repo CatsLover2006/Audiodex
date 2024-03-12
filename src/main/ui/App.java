@@ -7,10 +7,12 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.LogManager;
 
+import audio.AudioDecoder;
 import audio.AudioFileLoader;
 import audio.ID3Container;
 import model.AudioConversion;
@@ -146,13 +148,13 @@ public class App {
     }
 
     public static void main(String[] args) {
-        audioConverterList = new ArrayList<>();
         notMain = false;
         if (strArrContains(args, "--cli")) {
             USE_CLI = true;
         } else {
-            Gui.createLoadingThread();
+            GuiLoaderFrame.createLoadingThread();
         }
+        audioConverterList = new ArrayList<>();
         played = new LinkedList<>();
         songQueue = new LinkedList<>();
         database = new DataManager();
@@ -177,9 +179,9 @@ public class App {
         }
     }
 
-    // GUI mode
-    private static class Gui {
-        private static final JFrame loadingFrame = new JFrame();
+    // GUI loader frame
+    protected static class GuiLoaderFrame {
+        protected static final JFrame loadingFrame = new JFrame();
 
         // Loading frame initialization
         static {
@@ -191,6 +193,30 @@ public class App {
             loadingFrame.add(new JLabel("Loading..."));
             loadingFrame.repaint();
         }
+
+        // Modifies: this
+        // Effects:  shows loading pane
+        public static void createLoadingThread() {
+            try {
+                SwingUtilities.invokeAndWait(() -> loadingFrame.setVisible(true));
+            } catch (Exception | Error e) {
+                SwingUtilities.invokeLater(() -> loadingFrame.setVisible(true));
+            }
+        }
+
+        // Modifies: this
+        // Effects:  hides loading pane
+        private static void closeLoadingThread() {
+            try {
+                SwingUtilities.invokeAndWait(() -> loadingFrame.setVisible(false));
+            } catch (Exception | Error e) {
+                SwingUtilities.invokeLater(() -> loadingFrame.setVisible(true));
+            }
+        }
+    }
+
+    // GUI mode
+    private static class Gui {
 
         private static JFrame mainWindow;
         private static JFrame activeConversionsView = new JFrame("Active Conversions");
@@ -235,14 +261,35 @@ public class App {
 
         // Song right click menu
         private static class RightClickSongMenu extends JPopupMenu {
-            RightClickSongMenu(int row) {
-                JMenuItem item = new JMenuItem("Re-encode song");
+            JMenuItem item;
+
+            // Effects: adds metadata editor option
+            private void addMetadataEditor(int row) {
+                item = new JMenuItem("Edit metadata");
+                item.addActionListener(e ->
+                        new ID3PopupFrame(database.getAudioFile(row), obj -> {
+                            database.getAudioFile(row).updateID3((ID3Container) obj.getValue()); // Updates ID3 Data
+                            AudioDecoder decoder = AudioFileLoader.loadFile(database.getAudioFile(row).getFilename());
+                            decoder.prepareToPlayAudio();
+                            decoder.setID3((ID3Container) obj.getValue());
+                            musicTable.updateUI();
+                        }));
+                this.add(item);
+            }
+
+            // Effects: adds re-encode option
+            private void addReencoder(int row) {
+                item = new JMenuItem("Re-encode song");
                 item.addActionListener(e ->
                         new ConversionPopupFrame(database.getAudioFile(row), popup -> {
                             audioConverterList.add((AudioConversion) popup.getValue());
                             ((AudioConversion) popup.getValue()).start();
                         }));
                 this.add(item);
+            }
+
+            // Effects: adds remove option
+            private void addRemover(int row) {
                 item = new JMenuItem("Remove song");
                 item.addActionListener(e ->
                         new ConfirmationPopupFrame("Are you sure you want to remove this song?",
@@ -254,18 +301,13 @@ public class App {
                         }));
                 this.add(item);
             }
-        }
 
-        // Modifies: this
-        // Effects:  shows loading pane
-        public static void createLoadingThread() {
-            loadingFrame.setVisible(true);
-        }
-
-        // Modifies: this
-        // Effects:  hides loading pane
-        private static void closeLoadingThread() {
-            loadingFrame.setVisible(false);
+            // Effects: Does the thing
+            RightClickSongMenu(int row) {
+                addMetadataEditor(row);
+                addReencoder(row);
+                addRemover(row);
+            }
         }
 
         private static final String[] columns = {
@@ -455,7 +497,7 @@ public class App {
             setupMenubar();
             updatePlaybackBar();
             mainWindow.setVisible(true);
-            closeLoadingThread();
+            GuiLoaderFrame.closeLoadingThread();
         }
 
         public static void updateControls() {
@@ -523,35 +565,64 @@ public class App {
             updatePlaybackBar();
         }
 
-        // Modifies: this
-        // Effects:  sets up menu bard for main window
-        private static void setupMenubar() {
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-            JMenuBar menuBar = new JMenuBar();
+        private static JMenuBar mainMenuBar;
+
+        // Set up main menu bar;
+        // this is way too long to use a function, and splitting makes no sense
+        static {
+            mainMenuBar = new JMenuBar();
             JMenu menu = new JMenu("File");
-            JMenuItem item = new JMenuItem("Save database");
-            item.addActionListener(e -> database.saveDatabaseFile());
+            JMenuItem item = new JMenuItem("Play file");
+            item.addActionListener(e -> playArbitraryFile());
             menu.add(item);
+            mainMenuBar.add(menu);
+            menu = new JMenu("Database");
             item = new JMenuItem("Add file to database");
             item.addActionListener(e -> addFile());
             menu.add(item);
             item = new JMenuItem("Add directory to database");
             item.addActionListener(e -> addDir());
             menu.add(item);
-            menuBar.add(menu);
-            mainWindow.setJMenuBar(menuBar);
+            menu.addSeparator();
+            item = new JMenuItem("Save database");
+            item.addActionListener(e -> database.saveDatabaseFile());
+            menu.add(item);
+            mainMenuBar.add(menu);
+        }
+
+        // Modifies: this
+        // Effects:  sets up menu bar for main window
+        private static void setupMenubar() {
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            mainWindow.setJMenuBar(mainMenuBar);
+        }
+
+        // Effects: adds file to database via popup
+        private static void playArbitraryFile() {
+            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
+                    AudioFileLoader.KNOWN_FILETYPES, popup -> {
+                AudioDataStructure structure = new AudioDataStructure((String) popup.getValue());
+                if (!structure.isEmpty()) {
+                    playDbFile(structure);
+                    updatePlaybackBar();
+                } else {
+                    new PopupManager.ErrorPopupFrame("File is corrupt or in an unsupported format."
+                            + "\nCannot play file.",
+                            ErrorImageTypes.ERROR, obj -> { });
+                }
+            });
         }
 
         // Effects: adds file to database via popup
         private static void addFile() {
             FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
                     AudioFileLoader.KNOWN_FILETYPES, popup -> {
-                        createLoadingThread();
+                        GuiLoaderFrame.createLoadingThread();
                         database.addFileToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
                         database.sanitizeAudioDatabase();
                         database.sortSongList("Album_Title");
                         updateGuiList();
-                        closeLoadingThread();
+                        GuiLoaderFrame.closeLoadingThread();
                     });
         }
 
@@ -559,12 +630,12 @@ public class App {
         private static void addDir() {
             FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
                     new String[]{".folder"}, popup -> {
-                createLoadingThread();
+                GuiLoaderFrame.createLoadingThread();
                 database.addDirToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
                 database.sanitizeAudioDatabase();
                 database.sortSongList("Album_Title");
                 updateGuiList();
-                closeLoadingThread();
+                GuiLoaderFrame.closeLoadingThread();
             });
         }
 

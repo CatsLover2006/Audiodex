@@ -235,7 +235,9 @@ public class DataManager {
     public boolean saveDatabaseFile() {
         File userDirFile = new File(userDir);
         if (!userDirFile.exists()) {
-            assert userDirFile.mkdirs();
+            if (!userDirFile.mkdirs()) {
+                throw new RuntimeException(new IOException("Failed to create user directory"));
+            }
         }
         dbIndex++;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
