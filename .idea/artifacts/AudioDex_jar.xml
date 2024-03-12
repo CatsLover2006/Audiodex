@@ -32,6 +32,7 @@
       <element id="directory" name="data">
         <element id="dir-copy" path="$PROJECT_DIR$/data/spec" />
       </element>
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/JustFLAC-0.0.1-SNAPSHOT.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

@@ -142,14 +142,14 @@ public class MpegType implements AudioDecoder {
     public double getCurrentTime() {
         if (decoded == null) {
             return -1;
-        }
-        return (Long)decoded.properties().get("mp3.position.microseconds") * 0.000001;
+        } // format.getChannels() is a workaround for a library bug
+        return (Long)decoded.properties().get("mp3.position.microseconds") * 0.000002 / format.getChannels();
     }
 
     // Effects: returns the duration of the audio in seconds
     @Override
-    public double getFileDuration() {
-        return duration * 0.000001; // javax uses microseconds
+    public double getFileDuration() { // format.getChannels() is a workaround for a library bug
+        return duration * 0.000002 / format.getChannels(); // javax uses microseconds
     }
 
     // Requires: prepareToPlayAudio() called once
@@ -174,6 +174,7 @@ public class MpegType implements AudioDecoder {
         } // We readyn't
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
+        base.setID3Data("Title", getFileName());
         MP3File f = (MP3File)getAudioFile(filename);
         if (f == null) {
             return base;

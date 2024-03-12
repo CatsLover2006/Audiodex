@@ -82,12 +82,6 @@ public class MP4alac implements AudioDecoder {
         ready = false;
     }
 
-
-    // Effects: wait for a set time
-    private static void wait(int nanos) {
-        ExceptionIgnore.ignoreExc(() -> sleep(0, nanos));
-    }
-
     // This is what the library does so idk
     private int[] decodeBuffer = new int[1024 * 24 * 3];
 
@@ -95,8 +89,8 @@ public class MP4alac implements AudioDecoder {
     // Effects:  decodes and returns the next audio sample
     @Override
     public AudioSample getNextSample() {
-        while (!allowSampleReads) {
-            wait(1);
+        if (!allowSampleReads) {
+            return new AudioSample();
         }
         if (moreSamples()) {
             numberBytesRead = alac.decode(decodeBuffer, data);
@@ -177,6 +171,7 @@ public class MP4alac implements AudioDecoder {
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "NO");
+        base.setID3Data("Title", getFileName());
         AudioFile f;
         try {
             f = AudioFileIO.read(new File(filename));

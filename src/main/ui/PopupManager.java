@@ -1,7 +1,10 @@
 package ui;
 
 import audio.AudioDataStructure;
+import audio.AudioDecoder;
 import audio.AudioFileLoader;
+import audio.ID3Container;
+import audio.filetypes.TagConversion;
 import model.AudioConversion;
 import model.ExceptionIgnore;
 
@@ -9,12 +12,12 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.xml.crypto.Data;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
+import java.util.List;
 
 import static java.awt.GridBagConstraints.*;
 import static java.io.File.separatorChar;
@@ -434,15 +437,12 @@ public class PopupManager {
         private JLabel errorImg;
         private JFrame selector;
         private PopupResponder responder;
-        private Boolean yes = false;
 
         { // Initialize open commands
             cancelButton.addActionListener(e -> {
                 selector.setVisible(false);
-                responder.run(this);
             });
             okButton.addActionListener(e -> {
-                yes = true;
                 selector.setVisible(false);
                 responder.run(this);
             });
@@ -450,7 +450,7 @@ public class PopupManager {
 
         @Override
         public Object getValue() {
-            return yes;
+            return true; // Leftover
         }
 
         // Effects: defaults everything
@@ -613,6 +613,246 @@ public class PopupManager {
                     }
                 }
             });
+        }
+    }
+
+    // public class for audio conversion
+    public static class ID3PopupFrame implements Popup {
+        private JFrame editor;
+        private AudioDataStructure file;
+        private AudioDecoder fileScanner;
+        private PopupResponder responder;
+        private boolean hasEdited;
+        private JLabel musicArt = new JLabel();
+        private JLabel filenameLabel = new JLabel();
+        private JPanel valuesPanel = new JPanel(true);
+        private JScrollPane scrollPane;
+        private JButton cancelButton = new JButton("Cancel");
+        private JButton okButton = new JButton("Ok");
+
+        { // Initialize open commands
+            cancelButton.addActionListener(e -> {
+                editor.setVisible(false);
+            });
+            okButton.addActionListener(e -> {
+                editor.setVisible(false);
+                responder.run(this);
+            });
+        }
+
+        // data container class
+        // using a few public fields would make this so much easier
+        private static class DataClass {
+            public DataClass(String key, String value) {
+                dataKey = key;
+                dataValue = value;
+            }
+
+            private String dataKey;
+            private String dataValue;
+
+            public String getDataKey() {
+                return dataKey;
+            }
+
+            public String getDataValue() {
+                return dataValue;
+            }
+        }
+
+        private static final List<DataClass> dataList = new ArrayList<>();
+
+        // Set up value list
+        static {
+            dataList.add(new DataClass("Title", "Title"));
+            dataList.add(new DataClass("Title (sorting order)", "Title-Sort"));
+            dataList.add(new DataClass("Artist", "Artist"));
+            dataList.add(new DataClass("Artist (sorting order)", "Artist-Sort"));
+            dataList.add(new DataClass("Album", "Album"));
+            dataList.add(new DataClass("Album (sorting order)", "Album-Sort"));
+            dataList.add(new DataClass("Album Artist", "AlbumArtist"));
+            dataList.add(new DataClass("Album Artist (sorting order)", "AlbumArtist-Sort"));
+            dataList.add(new DataClass("Arranger", "Arranger"));
+            dataList.add(new DataClass("Arranger (sorting order)", "Arranger-Sort"));
+            dataList.add(new DataClass("Composer", "Composer"));
+            dataList.add(new DataClass("Producer", "Producer"));
+            dataList.add(new DataClass("Genre", "GenreString"));
+            dataList.add(new DataClass("Track Number", "Track"));
+            dataList.add(new DataClass("Total Tracks", "Tracks"));
+            dataList.add(new DataClass("Disc Number", "Disc"));
+            dataList.add(new DataClass("Total Discs", "Discs"));
+            dataList.add(new DataClass("Comment", "Comment"));
+        }
+
+        // Thread to update album artwork
+        private class AlbumArtworkUpdater extends Thread {
+            @Override
+            public void run() {
+                Thread.currentThread().setPriority(2);
+                ExceptionIgnore.ignoreExc(() -> {
+                    musicArt.setIcon(new ImageIcon(ERROR_IMAGES[ErrorImageTypes.ERROR.iconIndex]));
+                    BufferedImage bufferedImage = (BufferedImage) fileScanner.getArtwork().getImage();
+                    if (bufferedImage != null) {
+                        int newWidth = (int)(Math.min(32.0 / bufferedImage.getWidth(), 32.0 / bufferedImage.getHeight())
+                                * bufferedImage.getWidth());
+                        int newHeight = (int)(Math.min(32.0 / bufferedImage.getWidth(),
+                                32.0 / bufferedImage.getHeight()) * bufferedImage.getHeight());
+                        BufferedImage resized = new BufferedImage(newWidth, newHeight, bufferedImage.getType());
+                        Graphics2D g = resized.createGraphics();
+                        setGraphicsHints(g);
+                        g.drawImage(bufferedImage, 0, 0, newWidth, newHeight, 0, 0, bufferedImage.getWidth(),
+                                bufferedImage.getHeight(), null);
+                        g.dispose();
+                        musicArt.setIcon(new ImageIcon(resized));
+                        musicArt.setPreferredSize(new Dimension(newWidth, newHeight));
+                    }
+                });
+            }
+
+            // Effects: Sets graphics hints
+            private void setGraphicsHints(Graphics2D g) {
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
+                        RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+            }
+        }
+
+        // Effects:  returns updated ID3 data
+        @Override
+        public Object getValue() {
+            ID3Container nu = new ID3Container();
+            for (JTextFieldKey field : fields) {
+                nu.setID3Long(field.getKey(), field.getText());
+            }
+            return nu;
+        }
+
+        // Effects: defaults everything
+        public ID3PopupFrame(AudioDataStructure file, PopupResponder responder) {
+            this.file = file;
+            fileScanner = AudioFileLoader.loadFile(file.getFilename());
+            this.responder = responder;
+            hasEdited = false;
+            try {
+                SwingUtilities.invokeLater(() -> setup());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Effects: sets up window objects
+        private void setupWindowObjects() {
+            setupValuePane();
+            scrollPane = new JScrollPane();
+            scrollPane.setViewportView(valuesPanel);
+            scrollPane.setVerticalScrollBar(scrollPane.createVerticalScrollBar());
+            scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+            editor.add(musicArt);
+            editor.add(filenameLabel);
+            editor.add(okButton);
+            editor.add(cancelButton);
+            filenameLabel.setText(getID3Value("Title"));
+            filenameLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+            filenameLabel.setBorder(new EmptyBorder(0, 4, 0, 4));
+            editor.add(scrollPane);
+            scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
+            new AlbumArtworkUpdater().start();
+        }
+
+        // Virtual class for JTextField which stores its key (makes life easier)
+        private static class JTextFieldKey extends JEditorPane {
+            private String key;
+
+            // Modifies: this
+            // Effects:  sets key
+            public void setKey(String nuKey) {
+                key = nuKey;
+            }
+
+            // Effects: gets key
+            public String getKey() {
+                return key;
+            }
+        }
+
+        private List<JTextFieldKey> fields = new ArrayList<>();
+
+        // Effects: sets up value pane (objects and layout)
+        private void setupValuePane() {
+            GridBagLayout valuesLayout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.gridy = 0;
+            constraints.fill = HORIZONTAL;
+            for (DataClass data : dataList) {
+                constraints.weightx = 0;
+                constraints.gridx = 0;
+                JLabel keyLabel = new JLabel(data.getDataKey());
+                valuesPanel.add(keyLabel);
+                valuesLayout.setConstraints(keyLabel, constraints);
+                constraints.weightx = 1;
+                constraints.gridx = 1;
+                JTextFieldKey field = new JTextFieldKey();
+                valuesPanel.add(field);
+                fields.add(field);
+                field.setKey(data.getDataValue());
+                field.setText(getID3Value(data.getDataValue()));
+                valuesLayout.setConstraints(field, constraints);
+                constraints.gridy++;
+            }
+            valuesPanel.setLayout(valuesLayout);
+        }
+
+        // Effects: gets text for value
+        private String getID3Value(String key) {
+            try {
+                return file.getId3Data().getID3Data(key).toString();
+            } catch (NullPointerException e) {
+                return "";
+            }
+        }
+
+        // Effects: sets up window layout
+        private void setupWindowLayout() {
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints constraints = new GridBagConstraints();
+            constraints.fill = HORIZONTAL;
+            constraints.gridx = 1;
+            constraints.gridy = 0;
+            constraints.gridwidth = 3;
+            constraints.weightx = 1;
+            layout.setConstraints(filenameLabel, constraints);
+            constraints.gridy = 2;
+            constraints.gridwidth = 2;
+            constraints.gridx = 2;
+            layout.setConstraints(okButton, constraints);
+            constraints.gridx = 0;
+            layout.setConstraints(cancelButton, constraints);
+            constraints.gridy = 0;
+            constraints.fill = NONE;
+            constraints.weightx = 0;
+            constraints.gridwidth = 1;
+            layout.setConstraints(musicArt, constraints);
+            constraints.fill = BOTH;
+            constraints.weightx = 1;
+            constraints.gridwidth = 4;
+            constraints.weighty = 1;
+            constraints.gridy = 1;
+            layout.setConstraints(scrollPane, constraints);
+            editor.setLayout(layout);
+        }
+
+        // Effects: does the work
+        private void setup() {
+            editor = new JFrame(file.getFilename());
+            editor.setResizable(true);
+            editor.setSize(400, 400);
+            setupWindowObjects();
+            setupWindowLayout();
+            editor.setAlwaysOnTop(false);
+            editor.setVisible(true);
         }
     }
 }

@@ -4,6 +4,7 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 // Container for ID3 data
 public class ID3Container {
@@ -63,5 +64,18 @@ public class ID3Container {
     //          yes I'm making one of these myself
     public JSONObject encode() {
         return new JSONObject(id3data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id3data.hashCode(), id3data.size());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ID3Container) {
+            return obj.hashCode() == hashCode();
+        }
+        return false;
     }
 }

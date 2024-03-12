@@ -34,7 +34,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] MP3, MP2
   - MP1 is probably decodable as well, but quite literally nobody uses this format so I can't test
 - [x] OGG, OGA, MOGG: Vorbis
-- [ ] (Probably) AAC
+- [x] AAC
+  - That wasn't easy
 - [x] WAV
 - [x] AIFF
 - [x] FLAC
@@ -61,15 +62,13 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 ## Known Issues
 - You can't remove audio files from the database via the CLI
   - Only accessible through GUI or removing backend file
-- Encoded audio has a comment of "0"
-  - Maybe? Major backend changes have occured and I'm unsure of if this still applies
 - Slow storage interfaces can cause audio popping
   - Likely due to the decoder being starved for data
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 - ALAC vs AAC detection is weird since they share their container, there's no fix for this
   - Similar situation for detection in the OGG container, but there's only one supported playback mode within this container so it's just to avoid throwing errors
 - Gain system is partially dependent on format and system
-  - No way to fix this, it's entirely dependent on implementation
+  - No way to fix this, it's entirely dependent on Java and OS implementation
 - Due to no way to test on Windows or Linux, there's no way to test if a system config specific to macOS will crash Windows/Linux systems
   - Specific to GUI interface
 - If audio encodes too fast, it ends up skipping some code (AudioEncoder.encodedPercent never is checked during encoding)<br>That said you'd have to decode an ALAC file at over 1400 times realtime, which... good luck.
@@ -98,14 +97,16 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 _I'm a really lucky person ain't I?_
 
 ## User Stories
-- As a user, I want to play my music
-  - As a user, I want to play my music library nonstop for an extended period of time
+- As a user, I expect to be able to play my music
+  - As a user, I expect to be able to play my music library nonstop for an extended period of time
   - As a user, I don't expect my music playback history and queue to persist after closing the program
 - As a user, I want to be able to convert my music to a different format
-- As a user, I want to view, edit, and add songs to my music library, which is a list of songs
+  - As a user, I want to be able
+- As a user, I expect to be able to view, edit, and add songs to my music library, which is a list of songs
   - As a user, I expect my music library to automatically be loaded when I launch the program after importing the first time
   - As a user, I expect my music library to not disappear if I move the application<br>I expect my music library to be stored as a part of my user, and not alongside the application
   - As a user, I expect to be able to revert my music library to a previous version if I do something I didn't intend to do
+  - ~~As a user, I want to be able to edit the metadata of my songs~~
 
 In effect I'm creating a iTunes competitor.<br>
-I have made a program that I would intentionally go out of my way to use. ~~It's still command line.~~ Wow.
+I have made a program that I would intentionally go out of my way to use. Wow.

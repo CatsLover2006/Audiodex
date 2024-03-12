@@ -2,6 +2,8 @@ package model;
 
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 // Class to store application settings
 public class ApplicationSettings {
     private boolean soundCheck; // ReplayGain alias
@@ -33,5 +35,10 @@ public class ApplicationSettings {
         JSONObject out = new JSONObject();
         out.put("soundCheck", soundCheck);
         return out;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(soundCheck);
     }
 }

@@ -175,6 +175,7 @@ public class MP4AAC implements AudioDecoder {
     public ID3Container getID3() {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
+        base.setID3Data("Title", getFileName());
         base.setID3Data("bitRate", tracks.getSampleSize());
         base.setID3Data("sampleRate", tracks.getSampleRate());
         File file = new File(filename);

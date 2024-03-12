@@ -4,6 +4,7 @@ import javax.sound.sampled.AudioFormat;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import static java.io.File.separatorChar;
 
@@ -173,5 +174,18 @@ public class AudioDataStructure {
     // Effects:  replaces ID3Container
     public void updateID3(ID3Container nu) {
         id3Data = nu;
+    }
+
+    @Override
+    public int hashCode() {
+        return filename.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof AudioDataStructure) {
+            return filename.equals(((AudioDataStructure) obj).filename);
+        }
+        return false;
     }
 }
