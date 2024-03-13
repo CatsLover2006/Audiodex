@@ -524,6 +524,21 @@ public class App {
             }
         }
 
+        // Effects: loads font from data directory (/data/spec or (jar)/data)
+        private static Font loadFont(String filename) throws IOException {
+            try {
+                return Font.createFont(Font.TRUETYPE_FONT,
+                        Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+            } catch (Exception ex) {
+                try {
+                    return Font.createFont(Font.TRUETYPE_FONT,
+                            new File("data/spec/" + filename));
+                } catch (Exception e) {
+                    throw new IOException("Couldn't load image: " + e.getMessage() + " and " + ex.getMessage());
+                }
+            }
+        }
+
         // Modifies: this
         // Effects:  displays main window
         public static void doGui(String[] args) {
@@ -561,7 +576,7 @@ public class App {
 
         // Effects: updates control icons
         public static void updateControls() {
-            playButton.setText(playbackManager.paused() ? "\u23FD\u23FD" : ">");
+            playButton.setText(playbackManager.paused() ? "II" : ">");
             prevButton.setEnabled(!played.isEmpty());
             skipButton.setEnabled(!songQueue.isEmpty());
         }
@@ -784,27 +799,31 @@ public class App {
             Border emptyBorder = BorderFactory.createEmptyBorder();
             skipButton = new JButton("\u226B");
             skipButton.addActionListener(e -> playNext());
-            skipButton.setFont(new Font(FlatIntelliJLaf.getPreferredFontFamily(), Font.PLAIN, 20));
-            skipButton.setVerticalAlignment(SwingConstants.CENTER);
+            ExceptionIgnore.ignoreExc(() ->
+                    skipButton.setFont(loadFont("GothicA1-ExtraBold.ttf").deriveFont(16.0f)));
+            skipButton.setVerticalAlignment(SwingConstants.TOP);
             skipButton.setMaximumSize(new Dimension(24, 16));
             skipButton.setMinimumSize(new Dimension(24, 16));
-            skipButton.setMargin(new Insets(0, 0, 0, 0));
+            skipButton.setMargin(new Insets(2, 2, 2, 2));
             skipButton.setEnabled(false);
             prevButton = new JButton("\u226A");
             prevButton.addActionListener(e -> playPrevious());
-            prevButton.setFont(new Font(FlatIntelliJLaf.getPreferredFontFamily(), Font.PLAIN, 20));
-            prevButton.setVerticalAlignment(SwingConstants.CENTER);
+            ExceptionIgnore.ignoreExc(() ->
+                    prevButton.setFont(loadFont("GothicA1-ExtraBold.ttf").deriveFont(16.0f)));
+            prevButton.setVerticalAlignment(SwingConstants.TOP);
             prevButton.setMaximumSize(new Dimension(24, 16));
             prevButton.setMinimumSize(new Dimension(24, 16));
-            prevButton.setMargin(new Insets(0, 0, 0, 0));
+            prevButton.setMargin(new Insets(2, 2, 2, 2));
             prevButton.setEnabled(false);
-            playButton = new JButton("\u23F8");
-            playButton.setFont(new Font(FlatIntelliJLaf.getPreferredFontFamily(), Font.PLAIN, 36));
-            playButton.setVerticalAlignment(SwingConstants.CENTER);
+            playButton = new JButton(">");
+            System.out.println(FlatMacLightLaf.getPreferredFontFamily());
+            ExceptionIgnore.ignoreExc(() ->
+                    playButton.setFont(loadFont("GothicA1-ExtraBold.ttf").deriveFont(36.0f)));
+            playButton.setVerticalAlignment(SwingConstants.TOP);
             playButton.setMaximumSize(new Dimension(48, 32));
             playButton.setMinimumSize(new Dimension(48, 32));
             playButton.addActionListener(e -> togglePlayback());
-            playButton.setMargin(new Insets(0, 0, 0, 0));
+            playButton.setMargin(new Insets(2, 2, 2, 2));
         }
 
         // Modifies: this
