@@ -183,16 +183,16 @@ public class AudioFilePlaybackBackend {
                 if (!line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
                     bytesPerSampleWrite--;
                 }
+                audioFormat = new AudioFormat(
+                        audioFormat.getEncoding(), audioFormat.getSampleRate(), bytesPerSampleWrite * 8,
+                        audioFormat.getChannels(), bytesPerSampleWrite * audioFormat.getChannels(),
+                        audioFormat.getFrameRate(), audioFormat.isBigEndian());
+                line.close();
+                if (line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                    return;
+                }
             } catch (Exception e) {
                 bytesPerSampleWrite--;
-            }
-            audioFormat = new AudioFormat(
-                    audioFormat.getEncoding(), audioFormat.getSampleRate(), bytesPerSampleWrite * 8,
-                    audioFormat.getChannels(), bytesPerSampleWrite * audioFormat.getChannels(),
-                    audioFormat.getFrameRate(), audioFormat.isBigEndian());
-            line.close();
-            if (line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-                return;
             }
         } while (bytesPerSampleWrite > 0);
     }
