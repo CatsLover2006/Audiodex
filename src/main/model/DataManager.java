@@ -13,6 +13,7 @@ import java.util.List;
 
 import static java.nio.file.Files.delete;
 import static model.FileManager.readFile;
+import static java.io.File.separatorChar;
 
 // Instantiable class to handle the file list
 public class DataManager {
@@ -26,7 +27,7 @@ public class DataManager {
     public DataManager() {
         songFilelist = new ArrayList<>();
         settings = new ApplicationSettings();
-        userDir = System.getProperty("user.home") + "/audiodex/";
+        userDir = System.getProperty("user.home") + separatorChar + "audiodex" + separatorChar;
     }
 
     // Effects: gets list size
