@@ -183,7 +183,7 @@ public class AudioFilePlaybackBackend {
                 if (!line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
                     bytesPerSampleWrite--;
                 }
-            } catch (LineUnavailableException e) {
+            } catch (Exception e) {
                 bytesPerSampleWrite--;
             }
             audioFormat = new AudioFormat(
