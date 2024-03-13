@@ -177,24 +177,21 @@ public class AudioFilePlaybackBackend {
         System.out.println(bytesPerSampleRead);
         bytesPerSampleWrite = bytesPerSampleRead;
         do {
+            audioFormat = new AudioFormat(
+                    audioFormat.getEncoding(), audioFormat.getSampleRate(), bytesPerSampleWrite * 8,
+                    audioFormat.getChannels(), bytesPerSampleWrite * audioFormat.getChannels(),
+                    audioFormat.getFrameRate(), audioFormat.isBigEndian());
             try {
                 line = AudioSystem.getSourceDataLine(audioFormat);
                 line.open();
-                if (!line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-                    bytesPerSampleWrite--;
-                }
-                audioFormat = new AudioFormat(
-                        audioFormat.getEncoding(), audioFormat.getSampleRate(), bytesPerSampleWrite * 8,
-                        audioFormat.getChannels(), bytesPerSampleWrite * audioFormat.getChannels(),
-                        audioFormat.getFrameRate(), audioFormat.isBigEndian());
+                resetReplayGain(); // Induce an Exception if control isn't found
                 line.close();
-                if (line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
-                    return;
-                }
+                return;
             } catch (Exception e) {
                 bytesPerSampleWrite--;
             }
         } while (bytesPerSampleWrite > 0);
+        line.close();
     }
 
     // Effects: returns image of playing audio
