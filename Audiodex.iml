@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
-  <component name="CheckStyle-IDEA-Module">
-    <option name="configuration">
-      <map />
-    </option>
+  <component name="CheckStyle-IDEA-Module" serialisationVersion="2">
+    <option name="activeLocationsIds" />
   </component>
   <component name="NewModuleRootManager">
     <output url="file://$MODULE_DIR$/out/production/Project-Starter" />
@@ -41,5 +39,9 @@
     <orderEntry type="library" name="Java LAME 3.98.4" level="project" />
     <orderEntry type="library" name="JSON 2021/03/07" level="project" />
     <orderEntry type="library" name="JustFLAC 0.0.1 (Self-Compiled)" level="project" />
+    <orderEntry type="library" name="FlatLaf 3.4" level="project" />
+    <orderEntry type="library" name="Apache Commons Lang 3.14.0" level="project" />
+    <orderEntry type="library" name="jSystemThemeDetector 3.8" level="project" />
+    <orderEntry type="library" name="slf4j 2.0.12" level="project" />
   </component>
 </module>

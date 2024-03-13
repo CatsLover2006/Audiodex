@@ -3,11 +3,12 @@ package ui;
 import audio.AudioDataStructure;
 
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.LogManager;
@@ -15,10 +16,18 @@ import java.util.logging.LogManager;
 import audio.AudioDecoder;
 import audio.AudioFileLoader;
 import audio.ID3Container;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.icons.FlatMenuArrowIcon;
+import com.formdev.flatlaf.icons.FlatWindowCloseIcon;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import com.jthemedetecor.OsThemeDetector;
 import model.AudioConversion;
 import model.DataManager;
 import model.ExceptionIgnore;
 import model.FileManager;
+import org.apache.commons.lang3.SystemUtils;
 import org.fusesource.jansi.*;
 
 import javax.imageio.ImageIO;
@@ -37,6 +46,7 @@ import static java.lang.Thread.*;
 // Main application class
 public class App {
     private static boolean notMain = true;
+    private static OsThemeDetector detector;
     private static ID3Container id3;
     private static AudioFilePlaybackBackend playbackManager;
     private static boolean USE_CLI = false;
@@ -163,12 +173,15 @@ public class App {
 
     public static void main(String[] args) {
         notMain = false;
+        audioConverterList = new ArrayList<>();
         if (strArrContains(args, "--cli")) {
             USE_CLI = true;
         } else {
+            System.setProperty("apple.awt.application.appearance", "system");
+            detector = OsThemeDetector.getDetector();
+            setupSwing();
             GuiLoaderFrame.createLoadingThread();
         }
-        audioConverterList = new ArrayList<>();
         played = new LinkedList<>();
         songQueue = new LinkedList<>();
         database = new DataManager();
@@ -181,6 +194,34 @@ public class App {
         } else {
             Gui.doGui(args);
         }
+    }
+
+    // Effects: sets up Swing UI
+    private static void setupSwing() {
+        detector.registerListener(isDark -> {
+            SwingUtilities.invokeLater(() -> {
+                uiMod(isDark);
+            });
+        });
+        uiMod(detector.isDark());
+    }
+
+    // Effects: changes dark mode status
+    private static void uiMod(boolean dark) {
+        if (dark) {
+            if (SystemUtils.IS_OS_MAC_OSX) {
+                FlatMacDarkLaf.setup();
+            } else {
+                FlatDarculaLaf.setup();
+            }
+        } else {
+            if (SystemUtils.IS_OS_MAC_OSX) {
+                FlatMacLightLaf.setup();
+            } else {
+                FlatIntelliJLaf.setup();
+            }
+        }
+        Gui.updateUI();
     }
 
     // Modifies: audio playback manager
@@ -486,7 +527,7 @@ public class App {
         // Modifies: this
         // Effects:  displays main window
         public static void doGui(String[] args) {
-            mainWindow = new JFrame("AudioDex");
+            mainWindow = new JFrame("Audiodex");
             mainWindow.setSize(900, 500);
             mainWindow.setResizable(true);
             ExceptionIgnore.ignoreExc(() -> mainWindow.setIconImage(loadImage("AppIcon.png")));
@@ -506,10 +547,23 @@ public class App {
             GuiLoaderFrame.closeLoadingThread();
         }
 
+        private List<PopupManager.Popup> popupList = new LinkedList<>();
+
+        // Effects: refreshes all UI elements
+        public static void updateUI() {
+            ExceptionIgnore.ignoreExc(() -> {
+                SwingUtilities.updateComponentTreeUI(mainWindow);
+                SwingUtilities.updateComponentTreeUI(activeConversionsView);
+                SwingUtilities.updateComponentTreeUI(GuiLoaderFrame.loadingFrame);
+                PopupManager.updatePopupTrees();
+            });
+        }
+
+        // Effects: updates control icons
         public static void updateControls() {
-            playButton.setIcon(new ImageIcon(playbackManager.paused() ? paused : playing));
-            prevButton.setIcon(new ImageIcon(played.isEmpty() ? prevInactive : prev));
-            skipButton.setIcon(new ImageIcon(songQueue.isEmpty() ? skipInactive : skip));
+            playButton.setText(playbackManager.paused() ? "\u23FD\u23FD" : ">");
+            prevButton.setEnabled(!played.isEmpty());
+            skipButton.setEnabled(!songQueue.isEmpty());
         }
 
         // Modifies: this
@@ -599,7 +653,9 @@ public class App {
         // Modifies: this
         // Effects:  sets up menu bar for main window
         private static void setupMenubar() {
+            System.setProperty("apple.awt.application.name", "Audiodex");
             System.setProperty("apple.laf.useScreenMenuBar", "true");
+            System.setProperty("flatlaf.menuBarEmbedded", "true");
             mainWindow.setJMenuBar(mainMenuBar);
         }
 
@@ -659,6 +715,18 @@ public class App {
             constraints.weighty = 1.0;
             layout.setConstraints(musicList, constraints);
             mainWindow.setLayout(layout);
+            makeButtonTransparent(skipButton);
+            makeButtonTransparent(prevButton);
+            makeButtonTransparent(playButton);
+        }
+
+        // Modifies: button
+        // Effects:  makes button background transparent
+        private static void makeButtonTransparent(JButton button) {
+            button.setBorder(null);
+            button.setBorderPainted(false);
+            button.setContentAreaFilled(false);
+            button.setOpaque(false);
         }
 
         // Effects: converts ID3 tag to its corresponding menu bar item
@@ -697,45 +765,46 @@ public class App {
         private static final JLabel fileLabel = new JLabel();
         private static final JLabel albumLabel = new JLabel();
         private static BufferedImage placeholder;
-        private static BufferedImage skip;
-        private static BufferedImage prev;
-        private static BufferedImage skipInactive;
-        private static BufferedImage prevInactive;
-        private static BufferedImage paused;
-        private static BufferedImage playing;
         private static final JButton skipButton;
         private static final JButton prevButton;
         private static final JButton playButton;
 
+        // Prepare elements
         static {
+            fileLabel.putClientProperty("FlatLaf.styleClass", "h3.regular");
+            albumLabel.putClientProperty("FlatLaf.styleClass", "medium");
+            leftPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
+            rightPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
             try {
                 placeholder = loadImage("AppIcon.png");
-                skip = loadImage("NextIcon.png");
-                skipInactive = loadImage("NextIconInactive.png");
-                prev = loadImage("PrevIcon.png");
-                prevInactive = loadImage("PrevIconInactive.png");
-                paused = loadImage("PauseIcon.png");
-                playing = loadImage("PlayIcon.png");
             } catch (IOException e) {
                 e.printStackTrace();
                 placeholder = new BufferedImage(48, 48, BufferedImage.TYPE_3BYTE_BGR);
-                skip = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
-                prev = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
-                skipInactive = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
-                prevInactive = new BufferedImage(24, 16, BufferedImage.TYPE_3BYTE_BGR);
-                paused = new BufferedImage(48, 32, BufferedImage.TYPE_3BYTE_BGR);
-                playing = new BufferedImage(48, 32, BufferedImage.TYPE_3BYTE_BGR);
             }
             Border emptyBorder = BorderFactory.createEmptyBorder();
-            skipButton = new JButton(new ImageIcon(skipInactive));
-            skipButton.setBorder(emptyBorder);
+            skipButton = new JButton("\u226B");
             skipButton.addActionListener(e -> playNext());
-            prevButton = new JButton(new ImageIcon(prevInactive));
-            prevButton.setBorder(emptyBorder);
+            skipButton.setFont(new Font(FlatIntelliJLaf.getPreferredFontFamily(), Font.PLAIN, 20));
+            skipButton.setVerticalAlignment(SwingConstants.CENTER);
+            skipButton.setMaximumSize(new Dimension(24, 16));
+            skipButton.setMinimumSize(new Dimension(24, 16));
+            skipButton.setMargin(new Insets(0, 0, 0, 0));
+            skipButton.setEnabled(false);
+            prevButton = new JButton("\u226A");
             prevButton.addActionListener(e -> playPrevious());
-            playButton = new JButton(new ImageIcon(paused));
-            playButton.setBorder(emptyBorder);
+            prevButton.setFont(new Font(FlatIntelliJLaf.getPreferredFontFamily(), Font.PLAIN, 20));
+            prevButton.setVerticalAlignment(SwingConstants.CENTER);
+            prevButton.setMaximumSize(new Dimension(24, 16));
+            prevButton.setMinimumSize(new Dimension(24, 16));
+            prevButton.setMargin(new Insets(0, 0, 0, 0));
+            prevButton.setEnabled(false);
+            playButton = new JButton("\u23F8");
+            playButton.setFont(new Font(FlatIntelliJLaf.getPreferredFontFamily(), Font.PLAIN, 36));
+            playButton.setVerticalAlignment(SwingConstants.CENTER);
+            playButton.setMaximumSize(new Dimension(48, 32));
+            playButton.setMinimumSize(new Dimension(48, 32));
             playButton.addActionListener(e -> togglePlayback());
+            playButton.setMargin(new Insets(0, 0, 0, 0));
         }
 
         // Modifies: this

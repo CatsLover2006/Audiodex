@@ -48,6 +48,25 @@ public class PopupManager {
         }
     }
 
+    private static LinkedList<Popup> popupList = new LinkedList<>();
+
+    // Effects: updates component tree of all popups
+    public static void updatePopupTrees() {
+        clearPopupList();
+        for (Popup popup : popupList) {
+            popup.updateUI();
+        }
+    }
+
+    // Effects: removes empty popups from popup list
+    public static void clearPopupList() {
+        for (int i = popupList.size() - 1; i >= 0; i--) {
+            if (popupList.get(i).finished()) {
+                popupList.remove(i);
+            }
+        }
+    }
+
     // Gets images for popups
     static {
         BufferedImage[] myImages;
@@ -118,12 +137,18 @@ public class PopupManager {
 
     public interface Popup {
         Object getValue();
+
+        // Effects: external update UI function
+        void updateUI();
+
+        boolean finished();
     }
 
     // public class for file selection popups
     public static class FilePopupFrame implements Popup {
         private String location;
         private final String[] filetypes;
+
         private JTextField file = new JTextField();
         private JButton openButton = new JButton("Open");
         private boolean forceDirCheck = false;
@@ -148,6 +173,11 @@ public class PopupManager {
         private File[] dirList;
         private PopupResponder responder;
         private Boolean hasNoParent;
+
+        // Effects: external update UI function
+        public void updateUI() {
+            SwingUtilities.updateComponentTreeUI(selector);
+        }
 
         // Setup file table events
         {
@@ -345,12 +375,16 @@ public class PopupManager {
             selector.setAlwaysOnTop(true);
             selector.setVisible(true);
             allowOut = true;
-            System.out.println("Done");
+            popupList.add(this);
         }
 
         // Effects: gets filename, returns null if it's not selected
         public String getFile() {
             return !allowOut || selector.isVisible() ? null : location + separatorChar + file.getText();
+        }
+
+        public boolean finished() {
+            return allowOut;
         }
     }
 
@@ -361,6 +395,10 @@ public class PopupManager {
         private JLabel errorImg;
         private JFrame selector;
         private PopupResponder responder;
+
+        public boolean finished() {
+            return !selector.isVisible();
+        }
 
         { // Initialize open commands
             okButton.addActionListener(e -> {
@@ -416,6 +454,11 @@ public class PopupManager {
             selector.setLayout(layout);
         }
 
+        // Effects: external update UI function
+        public void updateUI() {
+            SwingUtilities.updateComponentTreeUI(selector);
+        }
+
         // Effects: does the work
         private void setup() {
             selector = new JFrame("Error");
@@ -426,6 +469,7 @@ public class PopupManager {
             selector.setAlwaysOnTop(true);
             selector.setSize(200, 150);
             selector.setVisible(true);
+            popupList.add(this);
         }
     }
 
@@ -463,6 +507,11 @@ public class PopupManager {
                 e.printStackTrace();
             }
             this.responder = responder;
+        }
+
+        // Effects: external update UI function
+        public void updateUI() {
+            SwingUtilities.updateComponentTreeUI(selector);
         }
 
         // Effects: sets up window objects
@@ -508,6 +557,11 @@ public class PopupManager {
             selector.setAlwaysOnTop(true);
             selector.setSize(200, 150);
             selector.setVisible(true);
+            popupList.add(this);
+        }
+
+        public boolean finished() {
+            return !selector.isVisible();
         }
     }
 
@@ -519,6 +573,11 @@ public class PopupManager {
         private AudioConversion converter;
         private JPanel optionsPanel = new JPanel(true);
         private HashMap<String, JComboBox> options = new HashMap<>();
+
+        // Effects: external update UI function
+        public void updateUI() {
+            SwingUtilities.updateComponentTreeUI(selector);
+        }
 
 
         { // Initialize open commands
@@ -597,6 +656,7 @@ public class PopupManager {
             selector.pack();
             selector.setAlwaysOnTop(true);
             selector.setVisible(true);
+            popupList.add(this);
         }
 
         // Effects: gets file to write to
@@ -614,6 +674,10 @@ public class PopupManager {
                 }
             });
         }
+
+        public boolean finished() {
+            return !selector.isVisible();
+        }
     }
 
     // public class for audio conversion
@@ -629,6 +693,15 @@ public class PopupManager {
         private JScrollPane scrollPane;
         private JButton cancelButton = new JButton("Cancel");
         private JButton okButton = new JButton("Ok");
+
+        // Effects: external update UI function
+        public void updateUI() {
+            SwingUtilities.updateComponentTreeUI(editor);
+        }
+
+        public boolean finished() {
+            return !editor.isVisible();
+        }
 
         { // Initialize open commands
             cancelButton.addActionListener(e -> {
@@ -839,6 +912,7 @@ public class PopupManager {
             setupWindowLayout();
             editor.setAlwaysOnTop(false);
             editor.setVisible(true);
+            popupList.add(this);
         }
     }
 }
