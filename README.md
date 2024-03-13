@@ -5,6 +5,7 @@
 ## AudioDex 
 
 | ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![Full GUI Preview on macOS Sonoma](./previewgui_sonoma_full.png)  | ![GUI Preview on macOS Sonoma](./previewgui_sonoma.png) |
+| ------------- | ------------- | ------------- | 
 | ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![GUI Preview on macOS Sonoma](./previewgui_sonoma.png) |
 <br>
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
