@@ -818,7 +818,7 @@ public class App {
             playButton = new JButton(">");
             System.out.println(FlatMacLightLaf.getPreferredFontFamily());
             ExceptionIgnore.ignoreExc(() ->
-                    playButton.setFont(loadFont("GothicA1-ExtraBold.ttf").deriveFont(36.0f)));
+                    playButton.setFont(loadFont("GothicA1-Light.ttf").deriveFont(36.0f)));
             playButton.setVerticalAlignment(SwingConstants.TOP);
             playButton.setMaximumSize(new Dimension(48, 32));
             playButton.setMinimumSize(new Dimension(48, 32));
