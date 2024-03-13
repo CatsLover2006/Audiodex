@@ -3,11 +3,9 @@
 ***NOTE 1***: This project expects you have music files to play. Thanks to non-copyright songs, I am able to include a full song for tests; that said, since lossy codecs aren't going to 100% match their lossless counterparts, I'm going to have to add one additional *.wav file for every codec. For the currently implemented tests (all but MP2) this has totaled to around 340MB. No doubt by the time I finish up with tests and adding encoders it'll be even larger.
 
 ## AudioDex 
-
-| ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![Full GUI Preview on macOS Sonoma](./previewgui_sonoma_full.png)  | ![GUI Preview on macOS Sonoma](./previewgui_sonoma.png) |
-| ------------- | ------------- | ------------- | 
-| ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![GUI Preview on macOS Sonoma](./previewgui_sonoma.png) |
-<br>
+![Full GUI Preview on macOS Sonoma](./previewgui_sonoma_full.png)<br>
+![GUI Preview on Windows 7](./previewgui_win7.PNG)<br>
+![GUI Preview on macOS Sonoma](./previewgui_sonoma.png)<br>
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
 
 ### Plans
