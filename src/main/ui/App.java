@@ -140,6 +140,20 @@ public class App {
         }
     }
 
+    // Modifies: this
+    // Effects:  is run when audio quality had to be reduced
+    public static void audioQualityDegradation() {
+        if (end || notMain) {
+            return;
+        }
+        if (USE_CLI) {
+            // Do CLI stuff
+        } else {
+            new PopupManager.ErrorPopupFrame("Cannot play this song at full quality on this system.",
+                    ErrorImageTypes.WARNING, obj -> { });
+        }
+    }
+
     static { // Disable jaudiotagger (library) logging
         LogManager manager = LogManager.getLogManager();
         ExceptionIgnore.ignoreExc(() -> manager.readConfiguration(

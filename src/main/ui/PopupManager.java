@@ -817,30 +817,16 @@ public class PopupManager {
         // Effects: sets up window layout
         private void setupWindowLayout() {
             GridBagLayout layout = new GridBagLayout();
-            GridBagConstraints constraints = new GridBagConstraints();
-            constraints.fill = HORIZONTAL;
-            constraints.gridx = 1;
-            constraints.gridy = 0;
-            constraints.gridwidth = 3;
-            constraints.weightx = 1;
-            layout.setConstraints(filenameLabel, constraints);
-            constraints.gridy = 2;
-            constraints.gridwidth = 2;
-            constraints.gridx = 2;
-            layout.setConstraints(okButton, constraints);
-            constraints.gridx = 0;
-            layout.setConstraints(cancelButton, constraints);
-            constraints.gridy = 0;
-            constraints.fill = NONE;
-            constraints.weightx = 0;
-            constraints.gridwidth = 1;
-            layout.setConstraints(musicArt, constraints);
-            constraints.fill = BOTH;
-            constraints.weightx = 1;
-            constraints.gridwidth = 4;
-            constraints.weighty = 1;
-            constraints.gridy = 1;
-            layout.setConstraints(scrollPane, constraints);
+            layout.setConstraints(filenameLabel, new GridBagConstraints(1, 0, 3, 1, 1, 0, CENTER, HORIZONTAL,
+                    new Insets(0, 0, 0, 0), 0, 0));
+            layout.setConstraints(okButton, new GridBagConstraints(2, 2, 2, 1, 1, 0, CENTER, HORIZONTAL,
+                    new Insets(0, 0, 0, 0), 0, 0));
+            layout.setConstraints(cancelButton, new GridBagConstraints(0, 2, 2, 1, 1, 0, CENTER, HORIZONTAL,
+                    new Insets(0, 0, 0, 0), 0, 0));
+            layout.setConstraints(musicArt, new GridBagConstraints(0, 0, 1, 1, 0, 0, CENTER, NONE,
+                    new Insets(0, 0, 0, 0), 0, 0));
+            layout.setConstraints(scrollPane, new GridBagConstraints(0, 1, 4, 1, 1, 1, CENTER, BOTH,
+                    new Insets(0, 0, 0, 0), 0, 0));
             editor.setLayout(layout);
         }
 

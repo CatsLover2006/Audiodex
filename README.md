@@ -3,7 +3,10 @@
 ***NOTE 1***: This project expects you have music files to play. Thanks to non-copyright songs, I am able to include a full song for tests; that said, since lossy codecs aren't going to 100% match their lossless counterparts, I'm going to have to add one additional *.wav file for every codec. For the currently implemented tests (all but MP2) this has totaled to around 340MB. No doubt by the time I finish up with tests and adding encoders it'll be even larger.
 
 ## AudioDex 
-![GUI Preview on Windows 7](./previewgui_win7.PNG)<br>
+
+| ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![Full GUI Preview on macOS Sonoma](./previewgui_sonoma_full.png)  | ![GUI Preview on macOS Sonoma](./previewgui_sonoma.png) |
+| ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![GUI Preview on Windows 7](./previewgui_win7.PNG)  | ![GUI Preview on macOS Sonoma](./previewgui_sonoma.png) |
+<br>
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
 
 ### Plans
@@ -34,8 +37,6 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] MP3, MP2
   - MP1 is probably decodable as well, but quite literally nobody uses this format so I can't test
 - [x] OGG, OGA, MOGG: Vorbis
-- [x] AAC
-  - That wasn't easy
 - [x] WAV
 - [x] AIFF
 - [x] FLAC
@@ -50,7 +51,6 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] MP3
   - MP2 and MP1 are irrelevant to encode to nowadays, and there are no Java libraries to do so
 - [ ] (Hopefully) OGG: Vorbis
-- [ ] (Hopefully) AAC
 - [x] WAV
 - [x] AIFF
 - [ ] (Maybe) FLAC
