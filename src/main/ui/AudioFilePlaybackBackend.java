@@ -14,6 +14,8 @@ import java.awt.image.BufferedImage;
 // This class is incapable of automated testing: multithreading over several
 public class AudioFilePlaybackBackend {
     private boolean done = false;
+    private int bytesPerSampleRead = 2;
+    private int bytesPerSampleWrite = 2;
 
     // No other class needs to know this
     // This is the audio decoding thread
@@ -70,6 +72,9 @@ public class AudioFilePlaybackBackend {
                     ExceptionIgnore.ignoreExc(() -> sleep(1, 0));
                 }
                 sample = loadedFile.getNextSample();
+                for (int i = bytesPerSampleRead; i > bytesPerSampleWrite; i--) {
+                    sample.reduceBitdepth(i, audioFormat.isBigEndian());
+                }
                 line.write(sample.getData(), 0, sample.getLength());
             }
             line.stop();
@@ -150,15 +155,46 @@ public class AudioFilePlaybackBackend {
             return;
         }
         try {
-            audioFormat = loadedFile.getAudioOutputFormat();
+            getAudioFormat();
             line = AudioSystem.getSourceDataLine(audioFormat);
             line.open(audioFormat);
+            if (bytesPerSampleWrite != bytesPerSampleRead) {
+                App.audioQualityDegradation();
+            }
             replayGainVal = loadedFile.getReplayGain();
             System.out.println("Replaygain is: " + replayGainVal);
             setReplayGain(replayGain);
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // Modifies: this
+    // Effects:  makes the output audio format
+    private void getAudioFormat() {
+        audioFormat = loadedFile.getAudioOutputFormat();
+        bytesPerSampleRead = audioFormat.getSampleSizeInBits() / 8;
+        System.out.println(bytesPerSampleRead);
+        bytesPerSampleWrite = bytesPerSampleRead;
+        do {
+            try {
+                line = AudioSystem.getSourceDataLine(audioFormat);
+                line.open();
+                if (!line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                    bytesPerSampleWrite--;
+                }
+            } catch (LineUnavailableException e) {
+                bytesPerSampleWrite--;
+            }
+            audioFormat = new AudioFormat(
+                    audioFormat.getEncoding(), audioFormat.getSampleRate(), bytesPerSampleWrite * 8,
+                    audioFormat.getChannels(), bytesPerSampleWrite * audioFormat.getChannels(),
+                    audioFormat.getFrameRate(), audioFormat.isBigEndian());
+            line.close();
+            if (line.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                return;
+            }
+        } while (bytesPerSampleWrite > 0);
     }
 
     // Effects: returns image of playing audio
