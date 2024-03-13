@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="FlatLaf 3.4">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/spec/flatlaf-3.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
