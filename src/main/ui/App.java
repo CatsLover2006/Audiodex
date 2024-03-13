@@ -197,21 +197,13 @@ public class App {
         // Modifies: this
         // Effects:  shows loading pane
         public static void createLoadingThread() {
-            try {
-                SwingUtilities.invokeAndWait(() -> loadingFrame.setVisible(true));
-            } catch (Exception | Error e) {
-                SwingUtilities.invokeLater(() -> loadingFrame.setVisible(true));
-            }
+            loadingFrame.setVisible(true);
         }
 
         // Modifies: this
         // Effects:  hides loading pane
         private static void closeLoadingThread() {
-            try {
-                SwingUtilities.invokeAndWait(() -> loadingFrame.setVisible(false));
-            } catch (Exception | Error e) {
-                SwingUtilities.invokeLater(() -> loadingFrame.setVisible(true));
-            }
+            loadingFrame.setVisible(false);
         }
     }
 

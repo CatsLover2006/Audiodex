@@ -160,8 +160,11 @@ public class WAV implements AudioDecoder {
     // Effects: returns filename without directories
     @Override
     public String getFileName() {
-        String[] dirList = filename.split(String.valueOf(separatorChar));
-        return dirList[dirList.length - 1];
+        int location = filename.lastIndexOf(separatorChar);
+        if (location == -1) {
+            location = 0;
+        }
+        return filename.substring(location + 1);
     }
 
     // Effects: returns album artwork if possible
