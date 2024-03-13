@@ -190,7 +190,7 @@ public class DataManager {
     public void loadDatabase() {
         String filename = userDir + "index.audiodex.db";
         try {
-            dbIndex = Long.parseLong(Files.readString(Paths.get(filename)), 36);
+            dbIndex = Long.parseLong(readFile(String.valueOf(Paths.get(filename))), 36);
         } catch (Exception e) {
             dbIndex = 0;
             System.out.println("New database.");
