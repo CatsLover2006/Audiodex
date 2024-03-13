@@ -3,7 +3,7 @@
 ***NOTE 1***: This project expects you have music files to play. Thanks to non-copyright songs, I am able to include a full song for tests; that said, since lossy codecs aren't going to 100% match their lossless counterparts, I'm going to have to add one additional *.wav file for every codec. For the currently implemented tests (all but MP2) this has totaled to around 340MB. No doubt by the time I finish up with tests and adding encoders it'll be even larger.
 
 ## AudioDex 
-![CLI Preview](./previewcli.png)<br>
+![GUI Preview on Windows 7](./previewgui_win7.PNG)<br>
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
 
 ### Plans
@@ -69,8 +69,9 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - Similar situation for detection in the OGG container, but there's only one supported playback mode within this container so it's just to avoid throwing errors
 - Gain system is partially dependent on format and system
   - No way to fix this, it's entirely dependent on Java and OS implementation
-- Due to no way to test on Windows or Linux, there's no way to test if a system config specific to macOS will crash Windows/Linux systems
-  - Specific to GUI interface
+- Sometimes hi-res audio, 24 bit samples, will fail to play
+  - Entirely OS and JDK dependent
+  - Theoretically possible for 16 bit samples, but no implementation is going to gut that functionality (that's the standard for... EVERYTHING)
 - If audio encodes too fast, it ends up skipping some code (AudioEncoder.encodedPercent never is checked during encoding)<br>That said you'd have to decode an ALAC file at over 1400 times realtime, which... good luck.
 
 ## Lucky Breaks
@@ -106,7 +107,7 @@ _I'm a really lucky person ain't I?_
   - As a user, I expect my music library to automatically be loaded when I launch the program after importing the first time
   - As a user, I expect my music library to not disappear if I move the application<br>I expect my music library to be stored as a part of my user, and not alongside the application
   - As a user, I expect to be able to revert my music library to a previous version if I do something I didn't intend to do
-  - ~~As a user, I want to be able to edit the metadata of my songs~~
+  - As a user, I want to be able to edit the metadata of my songs
 
 In effect I'm creating a iTunes competitor.<br>
 I have made a program that I would intentionally go out of my way to use. Wow.
