@@ -11,7 +11,7 @@ import java.io.File;
 public class AudioFileLoader {
     public static final String[] KNOWN_FILETYPES = {
             "wav", "wave", "aif", "aiff", "aifc", "mp1", "mp2", "mp3",
-            "ogg", "oga", "mogg", "mp4", "m4a", "flac", "aac"
+            "ogg", "oga", "mogg", "mp4", "m4a", "flac"
     };
 
     // Loads an audio file from disk
