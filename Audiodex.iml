@@ -42,5 +42,6 @@
     <orderEntry type="library" name="Apache Commons Lang 3.14.0" level="project" />
     <orderEntry type="library" name="slf4j 2.0.12" level="project" />
     <orderEntry type="library" name="jsvg 1.4.0" level="project" />
+    <orderEntry type="library" name="jaudiotagger-2.2.6-SNAPSHOT" level="project" />
   </component>
 </module>
