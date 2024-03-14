@@ -4,7 +4,6 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
-import audio.filetypes.decoders.LegacyVorbis;
 import audio.filetypes.decoders.Vorbis;
 import audio.filetypes.decoders.WAV;
 import org.junit.jupiter.api.BeforeEach;

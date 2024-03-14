@@ -29,5 +29,11 @@ public class ID3ContainerTest {
         assertEquals(420L, nu.getID3Data("Discs"));
         assertEquals("Hanabi", nu.getID3Data("Artist"));
         assertEquals("ID3 Test", nu.getID3Data("Title"));
+        assertEquals(nu.hashCode(), container.hashCode());
+        assertTrue(nu.equals(container));
+        container.setID3Data("Discs", 69);
+        assertNotEquals(nu.hashCode(), container.hashCode());
+        assertFalse(nu.equals(container));
+        assertFalse(nu.equals(69));
     }
 }

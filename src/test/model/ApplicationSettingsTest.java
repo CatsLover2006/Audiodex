@@ -31,4 +31,11 @@ public class ApplicationSettingsTest {
         JSONObject settingsObj = settings.encode();
         assertEquals(settingsObj.get("soundCheck"), settings.doSoundCheck());
     }
+
+    @Test
+    public void hashCodeTest() {
+        int preHash = settings.hashCode();
+        settings.toggleSoundCheck();
+        assertNotEquals(preHash, settings.hashCode());
+    }
 }
