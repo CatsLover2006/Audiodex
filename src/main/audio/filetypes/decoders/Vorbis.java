@@ -5,8 +5,6 @@ import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.TagConversion;
-import com.github.trilarion.sound.vorbis.sampled.DecodedVorbisAudioInputStream;
-import com.github.trilarion.sound.vorbis.sampled.spi.VorbisAudioFileReader;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -16,30 +14,40 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
 
+import de.jarnbjo.ogg.*;
+import de.jarnbjo.vorbis.*;
+
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 
 import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
-import static java.lang.Thread.sleep;
 
-// Vorbis-type audio file decoder class
 public class Vorbis implements AudioDecoder {
-    private final String filename;
+    private PhysicalOggStream stream;
+    private VorbisStream decoded;
+    private RandomAccessFile file;
+    private String filename;
     private AudioFormat format;
-    private DecodedVorbisAudioInputStream decoded;
-    private AudioInputStream in;
     private boolean ready = false;
-    private final byte[] data = new byte[4096]; // 4kb sample buffer, seems standard
     private int numberBytesRead = 0;
-    private long bytesPlayed = 0;
-    private boolean allowSampleReads = true;
-    private double bytesPerSecond;
-    private double duration;
+    private LogicalOggStream oggStream;
+    private boolean skipping = false;
+
+    public Vorbis(String filename) {
+        this.filename = filename;
+    }
+
+    // Returns filetype of decoder
+    @Override
+    public AudioFileType getFileType() {
+        return AudioFileType.VORBIS;
+    }
 
     // Effects: returns true if audio can be decoded currently
     @Override
@@ -47,32 +55,28 @@ public class Vorbis implements AudioDecoder {
         return ready;
     }
 
-    public Vorbis(String filename) {
-        this.filename = filename;
-    }
-
     // Modifies: this
     // Effects:  loads audio and makes all other functions valid
     @Override
     public void prepareToPlayAudio() {
         try {
-            File file = new File(filename);
-            VorbisAudioFileReader fileReader = new VorbisAudioFileReader();
-            in = fileReader.getAudioInputStream(file);
-            AudioFormat baseFormat = in.getFormat();
-            format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-                    baseFormat.getSampleRate(),
-                    16,
-                    baseFormat.getChannels(),
-                    baseFormat.getChannels() * 2,
-                    baseFormat.getSampleRate(),
-                    false);
-            decoded = new DecodedVorbisAudioInputStream(format, in);
-            AudioFile f = AudioFileIO.read(file);
-            duration = f.getAudioHeader().getPreciseTrackLength();
-            bytesPerSecond = format.getSampleSizeInBits() * format.getChannels() * format.getSampleRate() / 8;
-            System.out.println("Vorbis decoder ready!");
+            file = new RandomAccessFile(new File(filename), "r");
+            stream = new FileStream(file);
+            for (Object stream : stream.getLogicalStreams()) {
+                if (stream instanceof LogicalOggStream) {
+                    oggStream = (LogicalOggStream) stream;
+                    if (oggStream.getFormat().equals(LogicalOggStream.FORMAT_VORBIS)) {
+                        oggStream.getTime();
+                        decoded = new VorbisStream(oggStream);
+                        break;
+                    }
+                }
+            }
+            IdentificationHeader header = decoded.getIdentificationHeader();
+            format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, header.getSampleRate(), 16,
+                    header.getChannels(), header.getChannels() * 2, header.getSampleRate(), true);
             ready = true;
+            System.out.println("Modern Vorbis decoder ready!");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -84,35 +88,33 @@ public class Vorbis implements AudioDecoder {
     //           getAudioOutputFormat() and atEndOfFile() remain valid
     @Override
     public void closeAudioFile() {
-        ready = false;
-        ExceptionIgnore.ignoreExc(() ->  {
+        ExceptionIgnore.ignoreExc(() -> {
             decoded.close();
-            in.close();
+            stream.close();
+            oggStream.close();
+            file.close();
         });
-    }
-
-    // Effects: returns true if goToTime() is running
-    //          only exists due to having multiple threads
-    @Override
-    public boolean skipInProgress() {
-        return !allowSampleReads;
+        ready = false;
     }
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     @Override
     public AudioSample getNextSample() {
-        if (!allowSampleReads) {
+        if (skipping) {
             return new AudioSample();
         }
-        numberBytesRead = -2;
+        byte[] data = new byte[4096];
         while (moreSamples()) {
-            ExceptionIgnore.ignoreExc(() -> numberBytesRead = decoded.read(data, 0, data.length));
-            if (numberBytesRead < 0) {
-                continue;
-            } // Yes I have to do this to track time
-            bytesPlayed += numberBytesRead;
-            return new AudioSample(data, numberBytesRead);
+            try {
+                numberBytesRead = decoded.readPcm(data, 0, data.length);
+                if (numberBytesRead == -1) {
+                    break;
+                }
+                return new AudioSample(data, numberBytesRead);
+            } catch (IOException e) {
+                // Move along
+            }
         }
         return new AudioSample();
     }
@@ -123,52 +125,35 @@ public class Vorbis implements AudioDecoder {
     // Effects:  moves audio to a different point of the file
     @Override
     public void goToTime(double time) {
-        ExceptionIgnore.ignoreExc(() ->  {
-            long toSkip = (long) (time * bytesPerSecond) - bytesPlayed;
-            if (toSkip < 0) {
-                allowSampleReads = false;
-                toSkip += bytesPlayed;
-                bytesPlayed = 0;
-                prepareToPlayAudio();
-            }
-            allowSampleReads = false;
-            long skipped;
-            while (toSkip != 0) {
-                skipped = decoded.skip(toSkip);
-                bytesPlayed += skipped;
-                toSkip -= skipped;
-                if (skipped == 0) {
-                    break;
-                }
-            }
-        });
-        allowSampleReads = true;
+        skipping = true;
+        ExceptionIgnore.ignoreExc(() -> oggStream.setTime((long) (time * format.getSampleRate())));
+        skipping = false;
     }
 
     // Effects: returns the current time in the audio in seconds
     @Override
     public double getCurrentTime() {
-        return bytesPlayed / bytesPerSecond;
+        return oggStream.getTime() / format.getSampleRate();
     }
 
     // Effects: returns the duration of the audio in seconds
     @Override
     public double getFileDuration() {
-        return duration;
+        return oggStream.getMaximumGranulePosition() / format.getSampleRate();
     }
 
-    // Requires: prepareToPlayAudio() called once
+    // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
     // Effects:  returns the audio format of the file
     @Override
     public AudioFormat getAudioOutputFormat() {
         return format;
     }
 
-    // Effects:  returns true if there are more samples to be played
-    //           will return false is no file is loaded
+    // Effects: returns true if there are more samples to be played
+    //          will return false is no file is loaded
     @Override
     public boolean moreSamples() {
-        return numberBytesRead != -1;
+        return oggStream.getMaximumGranulePosition() <= decoded.getCurrentGranulePosition();
     }
 
     // Effects: returns decoded ID3 data
@@ -236,12 +221,6 @@ public class Vorbis implements AudioDecoder {
         return filename.substring(location + 1);
     }
 
-    // Returns filetype of decoder
-    @Override
-    public AudioFileType getFileType() {
-        return AudioFileType.VORBIS;
-    }
-
     // Effects: returns album artwork if possible
     @Override
     public Artwork getArtwork() {
@@ -270,18 +249,11 @@ public class Vorbis implements AudioDecoder {
         });
     }
 
-    // Modifies: this
-    // Effects:  force disables decoding
-    //           for use in tests only
-    public void forceDisableDecoding() {
-        allowSampleReads = false;
-    }
-
-    // Modifies: this
-    // Effects:  force enables decoding
-    //           for use in tests only
-    public void forceEnableDecoding() {
-        allowSampleReads = true;
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    @Override
+    public boolean skipInProgress() {
+        return skipping;
     }
 
     // Effects: returns replaygain value

@@ -8,6 +8,7 @@ import javax.sound.sampled.AudioFormat;
 // Most functions explain themselves
 public interface AudioDecoder {
 
+    // Returns filetype of decoder
     AudioFileType getFileType();
 
     // Effects: returns filename without directories

@@ -48,7 +48,7 @@ public class AudioFileLoaderTest {
             assertEquals(MP4AAC.class, loadFile("data/scarlet.aac.m4a").getClass());
             assertEquals(MP4alac.class, loadFile("data/scarlet.alac.m4a").getClass());
             assertEquals(MP4alac.class, loadFile("data/scarlet.lmao.m4a").getClass());
-            assertEquals(Vorbis.class, loadFile("data/scarlet.vorbis.ogg").getClass());
+            assertEquals(LegacyVorbis.class, loadFile("data/scarlet.vorbis.ogg").getClass());
         } catch (NullPointerException e) {
             fail("Null pointer exception; something went horribly wrong");
         }
