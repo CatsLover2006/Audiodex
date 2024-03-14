@@ -222,7 +222,7 @@ public class Flac implements AudioDecoder {
             base.setID3Data("bitRate", info.getBitsPerSample());
             base.setID3Data("sampleRate", info.getSampleRate());
             File file = new File(filename);
-            f = AudioFileIO.readAs(file, "flac");
+            f = AudioFileIO.read(file);
         } catch (Exception e) {
             return base;
         }

@@ -12,7 +12,7 @@ public class FileManager {
     // Effects:  writes string to file, overwriting previous contents
     public static boolean writeToFile(String filename, String data) {
         try {
-            FileWriter writer = new FileWriter(filename, StandardCharsets.UTF_8, false);
+            FileWriter writer = new FileWriter(filename, false);
             writer.write(data);
             writer.close();
         } catch (IOException e) {
@@ -24,7 +24,7 @@ public class FileManager {
     // Effects: reads string from file
     public static String readFile(String filename) {
         try {
-            FileReader reader = new FileReader(filename, StandardCharsets.UTF_8);
+            FileReader reader = new FileReader(filename);
             char[] fileContents = new char[Math.toIntExact(new File(filename).length())];
             int len = reader.read(fileContents);
             StringBuilder out = new StringBuilder();
