@@ -60,4 +60,26 @@ public class AudioDataStructureTest {
         structure = new AudioDataStructure("\u0000/lmao");
         assertTrue(structure.isEmpty());
     }
+
+    @Test
+    public void edgeCaseTests() {
+        AudioDataStructure nu = AudioDataStructure.decode(new JSONObject("{\"filetype\":\"MP3\",\"filename\":\""
+                + "/Users/hanabi/Documents/Soulseek/upload/NoteBlock/Unknown Album/01 _Fall-Stars_ Fall Guys Medley.mp3"
+                + "\",\"bitrate\":1411200,\"filesize\":\"6270486\",\"ID3data\":{\"Artist\":\"NoteBlock\",\"Tracks\":1,"
+                + "\"Year\":2020,\"bitRate\":128,\"VBR\":\"NO\",\"Title\":\"\\\"Fall-Stars\\\" Fall Guys Medley\",\"sam"
+                + "pleRate\":44100,\"Track\":1},\"samplesize\":\"NO\"}"));
+        assertEquals(6270486, nu.getFilesize());
+        assertEquals(0, nu.getSamplesize());
+        structure = new AudioDataStructure("./data/scarlet.aif");
+        assertNotEquals(structure.hashCode(), nu.hashCode());
+        assertFalse(structure.equals(nu));
+        structure = AudioDataStructure.decode(new JSONObject("{\"filetype\":\"MP3\",\"filename\":\""
+                + "/Users/hanabi/Documents/Soulseek/upload/NoteBlock/Unknown Album/01 _Fall-Stars_ Fall Guys Medley.mp3"
+                + "\",\"bitrate\":1411200,\"filesize\":\"6270486\",\"ID3data\":{\"Artist\":\"NoteBlock\",\"Tracks\":1,"
+                + "\"Year\":2020,\"bitRate\":128,\"VBR\":\"NO\",\"Title\":\"\\\"Fall-Stars\\\" Fall Guys Medley\",\"sam"
+                + "pleRate\":44100,\"Track\":1},\"samplesize\":\"NO\"}"));
+        assertEquals(structure.hashCode(), nu.hashCode());
+        assertTrue(structure.equals(nu));
+        assertFalse(structure.equals(69));
+    }
 }

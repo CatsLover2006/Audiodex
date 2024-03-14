@@ -1,6 +1,8 @@
 package model;
 
 import audio.AudioDataStructure;
+import audio.filetypes.encoders.AiffTest;
+import audio.filetypes.encoders.MP3Test;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -12,6 +14,28 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AudioConversionTest {
     AudioConversion converter;
 
+    // Make a lambda for this
+    private interface RunnableFloat {
+        double run();
+    }
+
+    // Percentage display class using lambda
+    private static class PercentDisp extends Thread {
+        final RunnableFloat thing;
+        PercentDisp(RunnableFloat yay) {
+            thing = yay;
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                ExceptionIgnore.ignoreExc(() -> sleep(100));
+                System.out.println(thing.run() * 100 + "%");
+                if (thing.run() >= 1) return;
+            }
+        }
+    }
+
     @Test
     public void baseTest() throws IOException {
         converter = new AudioConversion(new AudioDataStructure("data/scarlet.aif"),
@@ -21,6 +45,7 @@ public class AudioConversionTest {
         assertEquals(new File("data/out/scarlet.conv.wav").getCanonicalPath(), converter.getTarget());
         assertFalse(converter.isFinished());
         assertFalse(converter.errorOccurred());
+        new PercentDisp(() -> converter.getComplete()).start();
         converter.start();
         converter.waitForEncoderFinish();
         assertTrue(converter.isFinished());

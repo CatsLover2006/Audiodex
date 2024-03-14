@@ -59,6 +59,8 @@ public class MP3Test {
         player.startAudioDecoderThread();
         player.playAudio();
         new PercentDisp(() -> player.getPercentPlayed()).start();
+        ExceptionIgnore.ignoreExc(() -> Thread.sleep(5000));
+        player.seekTo(player.getFileDuration() - 2.5);
         player.waitForAudioFinish();
         player.cleanBackend();
     }

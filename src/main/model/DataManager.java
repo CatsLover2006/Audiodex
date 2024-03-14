@@ -220,6 +220,7 @@ public class DataManager {
                 return;
             }
         }
+        songFilelist.clear();
         for (Object object : array) {
             songFilelist.add(AudioDataStructure.decode((JSONObject) object));
         }
