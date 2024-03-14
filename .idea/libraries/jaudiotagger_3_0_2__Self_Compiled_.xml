@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="jaudiotagger 3.0.2 (Self-Compiled)">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/spec/jaudiotagger-3.0.2-SNAPSHOT.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

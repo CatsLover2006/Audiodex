@@ -335,7 +335,7 @@ public class MpegType implements AudioDecoder {
     public float getReplayGain() {
         AudioFile f;
         try {
-            f = AudioFileIO.read(new File(filename));
+            f = AudioFileIO.readAs(new File(filename), "mp3");
             return TagConversion.getReplayGain(f.getTag());
         } catch (Exception e) {
             // Why?
