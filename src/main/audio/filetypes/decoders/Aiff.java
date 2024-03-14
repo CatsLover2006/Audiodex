@@ -64,7 +64,7 @@ public class Aiff implements AudioDecoder {
             double audioFrameRate = format.getFrameRate();
             int frameSize = format.getFrameSize();
             bytesPerSecond = frameSize * audioFrameRate;
-            duration = f.getAudioHeader().getPreciseTrackLength();
+            duration = f.getAudioHeader().getTrackLength();
             System.out.println("AIFF decoder ready!");
             ready = true;
         } catch (Exception e) {

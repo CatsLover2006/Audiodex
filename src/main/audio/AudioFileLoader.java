@@ -76,7 +76,7 @@ public class AudioFileLoader {
         File file;
         try {
             file = new File(filename);
-            AudioFile audio = AudioFileIO.readAs(file, "m4a");
+            AudioFile audio = AudioFileIO.read(file);
             switch (audio.getAudioHeader().getEncodingType().toLowerCase()) {
                 case "aac":
                     return AudioFileType.AAC_MP4;
@@ -95,7 +95,7 @@ public class AudioFileLoader {
     private static AudioFileType oggAudioType(String filename) {
         File file = new File(filename);
         try {
-            AudioFile audio = AudioFileIO.readAs(file, "ogg");
+            AudioFile audio = AudioFileIO.read(file);
             switch (audio.getAudioHeader().getEncodingType().toLowerCase()) {
                 case "ogg vorbis v1":
                     return AudioFileType.VORBIS;
