@@ -12,7 +12,7 @@ import javax.sound.sampled.AudioFormat;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class VorbisTest {
-    Vorbis vorbisDecoder;
+    LegacyVorbis vorbisDecoder;
 
     private class ForcePauseThread extends Thread {
         @Override
@@ -29,7 +29,7 @@ public class VorbisTest {
 
     @BeforeEach
     public void prepare() {
-        vorbisDecoder = new Vorbis("data/scarlet.vorbis.ogg");
+        vorbisDecoder = new LegacyVorbis("data/scarlet.vorbis.ogg");
         Thread.currentThread().setPriority(2);
     }
 

@@ -1,18 +1,18 @@
 package audio.filetypes.decoders.nullFiles;
 
 import audio.ID3Container;
-import audio.filetypes.decoders.Vorbis;
+import audio.filetypes.decoders.LegacyVorbis;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class VorbisTest {
-    Vorbis vorbisDecoder;
+    LegacyVorbis vorbisDecoder;
 
     @BeforeEach
     public void prepare() {
-        vorbisDecoder = new Vorbis("data/\u0000/scarlet.vorbis.ogg");
+        vorbisDecoder = new LegacyVorbis("data/\u0000/scarlet.vorbis.ogg");
         Thread.currentThread().setPriority(2);
     }
 
