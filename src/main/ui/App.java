@@ -172,7 +172,6 @@ public class App {
     }
 
     public static void main(String[] args) {
-        notMain = false;
         audioConverterList = new ArrayList<>();
         if (strArrContains(args, "--cli")) {
             USE_CLI = true;
@@ -182,6 +181,7 @@ public class App {
             setupSwing();
             GuiLoaderFrame.createLoadingThread();
         }
+        notMain = false;
         played = new LinkedList<>();
         songQueue = new LinkedList<>();
         database = new DataManager();
@@ -221,7 +221,9 @@ public class App {
                 FlatIntelliJLaf.setup();
             }
         }
-        Gui.updateUI();
+        if (!notMain) {
+            Gui.updateUI();
+        }
     }
 
     // Effects: gets theme status
