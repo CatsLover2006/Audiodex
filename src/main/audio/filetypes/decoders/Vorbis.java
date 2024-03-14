@@ -69,7 +69,7 @@ public class Vorbis implements AudioDecoder {
                     false);
             decoded = new DecodedVorbisAudioInputStream(format, in);
             AudioFile f = AudioFileIO.read(file);
-            duration = f.getAudioHeader().getTrackLength();
+            duration = f.getAudioHeader().getPreciseTrackLength();
             bytesPerSecond = format.getSampleSizeInBits() * format.getChannels() * format.getSampleRate() / 8;
             System.out.println("Vorbis decoder ready!");
             ready = true;

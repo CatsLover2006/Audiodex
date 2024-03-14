@@ -22,6 +22,7 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.nodes.SVG;
 import com.github.weisj.jsvg.parser.SVGLoader;
+import com.jthemedetecor.OsThemeDetector;
 import model.AudioConversion;
 import model.DataManager;
 import model.ExceptionIgnore;
@@ -45,6 +46,7 @@ import static java.lang.Thread.*;
 // Main application class
 public class App {
     private static boolean notMain = true;
+    private static OsThemeDetector detector;
     private static ID3Container id3;
     private static AudioFilePlaybackBackend playbackManager;
     private static boolean USE_CLI = false;
@@ -175,7 +177,8 @@ public class App {
         if (strArrContains(args, "--cli")) {
             USE_CLI = true;
         } else {
-            System.setProperty("apple.awt.application.appearance", "NSAppearanceNameAqua");
+            System.setProperty("apple.awt.application.appearance", "system");
+            detector = OsThemeDetector.getDetector();
             setupSwing();
             GuiLoaderFrame.createLoadingThread();
         }
@@ -195,15 +198,28 @@ public class App {
 
     // Effects: sets up Swing UI
     private static void setupSwing() {
-        uiMod();
+        detector.registerListener(isDark -> {
+            SwingUtilities.invokeLater(() -> {
+                uiMod(isDark);
+            });
+        });
+        uiMod(detector.isDark());
     }
 
     // Effects: changes dark mode status
-    private static void uiMod() {
-        if (SystemUtils.IS_OS_MAC_OSX) {
-            FlatMacLightLaf.setup();
+    private static void uiMod(boolean dark) {
+        if (dark) {
+            if (SystemUtils.IS_OS_MAC_OSX) {
+                FlatMacDarkLaf.setup();
+            } else {
+                FlatDarculaLaf.setup();
+            }
         } else {
-            FlatIntelliJLaf.setup();
+            if (SystemUtils.IS_OS_MAC_OSX) {
+                FlatMacLightLaf.setup();
+            } else {
+                FlatIntelliJLaf.setup();
+            }
         }
         Gui.updateUI();
     }
