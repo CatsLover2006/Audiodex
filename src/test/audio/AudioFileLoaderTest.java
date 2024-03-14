@@ -17,19 +17,20 @@ public class AudioFileLoaderTest {
         assertEquals(AudioFileType.MP3, getAudioFiletype("data/scarlet.mp3"));
         assertEquals(AudioFileType.MPEG, getAudioFiletype("data/scarlet.mp2"));
         assertEquals(AudioFileType.FLAC, getAudioFiletype("data/scarlet.flac"));
-        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/scarlet.flac.oga")); // :`(
+        assertEquals(AudioFileType.EMPTY_OGG, getAudioFiletype("data/scarlet.flac.oga")); // :`(
         assertEquals(AudioFileType.AAC_MP4, getAudioFiletype("data/scarlet.aac.m4a"));
         assertEquals(AudioFileType.ALAC_MP4, getAudioFiletype("data/scarlet.alac.m4a"));
         assertEquals(AudioFileType.ALAC_MP4, getAudioFiletype("data/scarlet.lmao.m4a"));
-        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/video.mp4"));
+        assertEquals(AudioFileType.EMPTY_MP4, getAudioFiletype("data/video.mp4"));
         assertEquals(AudioFileType.VORBIS, getAudioFiletype("data/scarlet.vorbis.ogg"));
     }
 
     @Test
     public void edgeCaseTests() {
         new AudioFileLoader(); // No need
-        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.mp4"));
-        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null.ogg"));
+        assertEquals(AudioFileType.EMPTY_MP4, getAudioFiletype("data/null.mp4"));
+        assertEquals(AudioFileType.EMPTY_OGG, getAudioFiletype("data/null.ogg"));
+        assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null"));
         assertEquals(AudioFileType.MP3, getAudioFiletype("data/null.mp3"));
     }
 

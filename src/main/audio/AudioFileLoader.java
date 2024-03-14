@@ -1,10 +1,14 @@
 package audio;
 
 import audio.filetypes.decoders.*;
+import de.jarnbjo.ogg.FileStream;
+import de.jarnbjo.ogg.LogicalOggStream;
+import de.jarnbjo.ogg.PhysicalOggStream;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 
 import java.io.File;
+import java.io.RandomAccessFile;
 
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler
@@ -88,23 +92,31 @@ public class AudioFileLoader {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return AudioFileType.EMPTY;
+        return AudioFileType.EMPTY_MP4;
     }
 
     // Effects: detects encoding of a .ogg-like file
     private static AudioFileType oggAudioType(String filename) {
-        File file = new File(filename);
+        RandomAccessFile file;
         try {
-            AudioFile audio = AudioFileIO.readAs(file, "ogg");
-            switch (audio.getAudioHeader().getEncodingType().toLowerCase()) {
-                case "ogg vorbis v1":
-                    return AudioFileType.VORBIS;
-                default:
-                    System.out.println("Unknown format: " + audio.getAudioHeader().getEncodingType().toLowerCase());
+            file = new RandomAccessFile(new File(filename), "r");
+            PhysicalOggStream streams = new FileStream(file);
+            for (Object stream : streams.getLogicalStreams()) {
+                if (stream instanceof LogicalOggStream) {
+                    LogicalOggStream oggStream = (LogicalOggStream) stream;
+                    switch (oggStream.getFormat()) {
+                        case LogicalOggStream.FORMAT_VORBIS:
+                            return AudioFileType.VORBIS;
+                        case LogicalOggStream.FORMAT_FLAC:
+                            return AudioFileType.FLAC;
+                        default:
+                            return AudioFileType.EMPTY_OGG;
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return AudioFileType.EMPTY;
+        return AudioFileType.EMPTY_OGG;
     }
 }

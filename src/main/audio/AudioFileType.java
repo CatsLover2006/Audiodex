@@ -9,7 +9,9 @@ public enum AudioFileType {
     FLAC(6),
     AIFF(1),
     VORBIS(4),
-    EMPTY(0);
+    EMPTY(0),
+    EMPTY_MP4(0),
+    EMPTY_OGG(0);
 
     public final int iconIndex;
 

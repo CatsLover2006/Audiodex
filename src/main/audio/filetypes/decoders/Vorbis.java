@@ -133,12 +133,18 @@ public class Vorbis implements AudioDecoder {
     // Effects: returns the current time in the audio in seconds
     @Override
     public double getCurrentTime() {
+        if (oggStream == null) {
+            return -1;
+        }
         return oggStream.getTime() / format.getSampleRate();
     }
 
     // Effects: returns the duration of the audio in seconds
     @Override
     public double getFileDuration() {
+        if (oggStream == null) {
+            return -1;
+        }
         return oggStream.getMaximumGranulePosition() / format.getSampleRate();
     }
 
@@ -153,6 +159,9 @@ public class Vorbis implements AudioDecoder {
     //          will return false is no file is loaded
     @Override
     public boolean moreSamples() {
+        if (oggStream == null) {
+            return true;
+        }
         return oggStream.getMaximumGranulePosition() <= decoded.getCurrentGranulePosition();
     }
 
