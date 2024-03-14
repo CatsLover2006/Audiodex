@@ -3,8 +3,6 @@ package ui;
 import audio.AudioDataStructure;
 
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -18,10 +16,12 @@ import audio.AudioFileLoader;
 import audio.ID3Container;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.icons.FlatMenuArrowIcon;
-import com.formdev.flatlaf.icons.FlatWindowCloseIcon;
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
+import com.github.weisj.jsvg.SVGDocument;
+import com.github.weisj.jsvg.nodes.SVG;
+import com.github.weisj.jsvg.parser.SVGLoader;
 import com.jthemedetecor.OsThemeDetector;
 import model.AudioConversion;
 import model.DataManager;
@@ -222,6 +222,15 @@ public class App {
             }
         }
         Gui.updateUI();
+    }
+
+    // Effects: gets theme status
+    private static FlatLaf getThemeStatus() {
+        try {
+            return (FlatLaf) UIManager.getLookAndFeel();
+        } catch (ClassCastException e) {
+            return new FlatIntelliJLaf();
+        }
     }
 
     // Modifies: audio playback manager
@@ -509,6 +518,25 @@ public class App {
             });
         }
 
+        private static SVGLoader loader = new SVGLoader();
+
+        // Effects: loads image from data directory (/data/spec or (jar)/data)
+        private static SVGDocument loadVector(String filename) throws IOException {
+            try {
+                SVGDocument t = loader.load(Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+                if (t == null) {
+                    throw new IOException("Unable to load file");
+                }
+                return t;
+            } catch (Exception ex) {
+                try {
+                    return loader.load(new File("data/spec/" + filename).toURL());
+                } catch (Exception e) {
+                    throw new IOException("Couldn't load vector: " + e.getMessage() + " and " + ex.getMessage());
+                }
+            }
+        }
+
         // Effects: loads image from data directory (/data/spec or (jar)/data)
         private static BufferedImage loadImage(String filename) throws IOException {
             try {
@@ -534,7 +562,7 @@ public class App {
                     return Font.createFont(Font.TRUETYPE_FONT,
                             new File("data/spec/" + filename));
                 } catch (Exception e) {
-                    throw new IOException("Couldn't load image: " + e.getMessage() + " and " + ex.getMessage());
+                    throw new IOException("Couldn't load font: " + e.getMessage() + " and " + ex.getMessage());
                 }
             }
         }
@@ -576,8 +604,13 @@ public class App {
 
         // Effects: updates control icons
         public static void updateControls() {
-            playButton.setText(playbackManager.paused() ? "II" : ">");
+            playButton.setIcon(playbackManager.paused() ? pause : play);
+            UIDefaults defaults = getThemeStatus().getDefaults();
+            prevButton.setForeground(played.isEmpty() ? defaults.getColor("Button.disabledText") :
+                    defaults.getColor("RootPane.foreground"));
             prevButton.setEnabled(!played.isEmpty());
+            skipButton.setForeground(songQueue.isEmpty() ? defaults.getColor("Button.disabledText") :
+                    defaults.getColor("RootPane.foreground"));
             skipButton.setEnabled(!songQueue.isEmpty());
         }
 
@@ -779,46 +812,61 @@ public class App {
         private static final JLabel musicArt = new JLabel();
         private static final JLabel fileLabel = new JLabel();
         private static final JLabel albumLabel = new JLabel();
-        private static BufferedImage placeholder;
         private static final JButton skipButton;
         private static final JButton prevButton;
         private static final JButton playButton;
 
+        private static final JVectorIcon skip;
+        private static final JVectorIcon prev;
+        private static final JVectorIcon placeholder;
+        private static final JVectorIcon play;
+        private static final JVectorIcon pause;
+
         // Prepare elements
         static {
+            JVectorIcon pauseInit;
+            JVectorIcon playInit;
+            JVectorIcon prevInit;
+            JVectorIcon skipInit;
+            JVectorIcon placeholderInit;
             fileLabel.putClientProperty("FlatLaf.styleClass", "h3.regular");
             albumLabel.putClientProperty("FlatLaf.styleClass", "medium");
             leftPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
             rightPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
             try {
-                placeholder = loadImage("AppIcon.png");
+                placeholderInit = new JVectorIcon(loadVector("music.svg"), 48, 48);
+                skipInit = new JVectorIcon(loadVector("forward.svg"), 24, 16);
+                prevInit = new JVectorIcon(loadVector("backward.svg"), 24, 16);
+                playInit = new JVectorIcon(loadVector("play.svg"), 48, 32);
+                pauseInit = new JVectorIcon(loadVector("pause.svg"), 48, 32);
             } catch (IOException e) {
                 e.printStackTrace();
-                placeholder = new BufferedImage(48, 48, BufferedImage.TYPE_3BYTE_BGR);
+                placeholderInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 48);
+                skipInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
+                prevInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
+                playInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 32);
+                pauseInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 32);
             }
+            placeholder = placeholderInit;
+            pause = pauseInit;
+            play = playInit;
+            prev = prevInit;
+            skip = skipInit;
             Border emptyBorder = BorderFactory.createEmptyBorder();
-            skipButton = new JButton("\u226B");
+            skipButton = new JButton(skip);
             skipButton.addActionListener(e -> playNext());
-            ExceptionIgnore.ignoreExc(() ->
-                    skipButton.setFont(loadFont("GothicA1-ExtraBold.ttf").deriveFont(16.0f)));
             skipButton.setVerticalAlignment(SwingConstants.TOP);
             skipButton.setMaximumSize(new Dimension(24, 16));
             skipButton.setMinimumSize(new Dimension(24, 16));
             skipButton.setMargin(new Insets(2, 2, 2, 2));
             skipButton.setEnabled(false);
-            prevButton = new JButton("\u226A");
-            prevButton.addActionListener(e -> playPrevious());
-            ExceptionIgnore.ignoreExc(() ->
-                    prevButton.setFont(loadFont("GothicA1-ExtraBold.ttf").deriveFont(16.0f)));
+            prevButton = new JButton(prev);
             prevButton.setVerticalAlignment(SwingConstants.TOP);
             prevButton.setMaximumSize(new Dimension(24, 16));
             prevButton.setMinimumSize(new Dimension(24, 16));
             prevButton.setMargin(new Insets(2, 2, 2, 2));
             prevButton.setEnabled(false);
-            playButton = new JButton(">");
-            System.out.println(FlatMacLightLaf.getPreferredFontFamily());
-            ExceptionIgnore.ignoreExc(() ->
-                    playButton.setFont(loadFont("GothicA1-Light.ttf").deriveFont(36.0f)));
+            playButton = new JButton(play);
             playButton.setVerticalAlignment(SwingConstants.TOP);
             playButton.setMaximumSize(new Dimension(48, 32));
             playButton.setMinimumSize(new Dimension(48, 32));
@@ -933,7 +981,7 @@ public class App {
             @Override
             public void run() {
                 Thread.currentThread().setPriority(2);
-                musicArt.setIcon(new ImageIcon(placeholder));
+                musicArt.setIcon(placeholder);
                 BufferedImage bufferedImage = playbackManager.getArtwork();
                 if (bufferedImage != null) {
                     int newWidth = (int)(Math.min(48.0 / bufferedImage.getWidth(), 48.0 / bufferedImage.getHeight())

@@ -1,21 +1,21 @@
 package ui;
 
-import audio.AudioDataStructure;
-import audio.AudioDecoder;
-import audio.AudioFileLoader;
-import audio.ID3Container;
-import audio.filetypes.TagConversion;
+import audio.*;
+import com.github.weisj.jsvg.SVGDocument;
+import com.github.weisj.jsvg.nodes.SVG;
+import com.github.weisj.jsvg.parser.SVGLoader;
 import model.AudioConversion;
 import model.ExceptionIgnore;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.xml.crypto.Data;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -34,10 +34,11 @@ public class PopupManager {
         return Arrays.stream(arr).anyMatch(cur -> cur.equals(item));
     }
 
-    private static final BufferedImage[] FILE_BROWSER_IMAGES;
-    private static final BufferedImage[] ERROR_IMAGES;
+    private static final JVectorIcon[] FILE_BROWSER_IMAGES;
+    private static final JVectorIcon[] ERROR_IMAGES;
 
     public enum ErrorImageTypes {
+        INFO(4),
         ERROR(0),
         WARNING(1);
 
@@ -67,67 +68,63 @@ public class PopupManager {
         }
     }
 
+    private static SVGLoader loader = new SVGLoader();
+
+    // Effects: loads image from data directory (/data/spec or (jar)/data)
+    private static SVGDocument loadVector(String filename) throws IOException {
+        try {
+            SVGDocument t = loader.load(Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+            if (t == null) {
+                throw new IOException("Unable to load file");
+            }
+            return t;
+        } catch (Exception ex) {
+            try {
+                return loader.load(new File("data/spec/" + filename).toURL());
+            } catch (Exception e) {
+                throw new IOException("Couldn't load vector: " + e.getMessage() + " and " + ex.getMessage());
+            }
+        }
+    }
+
     // Gets images for popups
     static {
-        BufferedImage[] myImages;
         ClassLoader classLoader = Main.class.getClassLoader();
+        JVectorIcon[] icons;
         try {
-            myImages = new BufferedImage[]{
-                    ImageIO.read(classLoader.getResourceAsStream("data/FolderIcon.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_RAW.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_AAC.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_MPEG.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_Vorbis.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_ALAC.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/FileIcon_FLAC.png"))
+            icons = new JVectorIcon[]{
+                    new JVectorIcon(loadVector("folder.svg"), 20, 20),
+                    new JVectorIcon(loadVector("file.svg"), 20, 20),
+                    new JVectorIcon(loadVector("file-audio.svg"), 20, 20),
+                    new JVectorIcon(loadVector("folder-arrow-up.svg"), 20, 20)
             };
-        } catch (Exception e) {
-            try {
-                System.out.println("Not running in JAR");
-                myImages = new BufferedImage[]{
-                        ImageIO.read(new File("data/spec/FolderIcon.png")),
-                        ImageIO.read(new File("data/spec/FileIcon.png")),
-                        ImageIO.read(new File("data/spec/FileIcon_RAW.png")),
-                        ImageIO.read(new File("data/spec/FileIcon_AAC.png")),
-                        ImageIO.read(new File("data/spec/FileIcon_MPEG.png")),
-                        ImageIO.read(new File("data/spec/FileIcon_Vorbis.png")),
-                        ImageIO.read(new File("data/spec/FileIcon_ALAC.png")),
-                        ImageIO.read(new File("./data/spec/FileIcon_FLAC.png"))
-                };
-            } catch (Exception ex) {
-                myImages = new BufferedImage[]{
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(16, 16, BufferedImage.TYPE_3BYTE_BGR)
-                };
-            }
+        } catch (IOException e) {
+            icons = new JVectorIcon[]{
+                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16),
+                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16),
+                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16),
+                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16)
+            };
         }
-        FILE_BROWSER_IMAGES = myImages;
+        FILE_BROWSER_IMAGES = icons;
         try {
-            myImages = new BufferedImage[]{
-                    ImageIO.read(classLoader.getResourceAsStream("data/ErrorIcon.png")),
-                    ImageIO.read(classLoader.getResourceAsStream("data/WarningIcon.png"))
+            icons = new JVectorIcon[]{
+                    new JVectorIcon(loadVector("circle-xmark.svg"), 32, 32),
+                    new JVectorIcon(loadVector("triangle-exclamation.svg"), 32, 32),
+                    new JVectorIcon(loadVector("diamond-exclamation.svg"), 32, 32),
+                    new JVectorIcon(loadVector("hexagon-exclamation.svg"), 32, 32),
+                    new JVectorIcon(loadVector("circle-information.svg"), 32, 32)
             };
-        } catch (Exception e) {
-            try {
-                myImages = new BufferedImage[]{
-                        ImageIO.read(new File("./data/spec/ErrorIcon.png")),
-                        ImageIO.read(new File("./data/spec/WarningIcon.png"))
-                };
-            } catch (Exception ex) {
-                myImages = new BufferedImage[]{
-                        new BufferedImage(32, 32, BufferedImage.TYPE_3BYTE_BGR),
-                        new BufferedImage(32, 32, BufferedImage.TYPE_3BYTE_BGR)
-                };
-            }
+        } catch (IOException e) {
+            icons = new JVectorIcon[]{
+                    new JVectorIcon(new SVGDocument(new SVG()), 32, 32),
+                    new JVectorIcon(new SVGDocument(new SVG()), 32, 32),
+                    new JVectorIcon(new SVGDocument(new SVG()), 32, 32),
+                    new JVectorIcon(new SVGDocument(new SVG()), 32, 32),
+                    new JVectorIcon(new SVGDocument(new SVG()), 32, 32)
+            };
         }
-        ERROR_IMAGES = myImages;
+        ERROR_IMAGES = icons;
     }
 
     // Make a lambda for this
@@ -175,15 +172,16 @@ public class PopupManager {
         private Boolean hasNoParent;
 
         // Effects: external update UI function
+        @Override
         public void updateUI() {
             SwingUtilities.updateComponentTreeUI(selector);
         }
 
         // Setup file table events
         {
-            fileTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            fileTable.addMouseListener(new MouseAdapter() {
                 @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                public void mouseClicked(MouseEvent evt) {
                     int row = fileTable.rowAtPoint(evt.getPoint());
                     int col = fileTable.columnAtPoint(evt.getPoint());
                     if (row >= 0 && col >= 0) {
@@ -250,9 +248,9 @@ public class PopupManager {
             File where = new File(location);
             dirList = where.listFiles(pathname -> !pathname.isHidden());
             hasNoParent = where.getParentFile() == null;
-            fileTable.getColumnModel().getColumn(0).setMaxWidth(17);
-            fileTable.getColumnModel().getColumn(0).setMinWidth(17);
-            fileTable.setRowHeight(17);
+            fileTable.getColumnModel().getColumn(0).setMaxWidth(20);
+            fileTable.getColumnModel().getColumn(0).setMinWidth(20);
+            fileTable.setRowHeight(20);
             fileList.updateUI();
         }
 
@@ -283,6 +281,9 @@ public class PopupManager {
             // Gets table column class
             @Override
             public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 0) {
+                    return Icon.class;
+                }
                 return getValueAt(0, columnIndex).getClass();
             }
 
@@ -297,6 +298,9 @@ public class PopupManager {
             public Object getValueAt(int rowIndex, int columnIndex) {
                 if (hasNoParent) {
                     rowIndex++;
+                }
+                if (rowIndex == 0 && columnIndex == 0) {
+                    return FILE_BROWSER_IMAGES[3];
                 }
                 if (rowIndex == 0 && columnIndex == 1) {
                     return "..";
@@ -316,16 +320,16 @@ public class PopupManager {
                 case "Last Modified":
                     return new Date(file.lastModified()).toString();
                 case "Filetype":
-                    if (file.isDirectory() && file.getName().lastIndexOf(".") == -1) {
+                    if (file.isDirectory() && file.getName().lastIndexOf('.') == -1) {
                         return ".folder";
-                    } else if (file.getName().lastIndexOf(".") == -1) {
-                        return "file";
-                    } else {
-                        return file.getName().substring(file.getName().lastIndexOf(".") + 1);
                     }
+                    if (file.getName().lastIndexOf('.') == -1) {
+                        return "file";
+                    }
+                    return file.getName().substring(file.getName().lastIndexOf('.') + 1);
                 case "Icon": // Thanks IntelliJ!
-                    return new ImageIcon(FILE_BROWSER_IMAGES[file.isDirectory() ? 0 :
-                            AudioFileLoader.getAudioFiletype(file.getAbsolutePath()).iconIndex + 1]);
+                    return FILE_BROWSER_IMAGES[file.isDirectory() ? 0 :
+                            AudioFileLoader.getAudioFiletype(file.getAbsolutePath()) == AudioFileType.EMPTY ? 1 : 2];
                 default:
                     return String.valueOf(file.length());
             }
@@ -383,6 +387,7 @@ public class PopupManager {
             return !allowOut || selector.isVisible() ? null : location + separatorChar + file.getText();
         }
 
+        @Override
         public boolean finished() {
             return allowOut;
         }
@@ -396,6 +401,7 @@ public class PopupManager {
         private JFrame selector;
         private PopupResponder responder;
 
+        @Override
         public boolean finished() {
             return !selector.isVisible();
         }
@@ -415,7 +421,7 @@ public class PopupManager {
         // Effects: defaults everything
         public ErrorPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder) {
             this.errorText = new JLabel(String.format("<html>%s</html>", errorText));
-            errorImg = new JLabel(new ImageIcon(ERROR_IMAGES[image.iconIndex]));
+            errorImg = new JLabel(ERROR_IMAGES[image.iconIndex]);
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
@@ -455,6 +461,7 @@ public class PopupManager {
         }
 
         // Effects: external update UI function
+        @Override
         public void updateUI() {
             SwingUtilities.updateComponentTreeUI(selector);
         }
@@ -500,7 +507,7 @@ public class PopupManager {
         // Effects: defaults everything
         public ConfirmationPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder) {
             this.errorText = new JLabel(String.format("<html>%s</html>", errorText));
-            errorImg = new JLabel(new ImageIcon(ERROR_IMAGES[image.iconIndex]));
+            errorImg = new JLabel(ERROR_IMAGES[image.iconIndex]);
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
@@ -510,6 +517,7 @@ public class PopupManager {
         }
 
         // Effects: external update UI function
+        @Override
         public void updateUI() {
             SwingUtilities.updateComponentTreeUI(selector);
         }
@@ -560,6 +568,7 @@ public class PopupManager {
             popupList.add(this);
         }
 
+        @Override
         public boolean finished() {
             return !selector.isVisible();
         }
@@ -575,6 +584,7 @@ public class PopupManager {
         private HashMap<String, JComboBox> options = new HashMap<>();
 
         // Effects: external update UI function
+        @Override
         public void updateUI() {
             SwingUtilities.updateComponentTreeUI(selector);
         }
@@ -675,6 +685,7 @@ public class PopupManager {
             });
         }
 
+        @Override
         public boolean finished() {
             return !selector.isVisible();
         }
@@ -695,10 +706,12 @@ public class PopupManager {
         private JButton okButton = new JButton("Ok");
 
         // Effects: external update UI function
+        @Override
         public void updateUI() {
             SwingUtilities.updateComponentTreeUI(editor);
         }
 
+        @Override
         public boolean finished() {
             return !editor.isVisible();
         }
@@ -757,19 +770,32 @@ public class PopupManager {
             dataList.add(new DataClass("Comment", "Comment"));
         }
 
+        private static final JVectorIcon MUSIC_ICON;
+
+        // Load music icon
+        static {
+            JVectorIcon temp;
+            try {
+                temp = new JVectorIcon(loadVector("music.svg"), 48, 48);
+            } catch (IOException e) {
+                temp = new JVectorIcon(new SVGDocument(new SVG()), 48, 48);
+            }
+            MUSIC_ICON = temp;
+        }
+
         // Thread to update album artwork
         private class AlbumArtworkUpdater extends Thread {
             @Override
             public void run() {
                 Thread.currentThread().setPriority(2);
                 ExceptionIgnore.ignoreExc(() -> {
-                    musicArt.setIcon(new ImageIcon(ERROR_IMAGES[ErrorImageTypes.ERROR.iconIndex]));
+                    musicArt.setIcon(MUSIC_ICON);
                     BufferedImage bufferedImage = (BufferedImage) fileScanner.getArtwork().getImage();
                     if (bufferedImage != null) {
-                        int newWidth = (int)(Math.min(32.0 / bufferedImage.getWidth(), 32.0 / bufferedImage.getHeight())
+                        int newWidth = (int)(Math.min(48.0 / bufferedImage.getWidth(), 48.0 / bufferedImage.getHeight())
                                 * bufferedImage.getWidth());
-                        int newHeight = (int)(Math.min(32.0 / bufferedImage.getWidth(),
-                                32.0 / bufferedImage.getHeight()) * bufferedImage.getHeight());
+                        int newHeight = (int)(Math.min(48.0 / bufferedImage.getWidth(),
+                                48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight());
                         BufferedImage resized = new BufferedImage(newWidth, newHeight, bufferedImage.getType());
                         Graphics2D g = resized.createGraphics();
                         setGraphicsHints(g);
