@@ -14,8 +14,10 @@ import java.util.logging.LogManager;
 import audio.AudioDecoder;
 import audio.AudioFileLoader;
 import audio.ID3Container;
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.nodes.SVG;
@@ -169,6 +171,7 @@ public class App {
                     + "org.jaudiotagger.level=OFF").getBytes())));
     }
 
+    // Prepares and preloads data
     public static void startApp(String[] args) {
         audioConverterList = new ArrayList<>();
         if (strArrContains(args, "--cli")) {
