@@ -176,11 +176,13 @@ public class AudioDataStructure {
         id3Data = nu;
     }
 
+    // Effects: returns filename hashcode
     @Override
     public int hashCode() {
         return filename.hashCode();
     }
 
+    // Effects: compares filenames
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof AudioDataStructure) {

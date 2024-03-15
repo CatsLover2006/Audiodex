@@ -7,17 +7,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+// Vector Icon class
 public class JVectorIcon implements Icon {
     private SVGDocument svg;
     private int width;
     private int height;
 
+    // Effects: "registers" the SVGDocument
     public JVectorIcon(SVGDocument document, int w, int h) {
         svg = document;
         width = w;
         height = h;
     }
 
+    // Effects: Paints icon (in foreground color)
     @Override
     public void paintIcon(Component c, Graphics graphics, int x, int y) {
         BufferedImage render = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -39,11 +42,13 @@ public class JVectorIcon implements Icon {
         graphics.dispose();
     }
 
+    // Effects: returns width
     @Override
     public int getIconWidth() {
         return width;
     }
 
+    // Effects: returns width
     @Override
     public int getIconHeight() {
         return height;

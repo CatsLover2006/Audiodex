@@ -138,6 +138,7 @@ public class AudioConversion {
         return error && done;
     }
 
+    // Effects: waits for encoder to finish (joins the the encoding thread)
     public void waitForEncoderFinish() {
         ExceptionIgnore.ignoreExc(() -> converterThread.safeJoin());
     }

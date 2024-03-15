@@ -37,6 +37,7 @@ public class ApplicationSettings {
         return out;
     }
 
+    // Effects: generates a hash code using all settings
     @Override
     public int hashCode() {
         return Objects.hash(soundCheck);

@@ -86,6 +86,7 @@ public class AudioFilePlaybackBackend {
         }
     }
 
+    // Effects: null-safe passthrough for loadedFile.skipInProgress()
     public boolean audioIsSkipping() {
         if (loadedFile == null) {
             return true;
@@ -170,7 +171,7 @@ public class AudioFilePlaybackBackend {
     }
 
     // Modifies: this
-    // Effects:  makes the output audio format
+    // Effects:  creates the (potentially downsampled) output audio format
     private void getAudioFormat() {
         audioFormat = loadedFile.getAudioOutputFormat();
         bytesPerSampleRead = audioFormat.getSampleSizeInBits() / 8;
