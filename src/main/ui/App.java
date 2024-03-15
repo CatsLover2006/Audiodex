@@ -144,8 +144,8 @@ public class App {
         if (USE_CLI) {
             // Do CLI stuff
         } else {
-            new PopupManager.ErrorPopupFrame("Cannot use Replaygain with currently playing song on this computer."
-                    + "\nSound will not be the correct volume.",
+            new PopupManager.ErrorPopupFrame("Cannot use Replaygain with currently<br>playing song on this computer."
+                    + "<br>Sound will not be the correct volume.",
                     ErrorImageTypes.WARNING, obj -> { });
         }
     }
@@ -159,7 +159,7 @@ public class App {
         if (USE_CLI) {
             // Do CLI stuff
         } else {
-            new PopupManager.ErrorPopupFrame("Cannot play this song at full quality on this system.",
+            new PopupManager.ErrorPopupFrame("Cannot play this song at full<br>quality on this system.",
                     ErrorImageTypes.WARNING, obj -> { });
         }
     }
@@ -171,7 +171,8 @@ public class App {
                     + "org.jaudiotagger.level=OFF").getBytes())));
     }
 
-    public static void main(String[] args) {
+    // Prepares and preloads data
+    public static void startApp(String[] args) {
         audioConverterList = new ArrayList<>();
         if (strArrContains(args, "--cli")) {
             USE_CLI = true;
@@ -350,7 +351,7 @@ public class App {
             private void addRemover(int row) {
                 item = new JMenuItem("Remove song");
                 item.addActionListener(e ->
-                        new ConfirmationPopupFrame("Are you sure you want to remove this song?",
+                        new ConfirmationPopupFrame("Are you sure you want<br>to remove this song?",
                                 ErrorImageTypes.WARNING, popup -> {
                             if ((Boolean) popup.getValue()) {
                                 database.removeSongIndex(row);
@@ -697,6 +698,16 @@ public class App {
             item = new JMenuItem("Save database");
             item.addActionListener(e -> database.saveDatabaseFile());
             menu.add(item);
+            menu.addSeparator();
+            item = new JMenuItem("Database Manager");
+            item.addActionListener(e -> {
+                new ConfirmationPopupFrame("<span style=\"color: red\">Here be dragons...</span><br>Are you "
+                        + "sure you want<br>to continue?",
+                        ErrorImageTypes.HALT, popup -> {
+                    // TODO: Display menu
+                });
+            });
+            menu.add(item);
             mainMenuBar.add(menu);
         }
 
@@ -718,8 +729,8 @@ public class App {
                     playDbFile(structure);
                     updatePlaybackBar();
                 } else {
-                    new PopupManager.ErrorPopupFrame("File is corrupt or in an unsupported format."
-                            + "\nCannot play file.",
+                    new PopupManager.ErrorPopupFrame("File is corrupt or in an<br>unsupported format."
+                            + "<br>Cannot play file.",
                             ErrorImageTypes.ERROR, obj -> { });
                 }
             });

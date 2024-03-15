@@ -40,7 +40,9 @@ public class PopupManager {
     public enum ErrorImageTypes {
         INFO(4),
         ERROR(0),
-        WARNING(1);
+        WARNING(1),
+        HALT(3),
+        CRITICAL(3);
 
         public final int iconIndex;
 
@@ -345,7 +347,7 @@ public class PopupManager {
                 selector.setVisible(false);
                 responder.run(this);
             } else {
-                new ErrorPopupFrame("Cannot select this type of file.", ErrorImageTypes.WARNING,
+                new ErrorPopupFrame("Cannot select this<br>type of file.", ErrorImageTypes.WARNING,
                         temp -> { });
             }
         }
@@ -435,7 +437,7 @@ public class PopupManager {
             selector.add(okButton);
             selector.add(errorImg);
             selector.add(errorText);
-            errorText.setBorder(new EmptyBorder(4,4,4,4));
+            errorText.setBorder(new EmptyBorder(4,4,4,8));
             errorImg.setBorder(new EmptyBorder(4,4,4,4));
         }
 
@@ -469,12 +471,11 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             selector = new JFrame("Error");
-            selector.setResizable(false);
             setupWindowObjects();
             setupWindowLayout();
-            selector.pack();
             selector.setAlwaysOnTop(true);
-            selector.setSize(200, 150);
+            selector.pack();
+            selector.setResizable(false);
             selector.setVisible(true);
             popupList.add(this);
         }
@@ -528,7 +529,7 @@ public class PopupManager {
             selector.add(okButton);
             selector.add(errorImg);
             selector.add(errorText);
-            errorText.setBorder(new EmptyBorder(4,4,4,4));
+            errorText.setBorder(new EmptyBorder(4,4,4,8));
             errorImg.setBorder(new EmptyBorder(4,4,4,4));
         }
 
@@ -558,12 +559,11 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             selector = new JFrame("Confirmation");
-            selector.setResizable(false);
             setupWindowObjects();
             setupWindowLayout();
-            selector.pack();
             selector.setAlwaysOnTop(true);
-            selector.setSize(200, 150);
+            selector.pack();
+            selector.setResizable(false);
             selector.setVisible(true);
             popupList.add(this);
         }
@@ -658,7 +658,6 @@ public class PopupManager {
         private void setup() {
             selector = new JFrame("Converter");
             selector.setResizable(false);
-            selector.setSize(200, 150);
             ExceptionIgnore.ignoreExc(() -> converter.getOptions().forEach((key, value) ->
                     options.put(key, new JComboBox<>(value.toArray()))));
             setupWindowObjects();
