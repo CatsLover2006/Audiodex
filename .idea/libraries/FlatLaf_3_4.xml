@@ -2,11 +2,6 @@
   <library name="FlatLaf 3.4">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/lib/spec/flatlaf-3.4.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/spec/jfa-1.2.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/spec/oshi-core-5.8.6.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/spec/versioncompare-1.4.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/spec/jna-platform-5.10.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/spec/jna-5.10.0.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

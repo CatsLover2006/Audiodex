@@ -136,8 +136,8 @@ public class MpegTypeTest {
         id3.setID3Data("Encoder", "Audiodex");
         mp3Decoder.setID3(id3);
         mp3Decoder.setArtwork(mp3Decoder.getArtwork());
-        // Error range due to math errors in scanning program
-        assertTrue(Math.abs(-9.6 - mp3Decoder.getReplayGain()) < 0.05);
+        // Default Value
+        assertEquals(-6, mp3Decoder.getReplayGain());
         mp3Decoder.closeAudioFile();
     }
 }

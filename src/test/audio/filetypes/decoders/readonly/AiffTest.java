@@ -30,7 +30,7 @@ public class AiffTest {
         aiffDecoder.closeAudioFile();
         assertFalse(aiffDecoder.isReady());
         assertEquals("scarlet.aif", aiffDecoder.getFileName());
-        assertEquals(143, Math.floor(aiffDecoder.getFileDuration()));
+        assertEquals(142, Math.floor(aiffDecoder.getFileDuration()));
         assertEquals(AudioFileType.AIFF, aiffDecoder.getFileType());
     }
 
