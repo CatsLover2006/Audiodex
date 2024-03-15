@@ -526,7 +526,7 @@ public class App {
         // Effects: loads image from data directory (/data/spec or (jar)/data)
         private static SVGDocument loadVector(String filename) throws IOException {
             try {
-                SVGDocument t = loader.load(Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+                SVGDocument t = loader.load(Main.class.getResource("/data/" + filename));
                 if (t == null) {
                     throw new IOException("Unable to load file");
                 }
@@ -543,7 +543,7 @@ public class App {
         // Effects: loads image from data directory (/data/spec or (jar)/data)
         private static BufferedImage loadImage(String filename) throws IOException {
             try {
-                BufferedImage img = ImageIO.read(Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+                BufferedImage img = ImageIO.read(Main.class.getResourceAsStream("/data/" + filename));
                 System.out.println(img);
                 return img;
             } catch (Exception ex) {
@@ -559,7 +559,7 @@ public class App {
         private static Font loadFont(String filename) throws IOException {
             try {
                 return Font.createFont(Font.TRUETYPE_FONT,
-                        Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+                        Main.class.getResourceAsStream("/data/" + filename));
             } catch (Exception ex) {
                 try {
                     return Font.createFont(Font.TRUETYPE_FONT,
@@ -590,6 +590,7 @@ public class App {
             setupMenubar();
             updatePlaybackBar();
             mainWindow.setVisible(true);
+            updateUI();
             GuiLoaderFrame.closeLoadingThread();
         }
 

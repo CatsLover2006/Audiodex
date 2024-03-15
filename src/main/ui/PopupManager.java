@@ -75,7 +75,7 @@ public class PopupManager {
     // Effects: loads image from data directory (/data/spec or (jar)/data)
     private static SVGDocument loadVector(String filename) throws IOException {
         try {
-            SVGDocument t = loader.load(Main.class.getClassLoader().getResourceAsStream("data/" + filename));
+            SVGDocument t = loader.load(Main.class.getResource("/data/" + filename));
             if (t == null) {
                 throw new IOException("Unable to load file");
             }
@@ -91,7 +91,6 @@ public class PopupManager {
 
     // Gets images for popups
     static {
-        ClassLoader classLoader = Main.class.getClassLoader();
         JVectorIcon[] icons;
         try {
             icons = new JVectorIcon[]{

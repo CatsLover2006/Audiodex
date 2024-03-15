@@ -1,15 +1,11 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="AudioDex:jar">
-    <output-path>$PROJECT_DIR$/out/artifacts/AudioDex_jar</output-path>
-    <root id="archive" name="Project-Starter.jar">
+  <artifact type="jar" name="Audiodex:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Audiodex_jar</output-path>
+    <root id="archive" name="Audiodex.jar">
       <element id="module-output" name="Audiodex" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jaad-0.8.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jansi-2.4.2-SNAPSHOT.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/mp3spi-1.9.5.4.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jlayer-1.0.1.4.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/tritonus-share-0.3.12.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/tritonus-remaining-0.3.12-aiffc.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/tritonus-aos-0.3.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jaudiotagger-3.0.2-SNAPSHOT.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/j-ogg-vorbis-1.0.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound-alac-0.3.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound/vavi-commons-sandbox-0.3.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound/commons-beanutils-1.8.0.jar" path-in-jar="/" />
@@ -26,25 +22,29 @@
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound/vavi-sound-nda-1.0.13.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound/vavi-sound-1.0.15.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/java-vorbis-support-1.2.1.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/net.sourceforge.lame-3.98.4.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jaudiotagger-3.0.2-SNAPSHOT.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/json-20210307.jar" path-in-jar="/" />
-      <element id="directory" name="data">
-        <element id="dir-copy" path="$PROJECT_DIR$/data/spec" />
-      </element>
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/JustFLAC-0.0.1-SNAPSHOT.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/flatlaf-3.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/commons-lang3-3.14.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jSystemThemeDetector-3.8.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jsvg-1.4.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/tritonus-remaining-0.3.12-aiffc.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/tritonus-aos-0.3.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/tritonus-share-0.3.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/flatlaf-3.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/json-20210307.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/JustFLAC-0.0.1-SNAPSHOT.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/slf4j-api-2.0.12.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/slf4j-simple-2.0.12.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jaad-0.8.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/mp3spi-1.9.5.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jlayer-1.0.1.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jSystemThemeDetector-3.8.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/oshi-core-5.8.6.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/versioncompare-1.4.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jna-platform-5.10.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jna-5.10.0.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jfa-1.2.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jsvg-1.4.0.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/j-ogg-vorbis-1.0.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/net.sourceforge.lame-3.98.4.jar" path-in-jar="/" />
+      <element id="directory" name="data">
+        <element id="dir-copy" path="$PROJECT_DIR$/data/spec" />
+      </element>
     </root>
   </artifact>
 </component>
