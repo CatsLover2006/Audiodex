@@ -35,7 +35,7 @@ public class JVectorIcon implements Icon {
                 render.setRGB(workX, workY, rgba);
             }
         }
-        graphics.drawImage(render, x, y, null);
+        graphics.drawImage(render, 0, 0, null);
         graphics.dispose();
     }
 
