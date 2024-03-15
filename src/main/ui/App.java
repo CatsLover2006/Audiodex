@@ -171,7 +171,7 @@ public class App {
                     + "org.jaudiotagger.level=OFF").getBytes())));
     }
 
-    // Prepares and preloads data
+    // Prepares and loads data
     public static void startApp(String[] args) {
         audioConverterList = new ArrayList<>();
         if (strArrContains(args, "--cli")) {
@@ -829,7 +829,6 @@ public class App {
         private static final JButton skipButton;
         private static final JButton prevButton;
         private static final JButton playButton;
-
         private static final JVectorIcon skip;
         private static final JVectorIcon prev;
         private static final JVectorIcon placeholder;
@@ -1122,7 +1121,7 @@ public class App {
                 ExceptionIgnore.ignoreExc(() -> join(millis, nanos));
             }
 
-            // Effects: plays audio in file loadedFile
+            // Effects: updates the playback status bar (also in charge of the converter view bc why not)
             @Override
             public void run() {
                 while (run) {
@@ -1139,6 +1138,7 @@ public class App {
 
     // public interface to the private CLI class
     public static class CliInterface {
+        // Public Cli.doPlaybackStatusWrite()
         public static void updatePlaybackStatus() {
             if (notMain) {
                 return;
@@ -1528,6 +1528,8 @@ public class App {
             AnsiConsole.out().print(Ansi.ansi().fgDefault());
         } //*/// Debugging
 
+        // Modifies: database
+        // Effects:  passes a file into the database addFileToSongDatabase() function, adding it
         private static void addDatabaseFile(Scanner scanner) {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
             doPlaybackStatusWrite();
@@ -1548,6 +1550,8 @@ public class App {
             }
         }
 
+        // Modifies: database
+        // Effects:  passes a directory into the database addDirToSongDatabase() function, adding it
         private static void addDatabaseDir(Scanner scanner) {
             AnsiConsole.out().print(Ansi.ansi().eraseScreen());
             doPlaybackStatusWrite();

@@ -133,6 +133,7 @@ public class PopupManager {
         void run(Popup popup);
     }
 
+    // popup interface (lambda responder)
     public interface Popup {
         Object getValue();
 

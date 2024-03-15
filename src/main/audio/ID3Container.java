@@ -66,11 +66,13 @@ public class ID3Container {
         return new JSONObject(id3data);
     }
 
+    // Effects: Gets hashcode
     @Override
     public int hashCode() {
         return Objects.hash(id3data.hashCode(), id3data.size());
     }
 
+    // Effects: compares hashcodes as there's too much else to compare
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof ID3Container) {
