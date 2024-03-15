@@ -3,9 +3,7 @@
 ***NOTE 1***: This project expects you have music files to play. Thanks to non-copyright songs, I am able to include a full song for tests; that said, since lossy codecs aren't going to 100% match their lossless counterparts, I'm going to have to add one additional *.wav file for every codec. For the currently implemented tests (all but MP2) this has totaled to around 340MB. No doubt by the time I finish up with tests and adding encoders it'll be even larger.
 
 ## AudioDex 
-![Full GUI Preview on macOS Sonoma](./previewgui_sonoma_full.png)<br>
-![GUI Preview on Windows 7](./previewgui_win7.PNG)<br>
-![GUI Preview on macOS Sonoma](./previewgui_sonoma.png)<br>
+![GUI Preview](./previewgui.png)<br>
 An audiofile (hehe get it?) manager, which can play audio and reencode audio into different formats.
 
 ### Plans
@@ -21,11 +19,10 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [x] ID3 tag management
   - [x] Read ID3 tags
   - [x] Write ID3 tags
-    - Tested using AIFF re-encoding
-    - Will add full editing capability during GUI stage (aka soon)
   - [x] Read album art
     - GUI resizes the artwork on separate thread to speed up GUI loading (relevant on my 2008 machine)
   - [x] Write album art
+    - Works in encoders, will add in GUI options later
 - [x] All this, preferably without requiring native binaries
   - I'm going to use libraries to handle decoding and encoding
   
@@ -68,8 +65,8 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - Similar situation for detection in the OGG container, but there's only one supported playback mode within this container so it's just to avoid throwing errors
 - Gain system is partially dependent on format and system
   - No way to fix this, it's entirely dependent on Java and OS implementation
-- Sometimes hi-res audio, 24 bit samples, will fail to play
-  - Entirely OS and JDK dependent
+- ~~Sometimes hi-res audio, 24 bit samples, will fail to play~~
+  - ~~Entirely OS and JDK dependent~~ Will pop up a quality error if it can't play (and then crudely discard bits to make it work)
   - Theoretically possible for 16 bit samples, but no implementation is going to gut that functionality (that's the standard for... EVERYTHING)
 - If audio encodes too fast, it ends up skipping some code (AudioEncoder.encodedPercent never is checked during encoding)<br>That said you'd have to decode an ALAC file at over 1400 times realtime, which... good luck.
 
