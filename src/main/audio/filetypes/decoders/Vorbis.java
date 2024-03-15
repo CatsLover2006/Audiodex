@@ -159,10 +159,10 @@ public class Vorbis implements AudioDecoder {
     //          will return false is no file is loaded
     @Override
     public boolean moreSamples() {
-        if (oggStream == null || decoded == null) {
-            return true;
+        if (oggStream == null || decoded == null || !decoded.isOpen()) {
+            return false;
         }
-        return oggStream.getMaximumGranulePosition() <= decoded.getCurrentGranulePosition();
+        return oggStream.getMaximumGranulePosition() > oggStream.getTime();
     }
 
     // Effects: returns decoded ID3 data
