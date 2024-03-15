@@ -22,6 +22,7 @@ public class MP3 implements AudioEncoder {
     private int bitrate = 320;
     private boolean useVBR = false;
     private boolean stereo = false;
+    private int qualitySetting = Lame.QUALITY_HIGHEST;
 
     // Effects: Tells the audio encoder where we're encoding from
     @Override
@@ -43,15 +44,35 @@ public class MP3 implements AudioEncoder {
             options.put("Stereo", valid);
         }
         decoder.closeAudioFile();
-        valid = new ArrayList<>();
+        valid = getBitrateArray();
+        options.put("Bitrate", valid);
+        valid = getQualityArray();
+        options.put("Quality", valid);
+        return options;
+    }
+
+    // Effects: helper to get bitrate list
+    private List<String> getBitrateArray() {
+        List<String> valid = new ArrayList<>();
         int[] bitrates = {
                 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160
         };
         for (int bitrate : bitrates) {
             valid.add(bitrate + " kbps/channel");
         }
-        options.put("Bitrate", valid);
-        return options;
+        return valid;
+    }
+
+    // Effects: helper to get bitrate list
+    private List<String> getQualityArray() {
+        List<String> valid = new ArrayList<>();
+        String[] qualities = {
+                "Lowest", "Lower", "Low", "Medium", "High", "Highest"
+        };
+        for (String quality : qualities) {
+            valid.add(quality);
+        }
+        return valid;
     }
 
     // Modifies: this
@@ -66,6 +87,28 @@ public class MP3 implements AudioEncoder {
         } //*/// Critical bug found in library
         String[] bitrate = encoderSpecificValues.get("Bitrate").split(" ");
         this.bitrate = Integer.parseInt(bitrate[0]);
+        qualitySetting = convertQuality(encoderSpecificValues.get("Quality"));
+    }
+
+    // Effects: converts quality string to quality index
+    private int convertQuality(String in) {
+        if (in == null) {
+            return Lame.QUALITY_HIGHEST;
+        }
+        switch (in) {
+            case "Lowest":
+                return Lame.QUALITY_LOWEST;
+            case "Lower":
+                return Lame.QUALITY_LOW;
+            case "Low":
+                return Lame.QUALITY_MIDDLE_LOW;
+            case "Medium":
+                return Lame.QUALITY_MIDDLE;
+            case "High":
+                return Lame.QUALITY_HIGH;
+            default:
+                return Lame.QUALITY_HIGHEST;
+        }
     }
 
     // Modifies: filesystem
@@ -76,7 +119,7 @@ public class MP3 implements AudioEncoder {
             decoder.prepareToPlayAudio();
             AudioFormat format = decoder.getAudioOutputFormat();
             LameEncoder encoder = new LameEncoder(format, bitrate * (stereo ? 2 : 1),
-                    stereo ? MPEGMode.STEREO : MPEGMode.MONO, Lame.QUALITY_HIGHEST, useVBR);
+                    stereo ? MPEGMode.STEREO : MPEGMode.MONO, qualitySetting, useVBR);
             AudioSample sample;
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             int written;

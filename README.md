@@ -63,8 +63,9 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - Doesn't apply to the MP3 audio decoder, which seems to cache the entire file compared to the others streaming the audio off disk
 - ALAC vs AAC detection is weird since they share their container, there's no fix for this
   - Similar situation for detection in the OGG container, but there's only one supported playback mode within this container so it's just to avoid throwing errors
-- Gain system is partially dependent on format and system
-  - No way to fix this, it's entirely dependent on Java and OS implementation
+- ~~Gain system is partially dependent on format and system~~
+  - ~~No way to fix this, it's entirely dependent on Java and OS implementation~~
+  - Pops up a quality error if it can't use gain (and then it'll crudely discard bits to make it work)
 - ~~Sometimes hi-res audio, 24 bit samples, will fail to play~~
   - ~~Entirely OS and JDK dependent~~ Will pop up a quality error if it can't play (and then crudely discard bits to make it work)
   - Theoretically possible for 16 bit samples, but no implementation is going to gut that functionality (that's the standard for... EVERYTHING)

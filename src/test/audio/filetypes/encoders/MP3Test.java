@@ -34,6 +34,7 @@ public class MP3Test {
         options.put("Bitrate", "160 kbps");
         options.put("VBR", "No");
         options.put("Stereo", "Yes");
+        options.put("Quality", "Lowest"); // Absurdly big speedup
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertEquals(0, encoder.encodedPercent());
         assertNotNull(encoder.getEncoderSpecificSelectors());
