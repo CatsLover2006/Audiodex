@@ -40,7 +40,6 @@ import javax.swing.table.TableCellRenderer;
 import ui.PopupManager.*;
 
 import static java.lang.Math.floor;
-import static java.lang.Math.random;
 import static java.lang.Thread.*;
 
 // Main application class
@@ -275,7 +274,7 @@ public class App {
     }
 
     // GUI mode
-    private static class Gui {
+    static class Gui {
 
         private static JFrame mainWindow;
         private static JFrame activeConversionsView = new JFrame("Active Conversions");
@@ -315,8 +314,8 @@ public class App {
             ALL
         }
 
-        private static final LoopType loop = LoopType.NO;
-        private static final boolean shuffle = false;
+        private static LoopType loop = LoopType.NO;
+        private static boolean shuffle = false;
 
         // Song right click menu
         private static class RightClickSongMenu extends JPopupMenu {
@@ -628,8 +627,8 @@ public class App {
             }
             if (songQueue.isEmpty()) {
                 if (loop == LoopType.ALL) {
+                    playDbFile(database.getAudioFile(0));
                     queueFrom(0);
-                    playNext();
                 } else {
                     setPlaybackBarLength(-1);
                     played.addFirst(nowPlaying);
@@ -666,14 +665,8 @@ public class App {
             }
             // If song queue isn't empty we're playing SOMETHING
             played.addFirst(nowPlaying);
-            if (shuffle) {
-                int i = (int)(random() * songQueue.size()) % songQueue.size();
-                playDbFile(songQueue.get(i));
-                songQueue.remove(i);
-            } else {
-                playDbFile(songQueue.getFirst());
-                songQueue.removeFirst();
-            }
+            playDbFile(songQueue.getFirst());
+            songQueue.removeFirst();
             updatePlaybackBar();
         }
 
@@ -705,7 +698,7 @@ public class App {
                 new ConfirmationPopupFrame("<span style=\"color: red\">Here be dragons...</span><br>Are you "
                         + "sure you want<br>to continue?",
                         ErrorImageTypes.HALT, popup -> {
-                    // TODO: Display menu
+                    DatabaseManagerFrame databaseManagerFrame = new DatabaseManagerFrame(database);
                 });
             });
             menu.add(item);
@@ -780,6 +773,8 @@ public class App {
             makeButtonTransparent(skipButton);
             makeButtonTransparent(prevButton);
             makeButtonTransparent(playButton);
+            makeButtonTransparent(shuffleButton);
+            makeButtonTransparent(loopButton);
         }
 
         // Modifies: button
@@ -829,62 +824,118 @@ public class App {
         private static final JButton skipButton;
         private static final JButton prevButton;
         private static final JButton playButton;
+        private static final JButton shuffleButton;
+        private static final JButton loopButton;
         private static final JVectorIcon skip;
         private static final JVectorIcon prev;
         private static final JVectorIcon placeholder;
         private static final JVectorIcon play;
         private static final JVectorIcon pause;
+        private static final JVectorIcon noLoop;
+        private static final JVectorIcon loopOne;
+        private static final JVectorIcon loopAll;
+        private static final JVectorIcon noShuffle;
+        private static final JVectorIcon shuffleOn;
 
-        // Prepare elements
+        // Prepare visual elements
         static {
+            fileLabel.putClientProperty("FlatLaf.styleClass", "h3.regular");
+            albumLabel.putClientProperty("FlatLaf.styleClass", "medium");
+            leftPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
+            rightPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
             JVectorIcon pauseInit;
             JVectorIcon playInit;
             JVectorIcon prevInit;
             JVectorIcon skipInit;
             JVectorIcon placeholderInit;
-            fileLabel.putClientProperty("FlatLaf.styleClass", "h3.regular");
-            albumLabel.putClientProperty("FlatLaf.styleClass", "medium");
-            leftPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
-            rightPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
+            JVectorIcon shuffleOnInit;
+            JVectorIcon noShuffleInit;
+            JVectorIcon loopAllInit;
+            JVectorIcon loopOneInit;
+            JVectorIcon noLoopInit;
             try {
-                placeholderInit = new JVectorIcon(loadVector("music.svg"), 48, 48);
+                placeholderInit = new JVectorIcon(loadVector("music.svg"), 64, 64);
                 skipInit = new JVectorIcon(loadVector("forward.svg"), 24, 16);
                 prevInit = new JVectorIcon(loadVector("backward.svg"), 24, 16);
                 playInit = new JVectorIcon(loadVector("play.svg"), 48, 32);
                 pauseInit = new JVectorIcon(loadVector("pause.svg"), 48, 32);
+                noLoopInit = new JVectorIcon(loadVector("subdirectory.svg"), 24, 16);
+                loopOneInit = new JVectorIcon(loadVector("flip-backward.svg"), 24, 16);
+                loopAllInit = new JVectorIcon(loadVector("loop.svg"), 24, 16);
+                noShuffleInit = new JVectorIcon(loadVector("forward-arrow.svg"), 24, 16);
+                shuffleOnInit = new JVectorIcon(loadVector("shuffle.svg"), 24, 16);
             } catch (IOException e) {
                 e.printStackTrace();
-                placeholderInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 48);
+                placeholderInit = new JVectorIcon(new SVGDocument(new SVG()), 64, 64);
                 skipInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
                 prevInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
                 playInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 32);
                 pauseInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 32);
+                noLoopInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
+                loopOneInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
+                loopAllInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
+                noShuffleInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
+                shuffleOnInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
             }
+            shuffleOn = shuffleOnInit;
+            noShuffle = noShuffleInit;
+            loopAll = loopAllInit;
+            loopOne = loopOneInit;
+            noLoop = noLoopInit;
             placeholder = placeholderInit;
             pause = pauseInit;
             play = playInit;
             prev = prevInit;
             skip = skipInit;
-            Border emptyBorder = BorderFactory.createEmptyBorder();
+        }
+
+        // Set up buttons
+        static {
             skipButton = new JButton(skip);
             skipButton.addActionListener(e -> playNext());
             skipButton.setVerticalAlignment(SwingConstants.TOP);
             skipButton.setMaximumSize(new Dimension(24, 16));
             skipButton.setMinimumSize(new Dimension(24, 16));
-            skipButton.setMargin(new Insets(2, 2, 2, 2));
             skipButton.setEnabled(false);
             prevButton = new JButton(prev);
+            prevButton.addActionListener(e -> playPrevious());
             prevButton.setVerticalAlignment(SwingConstants.TOP);
             prevButton.setMaximumSize(new Dimension(24, 16));
             prevButton.setMinimumSize(new Dimension(24, 16));
-            prevButton.setMargin(new Insets(2, 2, 2, 2));
             prevButton.setEnabled(false);
             playButton = new JButton(play);
             playButton.setVerticalAlignment(SwingConstants.TOP);
             playButton.setMaximumSize(new Dimension(48, 32));
             playButton.setMinimumSize(new Dimension(48, 32));
             playButton.addActionListener(e -> togglePlayback());
-            playButton.setMargin(new Insets(2, 2, 2, 2));
+            shuffleButton = new JButton(noShuffle);
+            shuffleButton.addActionListener(e -> {
+                toggleShuffle();
+                shuffleButton.setIcon(shuffle ? shuffleOn : noShuffle);
+            });
+            shuffleButton.setVerticalAlignment(SwingConstants.TOP);
+            shuffleButton.setMaximumSize(new Dimension(24, 16));
+            shuffleButton.setMinimumSize(new Dimension(24, 16));
+            loopButton = new JButton(noLoop);
+            loopButton.addActionListener(e -> {
+                switch (loop) {
+                    case NO:
+                        loop = LoopType.ALL;
+                        loopButton.setIcon(loopAll);
+                        break;
+                    case ALL:
+                        loop = LoopType.ONE;
+                        loopButton.setIcon(loopOne);
+                        break;
+                    case ONE:
+                        loop = LoopType.NO;
+                        loopButton.setIcon(noLoop);
+                        break;
+                }
+            });
+            loopButton.setVerticalAlignment(SwingConstants.TOP);
+            loopButton.setMaximumSize(new Dimension(24, 16));
+            loopButton.setMinimumSize(new Dimension(24, 16));
         }
 
         // Modifies: this
@@ -903,13 +954,19 @@ public class App {
             controlsView.add(skipButton);
             controlsView.add(prevButton);
             controlsView.add(playButton);
+            controlsView.add(shuffleButton);
+            controlsView.add(loopButton);
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
-            constraints.gridy = 0;
             constraints.gridx = 1;
+            constraints.gridy = 2;
+            layout.setConstraints(loopButton, constraints);
+            constraints.gridy = 0;
             layout.setConstraints(skipButton, constraints);
             constraints.gridx = 0;
             layout.setConstraints(prevButton, constraints);
+            constraints.gridy = 2;
+            layout.setConstraints(shuffleButton, constraints);
             constraints.gridy = 1;
             constraints.gridwidth = 2;
             constraints.weightx = 1;
@@ -955,11 +1012,56 @@ public class App {
 
         // Modifies: this
         // Effects:  queues songs in the order of the list from the selected element
+        //           also starts first song
         private static void queueFrom(int index) {
-            playDbFile(database.getAudioFile(index));
+            int myIndex = index;
+            new Thread(() -> {
+                playDbFile(database.getAudioFile(myIndex));
+                updatePlaybackBar();
+            }).start();
+            queueFromNoStart(index);
+        }
+
+        // Modifies: this
+        // Effects:  queues songs in the order of the list from the selected element
+        private static void queueFromNoStart(int index) {
+            int myIndex = index;
             songQueue.clear();
-            for (index++; index < database.audioListSize(); index++) {
-                songQueue.addLast(database.getAudioFile(index));
+            if (shuffle) {
+                for (index = 0; index < database.audioListSize(); index++) {
+                    if (index == myIndex) {
+                        continue;
+                    }
+                    songQueue.add((int)Math.floor(Math.random() * songQueue.size()), database.getAudioFile(index));
+                }
+            } else {
+                for (index++; index < database.audioListSize(); index++) {
+                    songQueue.addLast(database.getAudioFile(index));
+                }
+            }
+        }
+
+        // Effects: toggles shuffle function
+        //          also reloads song queue
+        private static void toggleShuffle() {
+            shuffle = !shuffle;
+            if (nowPlaying != null) {
+                for (int i = 0; i < database.audioListSize(); i++) {
+                    if (nowPlaying.equals(database.getAudioFile(i))) {
+                        queueFromNoStart(i);
+                        updateControls();
+                        return;
+                    }
+                }
+            }
+            for (AudioDataStructure queued : songQueue) {
+                for (int i = 0; i < database.audioListSize(); i++) {
+                    if (queued.equals(database.getAudioFile(i))) {
+                        queueFromNoStart(i);
+                        updateControls();
+                        return;
+                    }
+                }
             }
         }
 
@@ -997,22 +1099,12 @@ public class App {
                 musicArt.setIcon(placeholder);
                 BufferedImage bufferedImage = playbackManager.getArtwork();
                 if (bufferedImage != null) {
-                    int newWidth = (int)(Math.min(48.0 / bufferedImage.getWidth(), 48.0 / bufferedImage.getHeight())
-                            * bufferedImage.getWidth());
-                    int newHeight = (int)(Math.min(48.0 / bufferedImage.getWidth(), 48.0 / bufferedImage.getHeight())
-                            * bufferedImage.getHeight());
-                    BufferedImage resized = new BufferedImage(newWidth, newHeight, bufferedImage.getType());
-                    Graphics2D g = resized.createGraphics();
-                    g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                            RenderingHints.VALUE_ANTIALIAS_ON);
-                    g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                            RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                    g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
-                            RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-                    g.drawImage(bufferedImage, 0, 0, newWidth, newHeight, 0, 0, bufferedImage.getWidth(),
-                            bufferedImage.getHeight(), null);
-                    g.dispose();
-                    musicArt.setIcon(new ImageIcon(resized));
+                    int newWidth = (int)(Math.min(64.0 / bufferedImage.getWidth(),
+                            64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth());
+                    int newHeight = (int)(Math.min(64.0 / bufferedImage.getWidth(),
+                            64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight());
+                    musicArt.setIcon(new ImageIcon(bufferedImage.getScaledInstance(newWidth, newHeight,
+                            Image.SCALE_AREA_AVERAGING)));
                     musicArt.setPreferredSize(new Dimension(newWidth, newHeight));
                 }
             }

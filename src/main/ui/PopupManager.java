@@ -42,7 +42,7 @@ public class PopupManager {
         ERROR(0),
         WARNING(1),
         HALT(3),
-        CRITICAL(3);
+        CRITICAL(2);
 
         public final int iconIndex;
 
@@ -791,30 +791,15 @@ public class PopupManager {
                     musicArt.setIcon(MUSIC_ICON);
                     BufferedImage bufferedImage = (BufferedImage) fileScanner.getArtwork().getImage();
                     if (bufferedImage != null) {
-                        int newWidth = (int)(Math.min(48.0 / bufferedImage.getWidth(), 48.0 / bufferedImage.getHeight())
-                                * bufferedImage.getWidth());
+                        int newWidth = (int)(Math.min(48.0 / bufferedImage.getWidth(),
+                                48.0 / bufferedImage.getHeight()) * bufferedImage.getWidth());
                         int newHeight = (int)(Math.min(48.0 / bufferedImage.getWidth(),
                                 48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight());
-                        BufferedImage resized = new BufferedImage(newWidth, newHeight, bufferedImage.getType());
-                        Graphics2D g = resized.createGraphics();
-                        setGraphicsHints(g);
-                        g.drawImage(bufferedImage, 0, 0, newWidth, newHeight, 0, 0, bufferedImage.getWidth(),
-                                bufferedImage.getHeight(), null);
-                        g.dispose();
-                        musicArt.setIcon(new ImageIcon(resized));
+                        musicArt.setIcon(new ImageIcon(bufferedImage.getScaledInstance(newWidth, newHeight,
+                                Image.SCALE_AREA_AVERAGING)));
                         musicArt.setPreferredSize(new Dimension(newWidth, newHeight));
                     }
                 });
-            }
-
-            // Effects: Sets graphics hints
-            private void setGraphicsHints(Graphics2D g) {
-                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                        RenderingHints.VALUE_ANTIALIAS_ON);
-                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                        RenderingHints.VALUE_INTERPOLATION_BICUBIC);
-                g.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION,
-                        RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
             }
         }
 
