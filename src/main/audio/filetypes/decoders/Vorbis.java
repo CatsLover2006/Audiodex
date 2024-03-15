@@ -159,7 +159,7 @@ public class Vorbis implements AudioDecoder {
     //          will return false is no file is loaded
     @Override
     public boolean moreSamples() {
-        if (oggStream == null) {
+        if (oggStream == null || decoded == null) {
             return true;
         }
         return oggStream.getMaximumGranulePosition() <= decoded.getCurrentGranulePosition();
