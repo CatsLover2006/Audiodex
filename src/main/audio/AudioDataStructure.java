@@ -4,7 +4,6 @@ import javax.sound.sampled.AudioFormat;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 
 import static java.io.File.separatorChar;
 
@@ -30,6 +29,7 @@ public class AudioDataStructure {
     private final AudioFileType audioFileType;
     private ID3Container id3Data;
     private final long fileSize;
+    private boolean qualityErrorOnThis = false;
 
     // Requires: filename points to a file (obviously)
     // Modifies: this
@@ -102,6 +102,16 @@ public class AudioDataStructure {
     // Effects: gets filetype
     public AudioFileType getAudioFileType() {
         return audioFileType;
+    }
+
+    // Effects: renamed isQualityErrorOnThis()
+    public boolean qualityErrorAlreadyOccured() {
+        return qualityErrorOnThis;
+    }
+
+    // Effects: renamed setQualityErrorOnThis(true)
+    public void markQualityErrorOccured() {
+        qualityErrorOnThis = true;
     }
 
     // Effects: gets filesize

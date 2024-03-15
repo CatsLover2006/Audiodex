@@ -32,7 +32,6 @@ import org.fusesource.jansi.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -158,9 +157,13 @@ public class App {
         if (USE_CLI) {
             // Do CLI stuff
         } else {
-            new PopupManager.ErrorPopupFrame("Cannot play this song at full<br>quality on this system.",
-                    ErrorImageTypes.WARNING, obj -> { });
+            if (!nowPlaying.qualityErrorAlreadyOccured()) {
+                new PopupManager.ErrorPopupFrame("Cannot play this song at full<br>quality on this system.",
+                        ErrorImageTypes.WARNING, obj -> {
+                });
+            }
         }
+        nowPlaying.markQualityErrorOccured();
     }
 
     static { // Disable jaudiotagger (library) logging
@@ -1171,11 +1174,11 @@ public class App {
         private static void playDbFile(AudioDataStructure audioDataStructure) {
             File f = new File(audioDataStructure.getFilename());
             if (f.isFile()) {
+                nowPlaying = audioDataStructure;
                 playbackManager.loadAudio(f.getAbsolutePath());
                 setPlaybackBarLength(playbackManager.getFileDuration());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
-                nowPlaying = audioDataStructure;
                 id3 = playbackManager.getID3();
                 audioDataStructure.updateID3(id3); // Update on file load
             } else {
@@ -1704,13 +1707,13 @@ public class App {
             if (f.isFile()) {
                 visualizerThread.killThread();
                 visualizerThread.safeJoin();
+                nowPlaying = new AudioDataStructure(f.getAbsolutePath());
                 playbackManager.loadAudio(f.getAbsolutePath());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
                 id3 = playbackManager.getID3();
                 visualizerThread = new PlaybackThread();
                 visualizerThread.start();
-                nowPlaying = new AudioDataStructure(f.getAbsolutePath());
             } else {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
                 wait(1000);
@@ -1924,10 +1927,10 @@ public class App {
             if (f.isFile()) {
                 visualizerThread.killThread();
                 visualizerThread.safeJoin();
+                nowPlaying = audioDataStructure;
                 playbackManager.loadAudio(f.getAbsolutePath());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
-                nowPlaying = audioDataStructure;
                 id3 = playbackManager.getID3();
                 audioDataStructure.updateID3(id3); // Update on file load
                 visualizerThread = new PlaybackThread();
