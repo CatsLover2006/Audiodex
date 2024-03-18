@@ -33,16 +33,19 @@ import org.fusesource.jansi.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
 import ui.PopupManager.*;
 
+import static java.io.File.separatorChar;
 import static java.lang.Math.floor;
 import static java.lang.Thread.*;
 
 // Main application class
 public class App {
+    private static FileSystemView fileSystemView = FileSystemView.getFileSystemView();
     private static boolean notMain = true;
     private static OsThemeDetector detector;
     private static ID3Container id3;
@@ -359,7 +362,7 @@ public class App {
                                 database.removeSongIndex(row);
                                 musicList.updateUI();
                             }
-                        }));
+                        }, "Yes", "No"));
                 this.add(item);
             }
 
@@ -683,6 +686,12 @@ public class App {
             JMenuItem item = new JMenuItem("Play file");
             item.addActionListener(e -> playArbitraryFile());
             menu.add(item);
+            item = new JMenuItem("Settings");
+            item.addActionListener(e ->
+                    new SettingsFrame(database.getSettings(), new SettingsFrame.Responder[]{
+                            () -> playbackManager.setReplayGain(database.getSettings().doSoundCheck())
+                    }));
+            menu.add(item);
             mainMenuBar.add(menu);
             menu = new JMenu("Database");
             item = new JMenuItem("Add file to database");
@@ -699,13 +708,43 @@ public class App {
             item = new JMenuItem("Database Manager");
             item.addActionListener(e -> {
                 new ConfirmationPopupFrame("<span style=\"color: red\">Here be dragons...</span><br>Are you "
-                        + "sure you want<br>to continue?",
+                        + "<i>sure</i> you<br>want to continue?",
                         ErrorImageTypes.HALT, popup -> {
                     DatabaseManagerFrame databaseManagerFrame = new DatabaseManagerFrame(database);
-                });
+                }, "Yes", "No");
+            });
+            menu.add(item);
+            item = new JMenuItem("Change Database");
+            item.addActionListener(e -> {
+                if (database.beenModified()) {
+                    new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
+                            + "Save before loading?", ErrorImageTypes.WARNING, popup -> {
+                                database.saveDatabaseFile();
+                                moveDbFolder();
+                            }, popup -> moveDbFolder(), "Yes", "No");
+                } else {
+                    moveDbFolder();
+                }
             });
             menu.add(item);
             mainMenuBar.add(menu);
+        }
+
+        // Modifies: this
+        // Effects:  moves database folder and attempts to load file
+        private static void moveDbFolder() {
+            new FilePopupFrame(fileSystemView.getDefaultDirectory().getAbsolutePath(),
+                    new String[]{".folder", ".empty"}, popup -> {
+                String path = new File((String) popup.getValue()).getAbsolutePath();
+                if (!path.endsWith(String.valueOf(separatorChar))) {
+                    path += separatorChar;
+                }
+                GuiLoaderFrame.createLoadingThread();
+                database.setUserDir(path);
+                database.loadDatabase();
+                updateGuiList();
+                GuiLoaderFrame.closeLoadingThread();
+            });
         }
 
         // Modifies: this
@@ -719,7 +758,7 @@ public class App {
 
         // Effects: adds file to database via popup
         private static void playArbitraryFile() {
-            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
+            FilePopupFrame filePopupFrame = new FilePopupFrame(fileSystemView.getDefaultDirectory().getAbsolutePath(),
                     AudioFileLoader.KNOWN_FILETYPES, popup -> {
                 AudioDataStructure structure = new AudioDataStructure((String) popup.getValue());
                 if (!structure.isEmpty()) {
@@ -735,7 +774,7 @@ public class App {
 
         // Effects: adds file to database via popup
         private static void addFile() {
-            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
+            FilePopupFrame filePopupFrame = new FilePopupFrame(fileSystemView.getDefaultDirectory().getAbsolutePath(),
                     AudioFileLoader.KNOWN_FILETYPES, popup -> {
                         GuiLoaderFrame.createLoadingThread();
                         database.addFileToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
@@ -748,7 +787,7 @@ public class App {
 
         // Effects: adds directory to database via popup
         private static void addDir() {
-            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"),
+            FilePopupFrame filePopupFrame = new FilePopupFrame(fileSystemView.getDefaultDirectory().getAbsolutePath(),
                     new String[]{".folder"}, popup -> {
                 GuiLoaderFrame.createLoadingThread();
                 database.addDirToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());

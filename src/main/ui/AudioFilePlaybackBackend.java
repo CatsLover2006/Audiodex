@@ -80,7 +80,7 @@ public class AudioFilePlaybackBackend {
             line.stop();
             loadedFile.closeAudioFile();
             loadedFile = null;
-            // This might be cursed, but whatever
+            System.gc(); // Clean up potential decoder garbage
             new FinishedSongThread().start();
             decoderThread = null;
         }

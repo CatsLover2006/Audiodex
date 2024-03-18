@@ -21,6 +21,7 @@ public class DataManager {
     private ApplicationSettings settings;
     private long dbIndex;
     private String userDir;
+    private boolean modified = false;
 
     // Modifies: this
     // Effects:  fileList is empty, loads database from (user home directory)/audiodex
@@ -163,6 +164,7 @@ public class DataManager {
             return;
         }
         songFilelist.add(data);
+        modified = true;
     }
 
     // Modifies: this
@@ -189,6 +191,7 @@ public class DataManager {
     // Effects:  loads database index from (userDir)/audiodex.dbindex and reloads database
     public void loadDatabase() {
         String filename = userDir + "index.audiodex.db";
+        songFilelist.clear();
         try {
             dbIndex = Long.parseLong(readFile(filename), 36);
         } catch (Exception e) {
@@ -198,6 +201,11 @@ public class DataManager {
         }
         System.out.println("Successfully loaded database index: " + dbIndex);
         loadDatabaseFile();
+    }
+
+    // Effects: returns if database has been modified since last save
+    public boolean beenModified() {
+        return modified;
     }
 
     // Requires: file exists
@@ -220,10 +228,10 @@ public class DataManager {
                 return;
             }
         }
-        songFilelist.clear();
         for (Object object : array) {
             songFilelist.add(AudioDataStructure.decode((JSONObject) object));
         }
+        modified = false;
     }
 
     // Effects: returns the ApplicationSettings struct
@@ -245,7 +253,11 @@ public class DataManager {
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         String toSave = getDatasave().toString();
         FileManager.writeToFile(filename, toSave);
-        return saveDatabaseIndex();
+        if (saveDatabaseIndex()) {
+            modified = false;
+            return true;
+        }
+        return false;
     }
 
     // Effects: returns a JSONObject to be saved
