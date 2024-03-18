@@ -268,6 +268,7 @@ public class PopupManager {
             setupFiles();
             selector.add(fileList);
             selector.add(file);
+            selector.add(folderLook);
             selector.add(openButton);
         }
 
@@ -341,7 +342,8 @@ public class PopupManager {
                     return "..";
                 }
                 if (rowIndex == 0) {
-                    return getFileData(new File(location).getParentFile(), columns[columnIndex]);
+                    Object fd = getFileData(new File(location).getParentFile(), columns[columnIndex]);
+                    return Objects.requireNonNullElse(fd, "");
                 }
                 return getFileData(dirList[rowIndex - 1], columns[columnIndex]);
             }
@@ -364,23 +366,17 @@ public class PopupManager {
         }
 
         // Effects: gets the file data for the file list
-        private static Object getFileData(File file, String type) {
+        private Object getFileData(File file, String type) {
             switch (type) {
                 case "Filename":
+                    if (inWindowsDriveList) {
+                        return file.getPath();
+                    }
                     return file.getName();
                 case "Last Modified":
                     return new Date(file.lastModified()).toString();
                 case "Filetype":
-                    if (!file.exists()) {
-                        return ".empty";
-                    }
-                    if (file.isDirectory() && getFileExtensionLoc(file.getPath()) == -1) {
-                        return ".folder";
-                    }
-                    if (getFileExtensionLoc(file.getPath()) == -1) {
-                        return "file";
-                    }
-                    return file.getName().substring(getFileExtensionLoc(file.getName()) + 1);
+                    return getFileExt(file);
                 case "Icon":
                     return FILE_BROWSER_IMAGES[getIcon(file)];
                 default:
@@ -388,8 +384,22 @@ public class PopupManager {
             }
         }
 
+        // Effects: gets file extension
+        private String getFileExt(File file) {
+            if (!file.exists()) {
+                return ".empty";
+            }
+            if (file.isDirectory() && getFileExtensionLoc(file.getPath()) == -1) {
+                return ".folder";
+            }
+            if (getFileExtensionLoc(file.getPath()) == -1) {
+                return "file";
+            }
+            return file.getName().substring(getFileExtensionLoc(file.getName()) + 1);
+        }
+
         // Effects: gets index of image for file browser
-        private static int getIcon(File file) {
+        private int getIcon(File file) {
             if (file.isDirectory()) {
                 if (!fileSystemView.isTraversable(file)) {
                     return 5;
@@ -496,6 +506,7 @@ public class PopupManager {
                 } catch (IOException e) {
                     location = file.getAbsolutePath();
                 }
+                inWindowsDriveList = false;
                 this.file.setText("");
                 setupFiles();
             } else if (strArrContains(filetypes, (String) getFileData(file, "Filetype")) && !inWindowsDriveList) {
@@ -512,6 +523,9 @@ public class PopupManager {
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
             constraints.gridwidth = 2;
+            constraints.fill = GridBagConstraints.HORIZONTAL;
+            layout.setConstraints(folderLook, constraints);
+            constraints.fill = GridBagConstraints.NONE;
             constraints.gridwidth = 1;
             constraints.gridy = 2;
             layout.setConstraints(openButton, constraints);
