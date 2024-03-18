@@ -342,8 +342,10 @@ public class PopupManager {
                     return "..";
                 }
                 if (rowIndex == 0) {
-                    Object fd = getFileData(new File(location).getParentFile(), columns[columnIndex]);
-                    return Objects.requireNonNullElse(fd, "");
+                    final Object[] fd = {null}; // One element arrays are WEIRD
+                    ExceptionIgnore.ignoreExc(() ->
+                            fd[0] = getFileData(new File(location).getParentFile(), columns[columnIndex]));
+                    return Objects.requireNonNullElse(fd[0], "");
                 }
                 return getFileData(dirList[rowIndex - 1], columns[columnIndex]);
             }
