@@ -1744,8 +1744,10 @@
           <option value="ui.PopupManager.ConfirmationPopupFrame" />
           <option value="ui.PopupManager.ConversionPopupFrame" />
           <option value="ui.PopupManager.ErrorPopupFrame" />
+          <option value="ui.PopupManager.FilePopupFrame" />
           <option value="ui.PopupManager.ID3PopupFrame" />
           <option value="ui.PopupManager.ID3PopupFrame.AlbumArtworkUpdater" />
+          <option value="ui.SettingsFrame" />
         </set>
       </option>
     </inspection_tool>

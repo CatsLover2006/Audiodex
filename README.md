@@ -91,6 +91,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - [Here's the port](https://github.com/Jazzzny/jdk-macos-legacy)
 - GridBagLayout
   - All hail GridBagLayout
+- [Dazzle UI Icons](https://dazzleui.pro/library/)
 
 _I'm a really lucky person ain't I?_
 

@@ -42,6 +42,7 @@ public class DatabaseManagerFrame extends JFrame {
         add(refreshButton);
         setLayout(new GridLayout(2, 2));
         pack();
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setVisible(true);
     }
 }

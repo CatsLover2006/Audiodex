@@ -1,10 +1,14 @@
 package model;
 
+import oshi.SystemInfo;
+import oshi.software.os.OSFileStore;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 // Static class
 public class FileManager {
@@ -36,5 +40,17 @@ public class FileManager {
         } catch (IOException e) {
             return "";
         }
+    }
+
+    private static SystemInfo sysInfo = new SystemInfo();
+    private static List<OSFileStore> fileStores;
+
+    // Effects: checks if directory/file is a mount point
+    public static boolean isRoot(File file) {
+        if (file.getParentFile() == null) {
+            return true;
+        }
+        fileStores = sysInfo.getOperatingSystem().getFileSystem().getFileStores();
+        return fileStores.stream().anyMatch(store -> file.getAbsolutePath().equals(store.getMount()));
     }
 }

@@ -6,9 +6,17 @@ import com.github.weisj.jsvg.nodes.SVG;
 import com.github.weisj.jsvg.parser.SVGLoader;
 import model.AudioConversion;
 import model.ExceptionIgnore;
+import model.FileManager;
+import org.apache.commons.lang3.SystemUtils;
+import oshi.SystemInfo;
+import oshi.hardware.HWDiskStore;
+import oshi.hardware.HWPartition;
+import oshi.hardware.UsbDevice;
+import oshi.software.os.OSFileStore;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -16,14 +24,19 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileStore;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.awt.GridBagConstraints.*;
 import static java.io.File.separatorChar;
 
 // Static class
 public class PopupManager {
+    private static FileSystemView fileSystemView = FileSystemView.getFileSystemView();
 
     // Effects: returns true if arr contains item, false otherwise
     //          this function is null-safe
@@ -97,14 +110,33 @@ public class PopupManager {
                     new JVectorIcon(loadVector("folder.svg"), 20, 20),
                     new JVectorIcon(loadVector("file.svg"), 20, 20),
                     new JVectorIcon(loadVector("file-audio.svg"), 20, 20),
-                    new JVectorIcon(loadVector("folder-arrow-up.svg"), 20, 20)
+                    new JVectorIcon(loadVector("folder-arrow-up.svg"), 20, 20),
+                    new JVectorIcon(loadVector("file-block.svg"), 20, 20),
+                    new JVectorIcon(loadVector("folder-block.svg"), 20, 20),
+                    new JVectorIcon(loadVector("folder-user.svg"), 20, 20),
+                    new JVectorIcon(loadVector("folder-shield.svg"), 20, 20),
+                    new JVectorIcon(loadVector("floppy-disk.svg"), 20, 20),
+                    new JVectorIcon(loadVector("disc-alt.svg"), 20, 20),
+                    new JVectorIcon(loadVector("hard-drive.svg"), 20, 20),
+                    new JVectorIcon(loadVector("usb-flash-drive.svg"), 20, 20),
+                    new JVectorIcon(loadVector("folder-arrow-right.svg"), 20, 20),
+                    new JVectorIcon(loadVector("file-arrow-right.svg"), 20, 20)
             };
         } catch (IOException e) {
             icons = new JVectorIcon[]{
-                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16),
-                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16),
-                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16),
-                    new JVectorIcon(new SVGDocument(new SVG()), 16, 16)
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20),
+                    new JVectorIcon(new SVGDocument(new SVG()), 20, 20)
             };
         }
         FILE_BROWSER_IMAGES = icons;
@@ -169,9 +201,10 @@ public class PopupManager {
         private boolean allowOut = false;
         private final JTable fileTable = new JTable(new FileTableModel());
         private final JScrollPane fileList = new JScrollPane(fileTable);
+        private JLabel folderLook;
         private File[] dirList;
         private PopupResponder responder;
-        private Boolean hasNoParent;
+        private Boolean inWindowsDriveList = false;
 
         // Effects: external update UI function
         @Override
@@ -188,20 +221,20 @@ public class PopupManager {
                     int col = fileTable.columnAtPoint(evt.getPoint());
                     if (row >= 0 && col >= 0) {
                         forceDirCheck = false;
-                        if (hasNoParent) {
+                        if (!hasParent(new File(location))) {
                             row++;
                         }
                         if (evt.getButton() == 1) {
                             if (evt.getClickCount() == 2) {
                                 if (row == 0) {
-                                    doFileSelection(new File(location).getParentFile());
+                                    doParentSelection();
                                 } else {
                                     doFileSelection(dirList[row - 1]);
                                 }
                             } else if (evt.getClickCount() == 1) {
                                 ExceptionIgnore.ignoreExc(() ->
                                         file.setText((String) getFileData(dirList[fileTable.rowAtPoint(evt.getPoint())
-                                                - (hasNoParent ? 0 : 1)], "Filename")));
+                                                - (hasParent(new File(location)) ? 1 : 0)], "Filename")));
                             }
                         } else if (evt.getButton() == 3) {
                             System.out.println("Right click!");
@@ -221,6 +254,7 @@ public class PopupManager {
             location = defaultLoc;
             this.filetypes = filetypes;
             file.setText("");
+            folderLook = new JLabel(getFile());
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
@@ -247,9 +281,8 @@ public class PopupManager {
 
         // Effects: gets file list and sets up file view
         private void setupFiles() {
-            File where = new File(location);
-            dirList = where.listFiles(pathname -> !pathname.isHidden());
-            hasNoParent = where.getParentFile() == null;
+            folderLook.setText(getFile());
+            dirList = listFiles();
             fileTable.getColumnModel().getColumn(0).setMaxWidth(20);
             fileTable.getColumnModel().getColumn(0).setMinWidth(20);
             fileTable.setRowHeight(20);
@@ -265,7 +298,7 @@ public class PopupManager {
                 if (dirList == null) {
                     return 0;
                 }
-                return dirList.length + (hasNoParent ? 0 : 1);
+                return dirList.length + (hasParent(new File(location)) ? 1 : 0);
             }
 
             // Gets table column count
@@ -298,7 +331,7 @@ public class PopupManager {
             // Gets table value
             @Override
             public Object getValueAt(int rowIndex, int columnIndex) {
-                if (hasNoParent) {
+                if (!hasParent(new File(location))) {
                     rowIndex++;
                 }
                 if (rowIndex == 0 && columnIndex == 0) {
@@ -314,6 +347,22 @@ public class PopupManager {
             }
         }
 
+        // Effects: Returns true if this file has a parent
+        private boolean hasParent(File file) {
+            if (SystemUtils.IS_OS_WINDOWS) {
+                return !inWindowsDriveList;
+            }
+            return file.getParentFile() != null;
+        }
+
+        // Effects: lists files in a directory (creates special menu for windows drive selection)
+        private File[] listFiles() {
+            if (SystemUtils.IS_OS_WINDOWS && inWindowsDriveList) {
+                return File.listRoots();
+            }
+            return new File(location).listFiles(pathname -> !pathname.isHidden());
+        }
+
         // Effects: gets the file data for the file list
         private static Object getFileData(File file, String type) {
             switch (type) {
@@ -322,28 +371,134 @@ public class PopupManager {
                 case "Last Modified":
                     return new Date(file.lastModified()).toString();
                 case "Filetype":
-                    if (file.isDirectory() && file.getName().lastIndexOf('.') == -1) {
+                    if (!file.exists()) {
+                        return ".empty";
+                    }
+                    if (file.isDirectory() && getFileExtensionLoc(file.getPath()) == -1) {
                         return ".folder";
                     }
-                    if (file.getName().lastIndexOf('.') == -1) {
+                    if (getFileExtensionLoc(file.getPath()) == -1) {
                         return "file";
                     }
-                    return file.getName().substring(file.getName().lastIndexOf('.') + 1);
-                case "Icon": // Thanks IntelliJ!
-                    return FILE_BROWSER_IMAGES[file.isDirectory() ? 0 :
-                            AudioFileLoader.getAudioFiletype(file.getAbsolutePath()) == AudioFileType.EMPTY ? 1 : 2];
+                    return file.getName().substring(getFileExtensionLoc(file.getName()) + 1);
+                case "Icon":
+                    return FILE_BROWSER_IMAGES[getIcon(file)];
                 default:
                     return String.valueOf(file.length());
             }
         }
 
-        // Effects: does file selection
-        private void doFileSelection(File file) {
-            if (file.isDirectory() && !forceDirCheck) {
-                location = file.getPath();
+        // Effects: gets index of image for file browser
+        private static int getIcon(File file) {
+            if (file.isDirectory()) {
+                if (!fileSystemView.isTraversable(file)) {
+                    return 5;
+                }
+                if (new File(System.getProperty("user.home")).getAbsolutePath().equals(file.getAbsolutePath())) {
+                    return 6;
+                }
+                if (FileManager.isRoot(file)) {
+                    return getDeviceType(file);
+                }
+                File[] dirlist = file.listFiles((dir, name) -> name.equals("index.audiodex.db"));
+                if (dirlist != null && dirlist.length != 0) {
+                    return 7;
+                }
+                return checkSymlink(file);
+            }
+            if (!file.canRead()) {
+                return 4;
+            }
+            if (AudioFileLoader.getAudioFiletype(file.getAbsolutePath()) == AudioFileType.EMPTY) {
+                return checkSymlink(file);
+            }
+            return 2;
+        }
+
+        // Effects: gets index of image of device for file browser
+        private static int getDeviceType(File file) {
+            SystemInfo sysInfo = new SystemInfo();
+            List<OSFileStore> fileStores = sysInfo.getOperatingSystem().getFileSystem().getFileStores();
+            List<HWDiskStore> diskStores = sysInfo.getHardware().getDiskStores();
+            for (OSFileStore store : fileStores) {
+                if (file.getAbsolutePath().equals(store.getMount())) {
+                    for (HWDiskStore diskStore : diskStores) {
+                        if (isUSB(diskStore, sysInfo.getHardware().getUsbDevices(true))) {
+                            for (HWPartition partition : diskStore.getPartitions()) {
+                                if (store.getUUID().equalsIgnoreCase(partition.getUuid())) {
+                                    return 11;
+                                }
+                            }
+                        }
+                    }
+                    switch (store.getDescription()) {
+                        case "Local Disk":
+                            return 10;
+                    }
+                }
+            }
+            return 10;
+        }
+
+        // Effect: checks if a file/folder is a symlink
+        private static int checkSymlink(File file) {
+            int out = 0;
+            try {
+                out = file.getAbsolutePath().equals(file.getCanonicalPath()) ? 0 : 12;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (file.isFile()) {
+                out++;
+            }
+            return out;
+        }
+
+        // Effects: returns true if diskStore is a USB device
+        //          this function is recursive
+        private static boolean isUSB(HWDiskStore diskStore, List<UsbDevice> devices) {
+            for (UsbDevice device : devices) {
+                if (diskStore.getName().equalsIgnoreCase(device.getName())
+                        || diskStore.getSerial().equalsIgnoreCase(device.getSerialNumber())) {
+                    return true;
+                }
+                if (isUSB(diskStore, device.getConnectedDevices())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Effects: returns file extension of a file
+        private static int getFileExtensionLoc(String path) {
+            return path.lastIndexOf('.', path.lastIndexOf(separatorChar) + 1);
+        }
+
+        // Effects: does PARENT selection (windows drive detection)
+        private void doParentSelection() {
+            if (SystemUtils.IS_OS_WINDOWS && new File(location).getParentFile() == null) {
+                inWindowsDriveList = true;
                 this.file.setText("");
                 setupFiles();
-            } else if (strArrContains(filetypes, (String) getFileData(file, "Filetype"))) {
+                return;
+            }
+            doFileSelection(new File(location).getParentFile());
+        }
+
+        // Effects: does file selection
+        private void doFileSelection(File file) {
+            if (!file.canRead()) {
+                return;
+            }
+            if (file.isDirectory() && (!forceDirCheck || inWindowsDriveList)) {
+                try {
+                    location = file.getCanonicalPath();
+                } catch (IOException e) {
+                    location = file.getAbsolutePath();
+                }
+                this.file.setText("");
+                setupFiles();
+            } else if (strArrContains(filetypes, (String) getFileData(file, "Filetype")) && !inWindowsDriveList) {
                 selector.setVisible(false);
                 responder.run(this);
             } else {
@@ -356,14 +511,16 @@ public class PopupManager {
         private void setupWindowLayout() {
             GridBagLayout layout = new GridBagLayout();
             GridBagConstraints constraints = new GridBagConstraints();
-            constraints.gridy = 1;
+            constraints.gridwidth = 2;
+            constraints.gridwidth = 1;
+            constraints.gridy = 2;
             layout.setConstraints(openButton, constraints);
             constraints.weightx = 1.0;
             constraints.fill = GridBagConstraints.HORIZONTAL;
             layout.setConstraints(file, constraints);
             constraints.weighty = 1.0;
             constraints.gridwidth = 2;
-            constraints.gridy = 0;
+            constraints.gridy = 1;
             constraints.fill = BOTH;
             layout.setConstraints(fileList, constraints);
             selector.setLayout(layout);
@@ -384,9 +541,12 @@ public class PopupManager {
             popupList.add(this);
         }
 
-        // Effects: gets filename, returns null if it's not selected
+        // Effects: gets filename, returns directory if it's not selected
         public String getFile() {
-            return !allowOut || selector.isVisible() ? null : location + separatorChar + file.getText();
+            if (inWindowsDriveList) {
+                return "Drive selection";
+            }
+            return !allowOut || selector.isVisible() ? location : location + separatorChar + file.getText();
         }
 
         @Override
@@ -489,10 +649,15 @@ public class PopupManager {
         private JLabel errorImg;
         private JFrame selector;
         private PopupResponder responder;
+        private PopupResponder noResponder;
 
         { // Initialize open commands
             cancelButton.addActionListener(e -> {
                 selector.setVisible(false);
+                if (noResponder == null) {
+                    return;
+                }
+                noResponder.run(this);
             });
             okButton.addActionListener(e -> {
                 selector.setVisible(false);
@@ -515,6 +680,51 @@ public class PopupManager {
                 e.printStackTrace();
             }
             this.responder = responder;
+        }
+
+        // Effects: defaults everything
+        public ConfirmationPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder,
+                                      PopupResponder noResponder) {
+            this.errorText = new JLabel(String.format("<html>%s</html>", errorText));
+            errorImg = new JLabel(ERROR_IMAGES[image.iconIndex]);
+            try {
+                SwingUtilities.invokeLater(() -> setup());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            this.responder = responder;
+            this.noResponder = noResponder;
+        }
+
+        // Effects: defaults everything
+        public ConfirmationPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder,
+                                      String confirmText, String denyText) {
+            this.errorText = new JLabel(String.format("<html>%s</html>", errorText));
+            errorImg = new JLabel(ERROR_IMAGES[image.iconIndex]);
+            okButton.setText(confirmText);
+            cancelButton.setText(denyText);
+            try {
+                SwingUtilities.invokeLater(() -> setup());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            this.responder = responder;
+        }
+
+        // Effects: defaults everything
+        public ConfirmationPopupFrame(String errorText, ErrorImageTypes image, PopupResponder responder,
+                                      PopupResponder noResponder, String confirmText, String denyText) {
+            this.errorText = new JLabel(String.format("<html>%s</html>", errorText));
+            errorImg = new JLabel(ERROR_IMAGES[image.iconIndex]);
+            okButton.setText(confirmText);
+            cancelButton.setText(denyText);
+            try {
+                SwingUtilities.invokeLater(() -> setup());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            this.responder = responder;
+            this.noResponder = noResponder;
         }
 
         // Effects: external update UI function
@@ -540,10 +750,10 @@ public class PopupManager {
             constraints.gridx = 0;
             constraints.gridy = 0;
             layout.setConstraints(errorImg, constraints);
-            constraints.weightx = 1;
             constraints.gridy = 1;
             constraints.fill = HORIZONTAL;
             constraints.gridwidth = 2;
+            constraints.weightx = 1;
             layout.setConstraints(cancelButton, constraints);
             constraints.gridx = 2;
             layout.setConstraints(okButton, constraints);
@@ -670,7 +880,8 @@ public class PopupManager {
 
         // Effects: gets file to write to
         private void getFileToWrite(AudioDataStructure source) {
-            FilePopupFrame filePopupFrame = new FilePopupFrame(System.getProperty("user.home"), null, popup -> {
+            FilePopupFrame filePopupFrame = new FilePopupFrame(fileSystemView.getDefaultDirectory().getAbsolutePath(),
+                    null, popup -> {
                 converter = new AudioConversion(source, (String) popup.getValue());
                 if (converter.errorOccurred() || new File((String) popup.getValue()).exists()) {
                     new ErrorPopupFrame("Cannot use file.", ErrorImageTypes.ERROR, t -> getFileToWrite(source));
