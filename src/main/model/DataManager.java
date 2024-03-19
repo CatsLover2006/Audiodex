@@ -281,6 +281,10 @@ public class DataManager {
     // Modifies: database files
     // Effects:  reverts to previous database, if avaliable
     public void revertDb() {
+        if (modified) {
+            loadDatabase();
+            return;
+        }
         dbIndex--;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         if (new File(filename).exists()) {

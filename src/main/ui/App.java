@@ -336,6 +336,7 @@ public class App {
                             AudioDecoder decoder = AudioFileLoader.loadFile(database.getAudioFile(row).getFilename());
                             decoder.prepareToPlayAudio();
                             decoder.setID3((ID3Container) obj.getValue());
+                            database.sortSongList("Album_Title");
                             musicTable.updateUI();
                         }));
                 this.add(item);
