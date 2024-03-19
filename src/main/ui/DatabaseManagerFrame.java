@@ -34,6 +34,7 @@ public class DatabaseManagerFrame extends JFrame {
                 }));
     }
 
+    // Constructor
     DatabaseManagerFrame(DataManager database) {
         super("Here be dragons...");
         this.database = database;
