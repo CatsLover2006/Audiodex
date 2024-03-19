@@ -430,6 +430,15 @@ public class PopupManager {
             SystemInfo sysInfo = new SystemInfo();
             List<OSFileStore> fileStores = sysInfo.getOperatingSystem().getFileSystem().getFileStores();
             List<HWDiskStore> diskStores = sysInfo.getHardware().getDiskStores();
+            if (SystemUtils.IS_OS_WINDOWS) {
+                return doWindowsDiskCheck(file, sysInfo, fileStores, diskStores);
+            }
+            return doUnixDiskCheck(file, sysInfo, fileStores, diskStores);
+        }
+
+        // Effects: getDeviceType extension for Windows
+        private static int doWindowsDiskCheck(File file, SystemInfo sysInfo, List<OSFileStore> fileStores,
+                                              List<HWDiskStore> diskStores) {
             for (OSFileStore store : fileStores) {
                 if (file.getAbsolutePath().equals(store.getMount())) {
                     for (HWDiskStore diskStore : diskStores) {
@@ -441,8 +450,26 @@ public class PopupManager {
                             }
                         }
                     }
-                    System.out.println(store.getDescription());
                     return getDiskStoreType(store);
+                }
+            }
+            return 10;
+        }
+
+        // Effects: getDeviceType extension for macOS (and maybe Linux)
+        private static int doUnixDiskCheck(File file, SystemInfo sysInfo, List<OSFileStore> fileStores,
+                                           List<HWDiskStore> diskStores) {
+            for (HWDiskStore diskStore : diskStores) {
+                for (HWPartition partition : diskStore.getPartitions()) {
+                    if (file.getAbsolutePath().equals(partition.getMountPoint())) {
+                        if (isUSB(diskStore, sysInfo.getHardware().getUsbDevices(true))) {
+                            return 11;
+                        }
+                        if (diskStore.getSerial().isEmpty()) {
+                            return 9;
+                        }
+                        System.out.println();
+                    }
                 }
             }
             return 10;
