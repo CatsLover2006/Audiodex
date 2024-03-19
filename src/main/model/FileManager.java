@@ -44,13 +44,22 @@ public class FileManager {
 
     private static SystemInfo sysInfo = new SystemInfo();
     private static List<OSFileStore> fileStores;
+    private static boolean updateStores = true;
+
+    // Effects: tells isRoot to update root directory stores on next execution
+    public static void updateRootStores() {
+        updateStores = true;
+    }
 
     // Effects: checks if directory/file is a mount point
     public static boolean isRoot(File file) {
         if (file.getParentFile() == null) {
             return true;
         }
-        fileStores = sysInfo.getOperatingSystem().getFileSystem().getFileStores();
+        if (updateStores) {
+            fileStores = sysInfo.getOperatingSystem().getFileSystem().getFileStores();
+            updateStores = false;
+        }
         return fileStores.stream().anyMatch(store -> file.getAbsolutePath().equals(store.getMount()));
     }
 }

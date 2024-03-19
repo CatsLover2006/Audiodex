@@ -24,12 +24,9 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileStore;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 import static java.awt.GridBagConstraints.*;
 import static java.io.File.separatorChar;
@@ -287,6 +284,7 @@ public class PopupManager {
             fileTable.getColumnModel().getColumn(0).setMaxWidth(20);
             fileTable.getColumnModel().getColumn(0).setMinWidth(20);
             fileTable.setRowHeight(20);
+            FileManager.updateRootStores();
             fileList.updateUI();
         }
 
@@ -341,11 +339,11 @@ public class PopupManager {
                 if (rowIndex == 0 && columnIndex == 1) {
                     return "..";
                 }
+                if (rowIndex == 0 && new File(location).getParentFile() == null) {
+                    return "";
+                }
                 if (rowIndex == 0) {
-                    final Object[] fd = {null}; // One element arrays are WEIRD
-                    ExceptionIgnore.ignoreExc(() ->
-                            fd[0] = getFileData(new File(location).getParentFile(), columns[columnIndex]));
-                    return Objects.requireNonNullElse(fd[0], "");
+                    return getFileData(new File(location).getParentFile(), columns[columnIndex]);
                 }
                 return getFileData(dirList[rowIndex - 1], columns[columnIndex]);
             }
@@ -403,14 +401,14 @@ public class PopupManager {
         // Effects: gets index of image for file browser
         private int getIcon(File file) {
             if (file.isDirectory()) {
+                if (FileManager.isRoot(file) || inWindowsDriveList) {
+                    return getDeviceType(file);
+                }
                 if (!fileSystemView.isTraversable(file)) {
                     return 5;
                 }
                 if (new File(System.getProperty("user.home")).getAbsolutePath().equals(file.getAbsolutePath())) {
                     return 6;
-                }
-                if (FileManager.isRoot(file)) {
-                    return getDeviceType(file);
                 }
                 File[] dirlist = file.listFiles((dir, name) -> name.equals("index.audiodex.db"));
                 if (dirlist != null && dirlist.length != 0) {
@@ -443,13 +441,24 @@ public class PopupManager {
                             }
                         }
                     }
-                    switch (store.getDescription()) {
-                        case "Local Disk":
-                            return 10;
-                    }
+                    System.out.println(store.getDescription());
+                    return getDiskStoreType(store);
                 }
             }
             return 10;
+        }
+
+        // Effects: returns the icon ID for a device description
+        //          (being as OS-independent as possible here)
+        private static int getDiskStoreType(OSFileStore store) {
+            switch (store.getDescription().toLowerCase()) {
+                case "cd-rom":
+                    return 9;
+                case "local disk":
+                case "fixed drive":
+                default:
+                    return 10;
+            }
         }
 
         // Effect: checks if a file/folder is a symlink
@@ -470,8 +479,8 @@ public class PopupManager {
         //          this function is recursive
         private static boolean isUSB(HWDiskStore diskStore, List<UsbDevice> devices) {
             for (UsbDevice device : devices) {
-                if (diskStore.getName().equalsIgnoreCase(device.getName())
-                        || diskStore.getSerial().equalsIgnoreCase(device.getSerialNumber())) {
+                if (diskStore.getModel().toLowerCase().contains(device.getName().toLowerCase())
+                        || device.getName().toLowerCase().contains(diskStore.getModel().toLowerCase())) {
                     return true;
                 }
                 if (isUSB(diskStore, device.getConnectedDevices())) {
