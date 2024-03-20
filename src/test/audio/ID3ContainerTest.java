@@ -1,9 +1,14 @@
 package audio;
 
+import org.junit.jupiter.api.ClassOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestClassOrder;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(0)
 public class ID3ContainerTest {
     @Test
     public void id3Test() {

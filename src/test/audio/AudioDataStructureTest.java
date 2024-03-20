@@ -2,13 +2,18 @@ package audio;
 
 import audio.filetypes.TagConversion;
 import org.json.JSONObject;
+import org.junit.jupiter.api.ClassOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestClassOrder;
 
 import java.io.File;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(0)
 public class AudioDataStructureTest {
     AudioDataStructure structure;
 

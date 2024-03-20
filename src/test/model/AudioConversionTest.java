@@ -3,7 +3,10 @@ package model;
 import audio.AudioDataStructure;
 import audio.filetypes.encoders.AiffTest;
 import audio.filetypes.encoders.MP3Test;
+import org.junit.jupiter.api.ClassOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestClassOrder;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,6 +14,8 @@ import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(0)
 public class AudioConversionTest {
     AudioConversion converter;
 

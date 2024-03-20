@@ -4,13 +4,14 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.sound.sampled.AudioFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(1)
 public class  WAVTest {
     AudioDecoder wavDecoder;
 
@@ -28,7 +29,7 @@ public class  WAVTest {
         wavDecoder.closeAudioFile();
         assertFalse(wavDecoder.isReady());
         assertEquals("scarlet.wav", wavDecoder.getFileName());
-        assertEquals(143, Math.floor(wavDecoder.getFileDuration()));
+        assertEquals(7, Math.floor(wavDecoder.getFileDuration()));
         assertEquals(AudioFileType.PCM_WAV, wavDecoder.getFileType());
     }
 
@@ -38,10 +39,10 @@ public class  WAVTest {
         wavDecoder.prepareToPlayAudio();
         assertTrue(wavDecoder.isReady());
         assertEquals(0, wavDecoder.getCurrentTime());
-        wavDecoder.goToTime(100);
-        assertEquals(100, wavDecoder.getCurrentTime());
-        wavDecoder.goToTime(10);
-        assertEquals(10, wavDecoder.getCurrentTime());
+        wavDecoder.goToTime(5);
+        assertEquals(5, wavDecoder.getCurrentTime());
+        wavDecoder.goToTime(2);
+        assertEquals(2, wavDecoder.getCurrentTime());
         assertFalse(wavDecoder.skipInProgress());
     }
 

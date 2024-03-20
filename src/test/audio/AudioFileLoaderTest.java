@@ -1,11 +1,16 @@
 package audio;
 
 import audio.filetypes.decoders.*;
+import org.junit.jupiter.api.ClassOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestClassOrder;
 
 import static audio.AudioFileLoader.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(0)
 public class AudioFileLoaderTest {
     @Test
     public void getAudioFiletypeTests() {

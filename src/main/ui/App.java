@@ -254,21 +254,21 @@ public class App {
     // GUI loader frame
     protected static class GuiLoaderFrame {
         protected static final JFrame loadingFrame = new JFrame();
-
-        // Loading frame initialization
-        static {
-            loadingFrame.setSize(200, 150);
-            loadingFrame.setResizable(false);
-            loadingFrame.setUndecorated(true);
-            loadingFrame.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-            loadingFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-            loadingFrame.add(new JLabel("Loading..."));
-            loadingFrame.repaint();
-        }
+        private static boolean needsSetup = true;
 
         // Modifies: this
         // Effects:  shows loading pane
         public static void createLoadingThread() {
+            if (needsSetup) {
+                loadingFrame.setSize(200, 150);
+                loadingFrame.setResizable(false);
+                loadingFrame.setUndecorated(true);
+                loadingFrame.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+                loadingFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+                loadingFrame.add(new JLabel("Loading..."));
+                loadingFrame.repaint();
+                needsSetup = false;
+            }
             loadingFrame.setVisible(true);
         }
 

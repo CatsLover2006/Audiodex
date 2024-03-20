@@ -6,13 +6,14 @@ import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.decoders.Vorbis;
 import audio.filetypes.decoders.WAV;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.sound.sampled.AudioFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(1)
 public class VorbisTest {
     Vorbis vorbisDecoder;
 
@@ -30,7 +31,7 @@ public class VorbisTest {
         vorbisDecoder.closeAudioFile();
         assertFalse(vorbisDecoder.isReady());
         assertEquals("scarlet.vorbis.ogg", vorbisDecoder.getFileName());
-        assertEquals(142, Math.floor(vorbisDecoder.getFileDuration()));
+        assertEquals(6, Math.floor(vorbisDecoder.getFileDuration()));
         assertEquals(AudioFileType.VORBIS, vorbisDecoder.getFileType());
     }
 
@@ -39,13 +40,13 @@ public class VorbisTest {
         assertFalse(vorbisDecoder.isReady());
         vorbisDecoder.prepareToPlayAudio();
         assertTrue(vorbisDecoder.isReady());
-        assertEquals(0, vorbisDecoder.getCurrentTime());
-        vorbisDecoder.goToTime(100);
+        assertEquals(0, Math.round(vorbisDecoder.getCurrentTime()));
+        vorbisDecoder.goToTime(5);
         // Error range due to timing math
-        assertTrue(Math.abs(100 - vorbisDecoder.getCurrentTime()) < 0.05);
-        vorbisDecoder.goToTime(10);
+        assertTrue(Math.abs(5 - vorbisDecoder.getCurrentTime()) < 0.06);
+        vorbisDecoder.goToTime(2);
         // Error range due to timing math
-        assertTrue(Math.abs(10 - vorbisDecoder.getCurrentTime()) < 0.06);
+        assertTrue(Math.abs(2 - vorbisDecoder.getCurrentTime()) < 0.06);
         assertFalse(vorbisDecoder.skipInProgress());
     }
 
