@@ -5,13 +5,18 @@ import audio.AudioEncoder;
 import audio.filetypes.decoders.Aiff;
 import audio.filetypes.decoders.MP4alac;
 import model.ExceptionIgnore;
+import org.junit.jupiter.api.ClassOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestClassOrder;
 import ui.AudioFilePlaybackBackend;
 
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(2)
 public class WAVTest {
     AudioDecoder decoder;
     AudioEncoder encoder;
@@ -55,8 +60,8 @@ public class WAVTest {
         player.startAudioDecoderThread();
         player.playAudio();
         new PercentDisp(() -> player.getPercentPlayed()).start();
-        ExceptionIgnore.ignoreExc(() -> Thread.sleep(5000));
-        player.seekTo(player.getFileDuration() - 2.5);
+        ExceptionIgnore.ignoreExc(() -> Thread.sleep(1000));
+        player.seekTo(player.getFileDuration() - 1);
         player.waitForAudioFinish();
         player.cleanBackend();
     }

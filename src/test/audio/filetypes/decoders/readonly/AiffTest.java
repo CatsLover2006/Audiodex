@@ -6,13 +6,14 @@ import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.decoders.Aiff;
 import audio.filetypes.decoders.WAV;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.sound.sampled.AudioFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(1)
 public class AiffTest {
     AudioDecoder aiffDecoder;
 
@@ -30,7 +31,7 @@ public class AiffTest {
         aiffDecoder.closeAudioFile();
         assertFalse(aiffDecoder.isReady());
         assertEquals("scarlet.aif", aiffDecoder.getFileName());
-        assertEquals(142, Math.floor(aiffDecoder.getFileDuration()));
+        assertEquals(6, Math.floor(aiffDecoder.getFileDuration()));
         assertEquals(AudioFileType.AIFF, aiffDecoder.getFileType());
     }
 
@@ -40,10 +41,10 @@ public class AiffTest {
         aiffDecoder.prepareToPlayAudio();
         assertTrue(aiffDecoder.isReady());
         assertEquals(0, aiffDecoder.getCurrentTime());
-        aiffDecoder.goToTime(100);
-        assertEquals(100, aiffDecoder.getCurrentTime());
-        aiffDecoder.goToTime(10);
-        assertEquals(10, aiffDecoder.getCurrentTime());
+        aiffDecoder.goToTime(5);
+        assertEquals(5, aiffDecoder.getCurrentTime());
+        aiffDecoder.goToTime(2);
+        assertEquals(2, aiffDecoder.getCurrentTime());
         assertFalse(aiffDecoder.skipInProgress());
     }
 
@@ -88,6 +89,6 @@ public class AiffTest {
         assertEquals(2015L, id3.getID3Data("Year")); // Lmao
         aiffDecoder.setID3(id3);
         // Error range due to math errors in scanning program
-        assertTrue(Math.abs(-9.6 - aiffDecoder.getReplayGain()) < 0.05);
+        assertTrue(Math.abs(-8.15 - aiffDecoder.getReplayGain()) < 0.05);
     }
 }

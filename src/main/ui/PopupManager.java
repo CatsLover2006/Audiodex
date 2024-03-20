@@ -535,7 +535,7 @@ public class PopupManager {
 
         // Effects: does file selection
         private void doFileSelection(File file) {
-            if (!file.canRead()) {
+            if (!file.canRead() && !strArrContains(filetypes, ".empty")) {
                 return;
             }
             if (file.isDirectory() && (!forceDirCheck || inWindowsDriveList)) {
@@ -933,7 +933,7 @@ public class PopupManager {
         // Effects: gets file to write to
         private void getFileToWrite(AudioDataStructure source) {
             FilePopupFrame filePopupFrame = new FilePopupFrame(fileSystemView.getDefaultDirectory().getAbsolutePath(),
-                    null, popup -> {
+                    new String[]{".empty"}, popup -> {
                 converter = new AudioConversion(source, (String) popup.getValue());
                 if (converter.errorOccurred() || new File((String) popup.getValue()).exists()) {
                     new ErrorPopupFrame("Cannot use file.", ErrorImageTypes.ERROR, t -> getFileToWrite(source));

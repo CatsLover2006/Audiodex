@@ -2,11 +2,12 @@ package audio.filetypes.decoders.nullFiles;
 
 import audio.ID3Container;
 import audio.filetypes.decoders.MP4alac;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(0)
 public class MP4alacTest {
     MP4alac alacDecoder;
 

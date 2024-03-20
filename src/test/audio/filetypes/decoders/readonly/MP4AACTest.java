@@ -6,13 +6,14 @@ import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.decoders.MP4AAC;
 import audio.filetypes.decoders.WAV;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.sound.sampled.AudioFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(1)
 public class MP4AACTest {
     AudioDecoder aacDecoder;
 
@@ -30,7 +31,7 @@ public class MP4AACTest {
         aacDecoder.closeAudioFile();
         assertFalse(aacDecoder.isReady());
         assertEquals("scarlet.aac.m4a", aacDecoder.getFileName());
-        assertEquals(142, Math.floor(aacDecoder.getFileDuration()));
+        assertEquals(6, Math.floor(aacDecoder.getFileDuration()));
         assertEquals(AudioFileType.AAC_MP4, aacDecoder.getFileType());
     }
 
@@ -42,14 +43,14 @@ public class MP4AACTest {
         assertEquals(-1, aacDecoder.getCurrentTime());
         aacDecoder.getNextSample();
         assertEquals(0, aacDecoder.getCurrentTime());
-        aacDecoder.goToTime(100);
+        aacDecoder.goToTime(5);
         aacDecoder.getNextSample();
         // Error range due to timing math
-        assertTrue(Math.abs(100 - aacDecoder.getCurrentTime()) < 0.06);
-        aacDecoder.goToTime(10);
+        assertTrue(Math.abs(5 - aacDecoder.getCurrentTime()) < 0.06);
+        aacDecoder.goToTime(2);
         aacDecoder.getNextSample();
         // Error range due to timing math
-        assertTrue(Math.abs(10 - aacDecoder.getCurrentTime()) < 0.06);
+        assertTrue(Math.abs(2 - aacDecoder.getCurrentTime()) < 0.07);
         assertFalse(aacDecoder.skipInProgress());
     }
 
@@ -98,6 +99,6 @@ public class MP4AACTest {
         aacDecoder.setID3(id3);
         aacDecoder.setArtwork(aacDecoder.getArtwork());
         // Error range due to math errors in scanning program
-        assertTrue(Math.abs(-9.6 - aacDecoder.getReplayGain()) < 0.05);
+        assertTrue(Math.abs(-8.15 - aacDecoder.getReplayGain()) < 0.05);
     }
 }

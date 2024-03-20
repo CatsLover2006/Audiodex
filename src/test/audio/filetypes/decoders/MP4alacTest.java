@@ -4,13 +4,14 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.sound.sampled.AudioFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(1)
 public class MP4alacTest {
     MP4alac alacDecoder;
 
@@ -41,7 +42,7 @@ public class MP4alacTest {
         alacDecoder.closeAudioFile();
         assertFalse(alacDecoder.isReady());
         assertEquals("scarlet.alac.m4a", alacDecoder.getFileName());
-        assertEquals(142, Math.floor(alacDecoder.getFileDuration()));
+        assertEquals(6, Math.floor(alacDecoder.getFileDuration()));
         assertEquals(AudioFileType.ALAC_MP4, alacDecoder.getFileType());
     }
 
@@ -51,12 +52,12 @@ public class MP4alacTest {
         alacDecoder.prepareToPlayAudio();
         assertTrue(alacDecoder.isReady());
         assertEquals(0, alacDecoder.getCurrentTime());
-        alacDecoder.goToTime(100);
+        alacDecoder.goToTime(5);
         // Error range due to timing math
-        assertTrue(Math.abs(100 - alacDecoder.getCurrentTime()) < 0.05);
-        alacDecoder.goToTime(10);
+        assertTrue(Math.abs(5 - alacDecoder.getCurrentTime()) < 0.05);
+        alacDecoder.goToTime(2);
         // Error range due to timing math
-        assertTrue(Math.abs(10 - alacDecoder.getCurrentTime()) < 0.05);
+        assertTrue(Math.abs(2 - alacDecoder.getCurrentTime()) < 0.05);
         assertFalse(alacDecoder.skipInProgress());
     }
 
@@ -107,6 +108,6 @@ public class MP4alacTest {
         alacDecoder.setID3(id3);
         alacDecoder.setArtwork(alacDecoder.getArtwork());
         // Error range due to math errors in scanning program
-        assertTrue(Math.abs(-9.6 - alacDecoder.getReplayGain()) < 0.05);
+        assertTrue(Math.abs(-8.15 - alacDecoder.getReplayGain()) < 0.05);
     }
 }

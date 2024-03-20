@@ -4,13 +4,14 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import javax.sound.sampled.AudioFormat;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@Order(1)
 public class FlacTest {
     Flac flacDecoder;
 
@@ -28,7 +29,7 @@ public class FlacTest {
         flacDecoder.closeAudioFile();
         assertFalse(flacDecoder.isReady());
         assertEquals("scarlet.flac", flacDecoder.getFileName());
-        assertEquals(142, Math.floor(flacDecoder.getFileDuration()));
+        assertEquals(6, Math.floor(flacDecoder.getFileDuration()));
         assertEquals(AudioFileType.FLAC, flacDecoder.getFileType());
     }
 
@@ -38,12 +39,12 @@ public class FlacTest {
         flacDecoder.prepareToPlayAudio();
         assertTrue(flacDecoder.isReady());
         assertEquals(0, flacDecoder.getCurrentTime());
-        flacDecoder.goToTime(100);
+        flacDecoder.goToTime(5);
         // Error range due to timing math
-        assertTrue(Math.abs(100 - flacDecoder.getCurrentTime()) < 0.05);
-        flacDecoder.goToTime(10);
+        assertTrue(Math.abs(5 - flacDecoder.getCurrentTime()) < 0.05);
+        flacDecoder.goToTime(2);
         // Error range due to timing math
-        assertTrue(Math.abs(10 - flacDecoder.getCurrentTime()) < 0.05);
+        assertTrue(Math.abs(2 - flacDecoder.getCurrentTime()) < 0.05);
         assertFalse(flacDecoder.skipInProgress());
     }
 
