@@ -20,20 +20,20 @@ public class MP4AACTest {
 
     @Test // Test ID3 data
     public void id3Test() {
-        assertFalse(aacDecoder.isReady());try {
+        assertFalse(aacDecoder.isReady());
+        try {
             aacDecoder.prepareToPlayAudio();
             fail("That's not a valid path!");
         } catch (RuntimeException e) {
             // Well that worked
         }
         assertFalse(aacDecoder.isReady());
-        ID3Container id3 = null;
-        try {
-            id3 = aacDecoder.getID3();
-            fail("Null Pointer Exception Where?");
-        } catch (NullPointerException e) {
-            // LOL
-        }
+        ID3Container id3 = aacDecoder.getID3();
+        assertNotEquals("Scarlet Fire", id3.getID3Data("Title"));
+        assertNotEquals("Otis McDonald", id3.getID3Data("Artist"));
+        assertNotEquals("YouTube Audio Library", id3.getID3Data("Album"));
+        assertNotEquals(2015L, id3.getID3Data("Year"));
+        id3.setID3Data("Encoder", "Audiodex");
         aacDecoder.setID3(id3);
         aacDecoder.setArtwork(aacDecoder.getArtwork());
     }

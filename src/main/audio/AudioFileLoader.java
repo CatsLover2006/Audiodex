@@ -43,35 +43,31 @@ public class AudioFileLoader {
     @SuppressWarnings("methodlength") // Large switch/case
     // No documentation needed, effectively a getter
     public static AudioFileType getAudioFiletype(String filename) {
-        try {
-            String filetype = filename.substring(filename.lastIndexOf('.') + 1);
-            switch (filetype.toLowerCase()) {
-                case "wav":
-                case "wave":
-                    return AudioFileType.PCM_WAV;
-                case "aif":
-                case "aiff":
-                case "aifc":
-                    return AudioFileType.AIFF;
-                case "mp1":
-                case "mp2":
-                    return AudioFileType.MPEG;
-                case "mp3":
-                    return AudioFileType.MP3;
-                case "flac":
-                    return AudioFileType.FLAC;
-                case "ogg":
-                case "oga":
-                case "mogg":
-                    return oggAudioType(filename);
-                case "mp4":
-                case "m4a":
-                    return m4aAudioType(filename);
-                default:
-                    return AudioFileType.EMPTY;
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            return AudioFileType.EMPTY;
+        String filetype = filename.substring(filename.lastIndexOf('.') + 1);
+        switch (filetype.toLowerCase()) {
+            case "wav":
+            case "wave":
+                return AudioFileType.PCM_WAV;
+            case "aif":
+            case "aiff":
+            case "aifc":
+                return AudioFileType.AIFF;
+            case "mp1":
+            case "mp2":
+                return AudioFileType.MPEG;
+            case "mp3":
+                return AudioFileType.MP3;
+            case "flac":
+                return AudioFileType.FLAC;
+            case "ogg":
+            case "oga":
+            case "mogg":
+                return oggAudioType(filename);
+            case "mp4":
+            case "m4a":
+                return m4aAudioType(filename);
+            default:
+                return AudioFileType.EMPTY;
         }
     }
 
@@ -81,13 +77,12 @@ public class AudioFileLoader {
         try {
             file = new File(filename);
             AudioFile audio = AudioFileIO.readAs(file, "m4a");
+            System.out.println("Got format: " + audio.getAudioHeader().getEncodingType().toLowerCase());
             switch (audio.getAudioHeader().getEncodingType().toLowerCase()) {
                 case "aac":
                     return AudioFileType.AAC_MP4;
                 case "alac":
                     return AudioFileType.ALAC_MP4;
-                default:
-                    System.out.println("Unknown format: " + audio.getAudioHeader().getEncodingType().toLowerCase());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -107,8 +102,6 @@ public class AudioFileLoader {
                     switch (oggStream.getFormat()) {
                         case LogicalOggStream.FORMAT_VORBIS:
                             return AudioFileType.VORBIS;
-                        case LogicalOggStream.FORMAT_FLAC:
-                            return AudioFileType.FLAC;
                         default:
                             return AudioFileType.EMPTY_OGG;
                     }

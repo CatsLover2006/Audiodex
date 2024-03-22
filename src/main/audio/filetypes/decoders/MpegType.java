@@ -69,8 +69,7 @@ public class MpegType implements AudioDecoder {
             System.out.println("MP3 decoder ready!");
             ready = true;
         } catch (FileNotFoundException e) {
-            System.out.println("Error in encoding");
-            return; // We don't set ready flag
+            System.out.println("File not found");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -123,17 +122,24 @@ public class MpegType implements AudioDecoder {
     @Override
     public void goToTime(double time) {
         skipping = true;
-        long toSkip = (long)(time * audioFrameRate) // Target frame
-                - (Long)decoded.properties().get("mp3.frame"); // Minus current frame
-        if (toSkip < 0) { // We can't skip backwards for some reason
-            try {
-                decoded.reset();
-            } catch (IOException e) {
-                prepareToPlayAudio(); // Backup
+        if (time > getFileDuration()) {
+            goToTime(Math.floor(getFileDuration()));
+            while (moreSamples()) {
+                getNextSample();
             }
-            toSkip = (long)(time * audioFrameRate);
+        } else {
+            long toSkip = (long) (time * audioFrameRate) // Target frame
+                    - (Long) decoded.properties().get("mp3.frame"); // Minus current frame
+            if (toSkip < 0) { // We can't skip backwards for some reason
+                try {
+                    decoded.reset();
+                } catch (IOException e) {
+                    prepareToPlayAudio(); // Backup
+                }
+                toSkip = (long) (time * audioFrameRate);
+            }
+            decoded.skipFrames(toSkip);
         }
-        decoded.skipFrames(toSkip);
         skipping = false;
     }
 
@@ -238,11 +244,7 @@ public class MpegType implements AudioDecoder {
         }
         setID3v1(f, container);
         //setID3v2(f, container); // Unimplemented in library
-        try {
-            f.commit();
-        } catch (CannotWriteException e) {
-            System.out.println("Failed to write to file.");
-        }
+        ExceptionIgnore.ignoreExc(() -> f.commit());
     }
 
     // Effects: sets relevant ID3v1 tags
@@ -251,14 +253,10 @@ public class MpegType implements AudioDecoder {
         if (tag == null) {
             return;
         }
-        for (Map.Entry<String, FieldKey> entry : valConv.entrySet()) {
+        for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
-                try {
-                    tag.setField(entry.getValue(), data.toString());
-                } catch (FieldDataInvalidException e) {
-                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
-                }
+                ExceptionIgnore.ignoreExc(() -> tag.setField(entry.getValue(), data.toString()));
             }
         }
     }
@@ -329,17 +327,17 @@ public class MpegType implements AudioDecoder {
         });
     }
 
+
+
     // Effects: returns replaygain value
     //          defaults to -6
     @Override
     public float getReplayGain() {
-        AudioFile f;
-        try {
-            f = AudioFileIO.read(new File(filename));
-            return TagConversion.getReplayGain(f.getTag());
-        } catch (Exception e) {
-            // Why?
-        }
-        return -6;
+        float[] ret = new float[] {-6};
+        ExceptionIgnore.ignoreExc(() ->  {
+            AudioFile f = AudioFileIO.read(new File(filename));
+            ret[0] = TagConversion.getReplayGain(f.getTag());
+        });
+        return ret[0];
     }
 }

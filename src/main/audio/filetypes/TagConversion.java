@@ -96,7 +96,7 @@ public class TagConversion {
         }
         id3v2valConv = new HashMap<>();
         for (Map.Entry<String, String> entry : id3v2keyConv.entrySet()) {
-            if (!arrContains(ignoreList, entry.getKey())) {
+            if (!arrContains(id3v2ignoreList, entry.getKey())) {
                 id3v2valConv.put(entry.getValue(), entry.getKey());
             }
         }
@@ -105,10 +105,10 @@ public class TagConversion {
     // Effects: gets replaygain of tag
     //          returns -6 as default
     public static float getReplayGain(Tag tag) {
-        Pattern gainPattern = Pattern.compile("-?[.\\d]+");
-        Iterator<TagField> fields = tag.getFields();
-        float albumGain = -6;
         try {
+            Pattern gainPattern = Pattern.compile("-?[.\\d]+");
+            Iterator<TagField> fields = tag.getFields();
+            float albumGain = -6;
             while (fields.hasNext()) {
                 TagField field = fields.next();
                 if ((field.getId() + field.toString()).contains("replaygain_track_gain")) {
@@ -124,9 +124,9 @@ public class TagConversion {
                     }
                 }
             }
+            return albumGain;
         } catch (Exception e) {
-            // LMAO
+            return -6;
         }
-        return albumGain;
     }
 }

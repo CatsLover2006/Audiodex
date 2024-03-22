@@ -45,6 +45,8 @@ public class FlacTest {
         flacDecoder.goToTime(2);
         // Error range due to timing math
         assertTrue(Math.abs(2 - flacDecoder.getCurrentTime()) < 0.05);
+        flacDecoder.goToTime(10);
+        assertFalse(flacDecoder.moreSamples());
         assertFalse(flacDecoder.skipInProgress());
     }
 

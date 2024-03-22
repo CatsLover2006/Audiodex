@@ -29,7 +29,6 @@ import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
 
 // FLAC decoder class
-// TODO: implement skipping
 public class Flac implements AudioDecoder {
     private StreamInfo info;
     private String filename;
@@ -149,7 +148,7 @@ public class Flac implements AudioDecoder {
         }
         while (time > getCurrentTime()) {
             bytesPlayed += decodeFrame().getLength();
-            if (time >= getFileDuration()) {
+            if (decoder.isEOF()) {
                 break;
             }
         }
@@ -169,18 +168,17 @@ public class Flac implements AudioDecoder {
         return skipping;
     }
 
+
     // Effects: returns replaygain value
     //          defaults to -6
     @Override
     public float getReplayGain() {
-        AudioFile f;
-        try {
-            f = AudioFileIO.read(new File(filename));
-            return TagConversion.getReplayGain(f.getTag());
-        } catch (Exception e) {
-            // Why?
-        }
-        return -6;
+        float[] ret = new float[] {-6};
+        ExceptionIgnore.ignoreExc(() ->  {
+            AudioFile f = AudioFileIO.read(new File(filename));
+            ret[0] = TagConversion.getReplayGain(f.getTag());
+        });
+        return ret[0];
     }
 
     // Effects: returns album artwork if possible
@@ -253,18 +251,10 @@ public class Flac implements AudioDecoder {
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
-                try {
-                    tag.setField(entry.getValue(), data.toString());
-                } catch (Exception e) {
-                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
-                }
+                ExceptionIgnore.ignoreExc(() -> tag.setField(entry.getValue(), data.toString()));
             }
         }
-        try {
-            f.commit();
-        } catch (CannotWriteException e) {
-            System.out.println("Failed to write to file.");
-        }
+        ExceptionIgnore.ignoreExc(() -> f.commit());
     }
 
     // Requires: prepareToPlayAudio() called once

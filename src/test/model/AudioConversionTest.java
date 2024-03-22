@@ -78,6 +78,7 @@ public class AudioConversionTest {
         converter = new AudioConversion(new AudioDataStructure("data/scarlet.aif"),
                 "data/out/scarlet.conv");
         assertTrue(converter.errorOccurred());
+        assertEquals(0, converter.getComplete());
         assertNull(converter.getOptions());
     }
 

@@ -33,11 +33,11 @@ public class Vorbis implements AudioDecoder {
     private VorbisStream decoded;
     private RandomAccessFile file;
     private String filename;
-    private AudioFormat format;
     private boolean ready = false;
     private int numberBytesRead = 0;
     private LogicalOggStream oggStream;
     private boolean skipping = false;
+    private IdentificationHeader header;
 
     public Vorbis(String filename) {
         this.filename = filename;
@@ -66,15 +66,15 @@ public class Vorbis implements AudioDecoder {
                 if (stream instanceof LogicalOggStream) {
                     oggStream = (LogicalOggStream) stream;
                     if (oggStream.getFormat().equals(LogicalOggStream.FORMAT_VORBIS)) {
-                        oggStream.getTime();
                         decoded = new VorbisStream(oggStream);
                         break;
                     }
                 }
             }
-            IdentificationHeader header = decoded.getIdentificationHeader();
-            format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, header.getSampleRate(), 16,
-                    header.getChannels(), header.getChannels() * 2, header.getSampleRate(), true);
+            if (decoded == null) {
+                return;
+            }
+            header = decoded.getIdentificationHeader();
             ready = true;
             System.out.println("Modern Vorbis decoder ready!");
         } catch (Exception e) {
@@ -108,9 +108,6 @@ public class Vorbis implements AudioDecoder {
         while (moreSamples()) {
             try {
                 numberBytesRead = decoded.readPcm(data, 0, data.length);
-                if (numberBytesRead == -1) {
-                    break;
-                }
                 return new AudioSample(data, numberBytesRead);
             } catch (IOException e) {
                 // Move along
@@ -126,40 +123,45 @@ public class Vorbis implements AudioDecoder {
     @Override
     public void goToTime(double time) {
         skipping = true;
-        ExceptionIgnore.ignoreExc(() -> oggStream.setTime((long) (time * format.getSampleRate())));
+        try {
+            oggStream.setTime((long) (time * header.getSampleRate()));
+        } catch (Exception e) {
+            ExceptionIgnore.ignoreExc(() -> oggStream.setTime(oggStream.getMaximumGranulePosition() - 1));
+        }
         skipping = false;
     }
 
     // Effects: returns the current time in the audio in seconds
     @Override
     public double getCurrentTime() {
-        if (oggStream == null) {
+        if (header == null) {
             return -1;
         }
-        return oggStream.getTime() / format.getSampleRate();
+        return (double) oggStream.getTime() / header.getSampleRate();
     }
 
     // Effects: returns the duration of the audio in seconds
     @Override
     public double getFileDuration() {
-        if (oggStream == null) {
+        if (header == null) {
             return -1;
         }
-        return oggStream.getMaximumGranulePosition() / format.getSampleRate();
+        return (double) oggStream.getMaximumGranulePosition() / header.getSampleRate();
     }
 
     // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
     // Effects:  returns the audio format of the file
     @Override
     public AudioFormat getAudioOutputFormat() {
-        return format;
+        return new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, header.getSampleRate(), 16,
+                header.getChannels(), header.getChannels() * 2, header.getSampleRate(), true);
     }
 
     // Effects: returns true if there are more samples to be played
     //          will return false is no file is loaded
     @Override
     public boolean moreSamples() {
-        if (oggStream == null || decoded == null || !decoded.isOpen()) {
+        if (decoded == null || !decoded.isOpen()) {
             return false;
         }
         return oggStream.getMaximumGranulePosition() > oggStream.getTime();
@@ -206,18 +208,10 @@ public class Vorbis implements AudioDecoder {
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
-                try {
-                    tag.setField(entry.getValue(), data.toString());
-                } catch (FieldDataInvalidException e) {
-                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
-                }
+                ExceptionIgnore.ignoreExc(() -> tag.setField(entry.getValue(), data.toString()));
             }
         }
-        try {
-            f.commit();
-        } catch (CannotWriteException e) {
-            System.out.println("Failed to write to file.");
-        }
+        ExceptionIgnore.ignoreExc(() -> f.commit());
     }
 
     // Effects: returns filename without directories
@@ -265,17 +259,17 @@ public class Vorbis implements AudioDecoder {
         return skipping;
     }
 
+
+
     // Effects: returns replaygain value
     //          defaults to -6
     @Override
     public float getReplayGain() {
-        AudioFile f;
-        try {
-            f = AudioFileIO.read(new File(filename));
-            return TagConversion.getReplayGain(f.getTag());
-        } catch (Exception e) {
-            // Why?
-        }
-        return -6;
+        float[] ret = new float[] {-6};
+        ExceptionIgnore.ignoreExc(() ->  {
+            AudioFile f = AudioFileIO.read(new File(filename));
+            ret[0] = TagConversion.getReplayGain(f.getTag());
+        });
+        return ret[0];
     }
 }
