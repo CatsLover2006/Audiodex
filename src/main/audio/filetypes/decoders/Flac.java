@@ -68,6 +68,7 @@ public class Flac implements AudioDecoder {
             }
             System.out.println("FLAC decoder ready!");
         } catch (Exception e) {
+            decoder = null;
             throw new RuntimeException(e);
         }
     }
