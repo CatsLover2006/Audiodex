@@ -130,7 +130,7 @@ public class AudioDataStructure {
         try {
             out.put("ID3data", id3Data.encode());
         } catch (NullPointerException e) {
-            out.put("ID3data", new JSONArray());
+            out.put("ID3data", new JSONObject());
         }
         return out;
     }
