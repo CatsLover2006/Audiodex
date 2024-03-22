@@ -1,9 +1,6 @@
 package audio.filetypes.decoders;
 
-import audio.AudioDecoder;
-import audio.AudioFileType;
-import audio.AudioSample;
-import audio.ID3Container;
+import audio.*;
 import audio.filetypes.TagConversion;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
@@ -72,7 +69,7 @@ public class Vorbis implements AudioDecoder {
                 }
             }
             if (decoded == null) {
-                return;
+                throw new Exception("Incorrect file type");
             }
             header = decoded.getIdentificationHeader();
             ready = true;

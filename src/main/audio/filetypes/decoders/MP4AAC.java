@@ -1,9 +1,6 @@
 package audio.filetypes.decoders;
 
-import audio.AudioDecoder;
-import audio.AudioFileType;
-import audio.AudioSample;
-import audio.ID3Container;
+import audio.*;
 import audio.filetypes.TagConversion;
 import model.ExceptionIgnore;
 import net.sourceforge.jaad.aac.AACException;
@@ -61,23 +58,21 @@ public class MP4AAC implements AudioDecoder {
     @Override
     public void prepareToPlayAudio() {
         try {
+            if (AudioFileLoader.getAudioFiletype(filename) != AudioFileType.AAC_MP4) {
+                throw new Exception("Incorrect file type");
+            }
             file = new RandomAccessFile(filename, "r");
             MP4Container container = new MP4Container(file);
             Movie movie = container.getMovie();
             duration = movie.getDuration();
             List<Track> tracks = movie.getTracks(AudioTrack.AudioCodec.AAC);
-            if (tracks.isEmpty()) {
-                file.close();
-                file = null;
-                return;
-            }
             this.tracks = (AudioTrack) tracks.get(0);
             audioFormat = new AudioFormat(this.tracks.getSampleRate(), this.tracks.getSampleSize(),
                     this.tracks.getChannelCount(), true, true);
             decoder = new Decoder(this.tracks.getDecoderSpecificInfo());
             ready = true;
             System.out.println("AAC decoder ready!");
-        } catch (IOException e) {
+        } catch (Throwable e) {
             ready = false;
             throw new RuntimeException(e);
         }
