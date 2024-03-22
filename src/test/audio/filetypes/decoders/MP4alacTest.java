@@ -58,6 +58,8 @@ public class MP4alacTest {
         alacDecoder.goToTime(2);
         // Error range due to timing math
         assertTrue(Math.abs(2 - alacDecoder.getCurrentTime()) < 0.05);
+        alacDecoder.goToTime(10);
+        assertFalse(alacDecoder.moreSamples());
         assertFalse(alacDecoder.skipInProgress());
     }
 

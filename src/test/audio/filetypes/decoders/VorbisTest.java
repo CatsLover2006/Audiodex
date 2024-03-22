@@ -45,6 +45,8 @@ public class VorbisTest {
         vorbisDecoder.goToTime(2);
         // Error range due to timing math
         assertTrue(Math.abs(2 - vorbisDecoder.getCurrentTime()) < 0.06);
+        vorbisDecoder.goToTime(10);
+        assertFalse(vorbisDecoder.moreSamples());
         assertFalse(vorbisDecoder.skipInProgress());
     }
 

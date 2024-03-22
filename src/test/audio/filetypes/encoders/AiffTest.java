@@ -34,6 +34,11 @@ public class AiffTest {
         assertEquals(0, encoder.encodedPercent());
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
+        while (decoder.moreSamples()) {
+            decoder.getNextSample();
+        }
+        assertEquals(1, encoder.encodedPercent());
+        decoder.goToTime(0);
         HashMap<String, String> options = new HashMap<>();
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertNull(encoder.getEncoderSpecificSelectors());

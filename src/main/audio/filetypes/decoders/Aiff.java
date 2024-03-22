@@ -114,18 +114,22 @@ public class Aiff implements AudioDecoder {
         skipping = true;
         ExceptionIgnore.ignoreExc(() -> {
             prepareToPlayAudio(); // Reset doesn't work
-            long toSkip = (long) (time * bytesPerSecond);
+            bytesPlayed = (long) Math.min(time * bytesPerSecond, duration * bytesPerSecond);
+            long toSkip = bytesPlayed;
             long skipped;
             while (toSkip != 0) {
                 skipped = in.skip(toSkip);
                 toSkip -= skipped;
                 if (skipped == 0) {
+                    numberBytesRead = -1;
                     skipping = false;
                     return;
                 }
             }
-            bytesPlayed = (long)(time * bytesPerSecond);
         });
+        if (bytesPlayed == Math.round(duration * bytesPerSecond)) {
+            numberBytesRead = -1;
+        }
         skipping = false;
     }
 
@@ -195,18 +199,10 @@ public class Aiff implements AudioDecoder {
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
-                try {
-                    tag.setField(entry.getValue(), data.toString());
-                } catch (FieldDataInvalidException e) {
-                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
-                }
+                ExceptionIgnore.ignoreExc(() -> tag.setField(entry.getValue(), data.toString()));
             }
         }
-        try {
-            f.commit();
-        } catch (CannotWriteException e) {
-            System.out.println("Failed to write to file.");
-        }
+        ExceptionIgnore.ignoreExc(() -> f.commit());
     }
 
     // Effects: returns filename without directories
@@ -260,13 +256,11 @@ public class Aiff implements AudioDecoder {
     //          defaults to -6
     @Override
     public float getReplayGain() {
-        AudioFile f;
-        try {
-            f = AudioFileIO.read(new File(filename));
-            return TagConversion.getReplayGain(f.getTag());
-        } catch (Exception e) {
-            // Why?
-        }
-        return -6;
+        float[] ret = new float[] {-6};
+        ExceptionIgnore.ignoreExc(() ->  {
+            AudioFile f = AudioFileIO.read(new File(filename));
+            ret[0] = TagConversion.getReplayGain(f.getTag());
+        });
+        return ret[0];
     }
 }

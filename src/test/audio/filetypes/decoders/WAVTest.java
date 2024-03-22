@@ -43,6 +43,8 @@ public class  WAVTest {
         assertEquals(5, wavDecoder.getCurrentTime());
         wavDecoder.goToTime(2);
         assertEquals(2, wavDecoder.getCurrentTime());
+        wavDecoder.goToTime(10);
+        assertFalse(wavDecoder.moreSamples());
         assertFalse(wavDecoder.skipInProgress());
     }
 

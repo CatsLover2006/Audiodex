@@ -100,17 +100,18 @@ public class WAV implements AudioDecoder {
         skipping = true;
         ExceptionIgnore.ignoreExc(() -> {
             prepareToPlayAudio(); // Reset doesn't work
-            long toSkip = (long) (time * bytesPerSecond);
+            bytesPlayed = (long) Math.min(time * bytesPerSecond, duration * bytesPerSecond);
+            long toSkip = bytesPlayed;
             long skipped;
             while (toSkip != 0) {
                 skipped = in.skip(toSkip);
                 toSkip -= skipped;
                 if (skipped == 0) {
+                    numberBytesRead = -1;
                     skipping = false;
                     return;
                 }
             }
-            bytesPlayed = (long)(time * bytesPerSecond);
         });
         skipping = false;
     }

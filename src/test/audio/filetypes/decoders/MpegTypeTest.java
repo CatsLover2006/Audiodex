@@ -50,6 +50,8 @@ public class MpegTypeTest {
         mp3Decoder.getNextSample(); // Timer update
         // Error range due to timing math
         assertTrue(Math.abs(2 - mp3Decoder.getCurrentTime()) < 0.05);
+        mp3Decoder.goToTime(10);
+        assertFalse(mp3Decoder.moreSamples());
         assertFalse(mp3Decoder.skipInProgress());
         mp3Decoder.closeAudioFile();
     }

@@ -49,6 +49,8 @@ public class MP4AACTest {
         aacDecoder.getNextSample();
         // Error range due to timing math
         assertTrue(Math.abs(2 - aacDecoder.getCurrentTime()) < 0.1);
+        aacDecoder.goToTime(10);
+        assertFalse(aacDecoder.moreSamples());
         assertFalse(aacDecoder.skipInProgress());
     }
 

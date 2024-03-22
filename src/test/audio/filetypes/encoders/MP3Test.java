@@ -13,6 +13,7 @@ import org.junit.jupiter.api.TestClassOrder;
 import ui.AudioFilePlaybackBackend;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,13 +36,23 @@ public class MP3Test {
         encoder = new MP3();
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
+        assertEquals(0, encoder.encodedPercent());
+        while (decoder.moreSamples()) {
+            decoder.getNextSample();
+        }
+        assertEquals(1, encoder.encodedPercent());
         HashMap<String, String> options = new HashMap<>();
         options.put("Bitrate", "160 kbps");
         options.put("VBR", "No");
         options.put("Stereo", "Yes");
-        options.put("Quality", "Lowest"); // Absurdly big speedup
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
-        assertEquals(0, encoder.encodedPercent());
+        for (String qual : encoder.getEncoderSpecificSelectors().get("Quality")) {
+            options.put("Quality", qual);
+            encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
+        }
+        options.put("Quality", "Lowest"); // Speedup
+        encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
+        decoder.goToTime(0);
         assertNotNull(encoder.getEncoderSpecificSelectors());
         EncodeThread thread = new EncodeThread();
         new PercentDisp(() -> encoder.encodedPercent()).start();
@@ -74,7 +85,8 @@ public class MP3Test {
     @Test
     public void failEncodeTest() {
         decoder = new Aiff("./data/scarlet.aif");
-        encoder = new audio.filetypes.encoders.Aiff();
+        encoder = new audio.filetypes.encoders.MP3();
+        assertFalse(encoder.encodeAudio("./data/out/scarlet.lol.mp3"));
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
         HashMap<String, String> options = new HashMap<>();
@@ -83,7 +95,7 @@ public class MP3Test {
         options.put("Stereo", "No"); // LMAO settings
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
         assertEquals(0, encoder.encodedPercent());
-        assertNull(encoder.getEncoderSpecificSelectors()); // Japanese directory name
+        assertNotNull(encoder.getEncoderSpecificSelectors()); // Japanese directory name
         assertFalse(encoder.encodeAudio("./data/\u3042/scarlet.mp3"));
     }
 

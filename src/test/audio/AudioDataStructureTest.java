@@ -86,5 +86,8 @@ public class AudioDataStructureTest {
         assertEquals(structure.hashCode(), nu.hashCode());
         assertTrue(structure.equals(nu));
         assertFalse(structure.equals(69));
+        assertFalse(structure.qualityErrorAlreadyOccured());
+        structure.markQualityErrorOccured();
+        assertTrue(structure.qualityErrorAlreadyOccured());
     }
 }

@@ -135,7 +135,14 @@ public class MP4AAC implements AudioDecoder {
     @Override
     public void goToTime(double time) {
         skipping = true;
-        tracks.seek(time);
+        if (time > getFileDuration()) {
+            tracks.seek(Math.floor(getFileDuration()));
+            while (moreSamples()) {
+                getNextSample();
+            }
+        } else {
+            tracks.seek(time);
+        }
         skipping = false;
     }
 
@@ -176,25 +183,22 @@ public class MP4AAC implements AudioDecoder {
         ID3Container base = new ID3Container();
         base.setID3Data("VBR", "UNKNOWN");
         base.setID3Data("Title", getFileName());
-        base.setID3Data("bitRate", tracks.getSampleSize());
-        base.setID3Data("sampleRate", tracks.getSampleRate());
-        File file = new File(filename);
-        AudioFile f;
-        try {
-            f = AudioFileIO.read(file);
-        } catch (Exception e) {
-            return base;
-        }
-        base.setID3Data("VBR", f.getAudioHeader().isVariableBitRate() ? "YES" : "NO");
-        Tag tag = f.getTag();
-        for (Map.Entry<FieldKey, String> entry: keyConv.entrySet()) {
-            try {
-                Date d = Date.from(Instant.parse(tag.getFirst(entry.getKey())));
-                base.setID3Long(entry.getValue(), String.valueOf(1900 + d.getYear()));
-            } catch (Exception e) {
-                base.setID3Long(entry.getValue(), tag.getFirst(entry.getKey()));
+        ExceptionIgnore.ignoreExc(() -> {
+            base.setID3Data("bitRate", tracks.getSampleSize());
+            base.setID3Data("sampleRate", tracks.getSampleRate());
+            File file = new File(filename);
+            AudioFile f = AudioFileIO.read(file);
+            base.setID3Data("VBR", f.getAudioHeader().isVariableBitRate() ? "YES" : "NO");
+            Tag tag = f.getTag();
+            for (Map.Entry<FieldKey, String> entry : keyConv.entrySet()) {
+                try {
+                    Date d = Date.from(Instant.parse(tag.getFirst(entry.getKey())));
+                    base.setID3Long(entry.getValue(), String.valueOf(1900 + d.getYear()));
+                } catch (Exception e) {
+                    base.setID3Long(entry.getValue(), tag.getFirst(entry.getKey()));
+                }
             }
-        }
+        });
         return base;
     }
 
@@ -212,18 +216,10 @@ public class MP4AAC implements AudioDecoder {
         for (Map.Entry<String, FieldKey> entry : TagConversion.valConv.entrySet()) {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
-                try {
-                    tag.setField(entry.getValue(), data.toString());
-                } catch (Exception e) {
-                    System.out.println("Failed to set " + entry.getKey() + " to " + data);
-                }
+                ExceptionIgnore.ignoreExc(() -> tag.setField(entry.getValue(), data.toString()));
             }
         }
-        try {
-            f.commit();
-        } catch (CannotWriteException e) {
-            System.out.println("Failed to write to file.");
-        }
+        ExceptionIgnore.ignoreExc(() -> f.commit());
     }
 
     // Effects: returns filename without directories
@@ -270,17 +266,17 @@ public class MP4AAC implements AudioDecoder {
         });
     }
 
+
+
     // Effects: returns replaygain value
     //          defaults to -6
     @Override
     public float getReplayGain() {
-        AudioFile f;
-        try {
-            f = AudioFileIO.read(new File(filename));
-            return TagConversion.getReplayGain(f.getTag());
-        } catch (Exception e) {
-            // Why?
-        }
-        return -6;
+        float[] ret = new float[] {-6};
+        ExceptionIgnore.ignoreExc(() ->  {
+            AudioFile f = AudioFileIO.read(new File(filename));
+            ret[0] = TagConversion.getReplayGain(f.getTag());
+        });
+        return ret[0];
     }
 }

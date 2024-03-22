@@ -43,6 +43,8 @@ public class AiffTest {
         assertEquals(5, aiffDecoder.getCurrentTime());
         aiffDecoder.goToTime(2);
         assertEquals(2, aiffDecoder.getCurrentTime());
+        aiffDecoder.goToTime(10);
+        assertFalse(aiffDecoder.moreSamples());
         assertFalse(aiffDecoder.skipInProgress());
     }
 

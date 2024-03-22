@@ -31,13 +31,19 @@ public class WAVTest {
     @Test
     public void doEncodeTest() {
         decoder = new MP4alac("./data/scarlet.alac.m4a");
-        encoder = new WAV();
+        encoder = new audio.filetypes.encoders.WAV();
+        assertEquals(0, encoder.encodedPercent());
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
+        while (decoder.moreSamples()) {
+            decoder.getNextSample();
+        }
+        assertEquals(1, encoder.encodedPercent());
+        decoder.goToTime(0);
         HashMap<String, String> options = new HashMap<>();
         encoder.setAudioFormat(decoder.getAudioOutputFormat(), options);
-        assertEquals(0, encoder.encodedPercent());
         assertNull(encoder.getEncoderSpecificSelectors());
+        assertEquals(0, encoder.encodedPercent());
         EncodeThread thread = new EncodeThread();
         new PercentDisp(() -> encoder.encodedPercent()).start();
         thread.start();
@@ -49,6 +55,7 @@ public class WAVTest {
                 // LMAO next
             }
         }
+        assertEquals(1, encoder.encodedPercent());
         decoder.closeAudioFile();
         decoder = new audio.filetypes.decoders.WAV("./data/out/scarlet.wav");
         decoder.prepareToPlayAudio();
@@ -69,7 +76,7 @@ public class WAVTest {
     @Test
     public void failEncodeTest() {
         decoder = new Aiff("./data/scarlet.aif");
-        encoder = new audio.filetypes.encoders.Aiff();
+        encoder = new audio.filetypes.encoders.WAV();
         encoder.setSource(decoder);
         decoder.prepareToPlayAudio();
         HashMap<String, String> options = new HashMap<>();

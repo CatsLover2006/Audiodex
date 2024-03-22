@@ -129,8 +129,8 @@ public class AudioDataStructure {
         out.put("filesize", fileSize);
         try {
             out.put("ID3data", id3Data.encode());
-        } catch (Exception e) {
-            out.put("ID3data", new JSONObject());
+        } catch (NullPointerException e) {
+            out.put("ID3data", new JSONArray());
         }
         return out;
     }

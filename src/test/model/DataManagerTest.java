@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DataManagerTest {
     static DataManager database;
+    private static final int LIST_SIZE = 26;
 
     @BeforeAll
     public static void preTest() {
@@ -45,8 +46,10 @@ public class DataManagerTest {
     @Order(2)
     public void databaseManagementTest() {
         assertEquals(0, database.audioListSize());
+        assertFalse(database.beenModified());
         database.addFileToSongDatabase("./data/scarlet.aif");
         assertEquals(1, database.audioListSize());
+        assertTrue(database.beenModified());
         database.updateAudioFile(0,"./data/scarlet.wav");
         assertEquals(1, database.audioListSize());
         database.updateAudioFile(0,"./data/scarlet.wav");
@@ -54,17 +57,17 @@ public class DataManagerTest {
         database.updateAudioFile(0,"./data/scarlet.wav.lmao");
         assertEquals(1, database.audioListSize());
         database.addDirToSongDatabase("./data/");
-        assertEquals(25, database.audioListSize());
+        assertEquals(LIST_SIZE, database.audioListSize());
         database.addDirToSongDatabase("./data/db/audiofolder");
-        assertEquals(25, database.audioListSize());
+        assertEquals(LIST_SIZE, database.audioListSize());
         database.sanitizeAudioDatabase();
-        assertEquals(25, database.audioListSize());
+        assertEquals(LIST_SIZE, database.audioListSize());
         database.removeSongIndex(0);
-        assertEquals(24, database.audioListSize());
+        assertEquals(LIST_SIZE - 1, database.audioListSize());
         database.addFileToSongDatabase("./data/scarlet.wav");
-        assertEquals(25, database.audioListSize());
+        assertEquals(LIST_SIZE, database.audioListSize());
         database.sanitizeAudioDatabase();
-        assertEquals(25, database.audioListSize());
+        assertEquals(LIST_SIZE, database.audioListSize());
     }
 
     @Test
@@ -77,6 +80,7 @@ public class DataManagerTest {
         }
         assertTrue(dbDir.delete());
         assertTrue(database.saveDatabaseFile());
+        assertFalse(database.beenModified());
         new File("./data/db/audioFolder").mkdirs();
     }
 
@@ -98,12 +102,12 @@ public class DataManagerTest {
         database.sortSongList("Album-Title"); // I used to use this
         database.sortSongList("Album_Title");
         database.sanitizeAudioDatabase();
-        assertEquals(25, database.audioListSize());
+        assertEquals(LIST_SIZE, database.audioListSize());
         assertNull(database.getAudioFile(-1));
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < LIST_SIZE; i++) {
             assertNotNull(database.getAudioFile(i));
         }
-        assertNull(database.getAudioFile(25));
+        assertNull(database.getAudioFile(LIST_SIZE));
     }
 
     @Test
@@ -166,11 +170,11 @@ public class DataManagerTest {
         new FileManager();
         FileManager.writeToFile("\u0000", "This fails");
         database.updateAudioFile(1, new AudioDataStructure("/data/scarlet.lol.mp3"));
-        assertEquals(25, database.audioListSize());
+        assertEquals(LIST_SIZE, database.audioListSize());
         assertEquals(1, database.getRemovedAudioFiles().size());
         assertEquals(1, database.getRemovedAudioFiles().get(0));
         database.removeEmptyAudioFiles();
-        assertEquals(24, database.audioListSize());
+        assertEquals(LIST_SIZE - 1, database.audioListSize());
         assertEquals(0, database.getRemovedAudioFiles().size());
         manager = new DataManager();
         manager.setUserDir("./data/db/null");
