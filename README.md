@@ -107,5 +107,18 @@ _I'm a really lucky person ain't I?_
   - As a user, I expect to be able to revert my music library to a previous version if I do something I didn't intend to do
   - As a user, I want to be able to edit the metadata of my songs
 
-In effect I'm creating a iTunes competitor.<br>
-I have made a program that I would intentionally go out of my way to use. Wow.
+## Grader Instructions
+
+My program is designed to be as intuitive and simple as possible. If you've used iTunes, the program should feel fairly familiar (excluding the lack of drag-and-drop for files).<br>
+Both actions involving adding to the (theoretically infinite) list of files are located in the "Database" dropdown menu. You can either import a individual song, or tell the program to import the contents of a directory. Additionally, right clicking on any individual song allows it to be individually removed from the list. The ability to save the state of the application is also located in this menu, as is the ability to load a state other than the automatically loaded one using the "Change Database" button in the "Database" menu.<br>
+The only visual element outside of the (many) SVG icons that are loaded by the program is visible on the top left part of the main window. When you play a song, it will automatically load the album artwork from the file and display it in place of the music note located there.<br>
+To put in in terms of the template:
+
+- There are many SVG files used in my program; there is a chance these fail to load, and if they do, the GUI will become unresponsive. This is a bug within one of the libraries I use, and the only fix is to restart the program. If this happens, the GUI will be visibly broken. The primary visual element can be located in the top left corner of my program, when a song is played; if there is album artwork embedded in the file, it will load this artwork and display it there in place of the default music note.
+- You can generate the required actions relating to the user story of "As a user, I expect to be able to view, edit, and add songs to my music library, which is a list of songs" by:
+  - Using the "Add file to database" button in the "Database" menu to add an indivdual song to the song list.
+  - Using the "Add directory to database" button in the "Database" menu to add the contents of a directory to the song list.
+  - Right clicking on a song in the list and selecting the "Remove song" button to remove a song from the song list.
+  - Right clicking on a song in the list and selecting the "Edit metadata" button to edit the metadata of a song.
+- You can save the state of my application using the "Save database" button in the "Database" menu; this saves a new file in the active directory and updates the index the program will load (rationale for this in next point).
+- The application will automatically attempt to load the most recently saved file within the default directory, which is set to `(user home)/audiodex`; this can be changed using the "Change Database" button in the "Database" menu. Using this button will allow you to change the active directory. This will make the program attempt to load the most recently saved database located in that directory; if there is none, it will initalize a new database. I use a directory instead of an individual file to make rolling back the database in case of a failed save fairly easy, as it could be difficult or slow to import hundreds of songs. Which file is loaded is determined by the file `index.audiodex.db`, which is used to both detect if a database is present, and also to determine which JSON file to load (it stores a 64-bit index in base 36)
