@@ -115,7 +115,7 @@ The only visual element outside of the (many) SVG icons that are loaded by the p
 To put in in terms of the template:
 
 - There are many SVG files used in my program; there is a chance these fail to load, and if they do, the GUI will become unresponsive. This is a bug within one of the libraries I use, and the only fix is to restart the program. If this happens, the GUI will be visibly broken. The primary visual element can be located in the top left corner of my program, when a song is played; if there is album artwork embedded in the file, it will load this artwork and display it there in place of the default music note.
-- You can generate the required actions relating to the user story of "As a user, I expect to be able to view, edit, and add songs to my music library, which is a list of songs" by:
+- You can generate the required actions relating to the user story of "As a user, I expect to be able to view, edit, and add songs to my music library, which is a list of songs" by having a song file and:
   - Using the "Add file to database" button in the "Database" menu to add an indivdual song to the song list.
   - Using the "Add directory to database" button in the "Database" menu to add the contents of a directory to the song list.
   - Right clicking on a song in the list and selecting the "Remove song" button to remove a song from the song list.
