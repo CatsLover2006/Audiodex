@@ -15,9 +15,7 @@ import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotWriteException;
 import org.jaudiotagger.audio.mp3.MP3File;
-import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
@@ -335,7 +333,7 @@ public class MpegType implements AudioDecoder {
     public float getReplayGain() {
         float[] ret = new float[] {-6};
         ExceptionIgnore.ignoreExc(() ->  {
-            AudioFile f = AudioFileIO.read(new File(filename));
+            AudioFile f = AudioFileIO.readAs(new File(filename), "mp3");
             ret[0] = TagConversion.getReplayGain(f.getTag());
         });
         return ret[0];

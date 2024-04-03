@@ -4,7 +4,6 @@
     <root id="archive" name="Audiodex.jar">
       <element id="module-output" name="Audiodex" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jansi-2.4.2-SNAPSHOT.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jaudiotagger-3.0.2-SNAPSHOT.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/j-ogg-vorbis-1.0.4.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound-alac-0.3.2.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/vavi-sound/vavi-commons-sandbox-0.3.4.jar" path-in-jar="/" />
@@ -45,6 +44,7 @@
       <element id="directory" name="data">
         <element id="dir-copy" path="$PROJECT_DIR$/data/spec" />
       </element>
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jaudiotagger-2.2.6-SNAPSHOT.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

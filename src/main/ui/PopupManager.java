@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import static java.awt.GridBagConstraints.*;
 import static java.io.File.separatorChar;
@@ -389,7 +388,7 @@ public class PopupManager {
             if (!file.exists()) {
                 return ".empty";
             }
-            if (file.isDirectory() && getFileExtensionLoc(file.getPath()) == -1) {
+            if (file.isDirectory()) {
                 return ".folder";
             }
             if (getFileExtensionLoc(file.getPath()) == -1) {
@@ -519,7 +518,7 @@ public class PopupManager {
 
         // Effects: returns file extension of a file
         private static int getFileExtensionLoc(String path) {
-            return path.lastIndexOf('.', path.lastIndexOf(separatorChar) + 1);
+            return path.lastIndexOf('.');
         }
 
         // Effects: does PARENT selection (windows drive detection)
