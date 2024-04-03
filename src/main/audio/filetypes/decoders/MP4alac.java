@@ -9,8 +9,6 @@ import com.beatofthedrum.alacdecoder.Alac;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotWriteException;
-import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
@@ -24,7 +22,6 @@ import java.util.Map;
 
 import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
-import static java.lang.Thread.sleep;
 
 // ALAC file decoder class
 public class MP4alac implements AudioDecoder {

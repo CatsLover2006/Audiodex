@@ -56,8 +56,8 @@ public class MP3Test {
         assertNotNull(encoder.getEncoderSpecificSelectors());
         EncodeThread thread = new EncodeThread();
         new PercentDisp(() -> encoder.encodedPercent()).start();
-        thread.start();
         assertEquals(0, encoder.encodedPercent());
+        thread.start();
         while (thread.isAlive()) {
             try {
                 thread.join();

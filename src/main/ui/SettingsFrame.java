@@ -1,12 +1,9 @@
 package ui;
 
-import com.github.weisj.jsvg.nodes.Anchor;
 import model.ApplicationSettings;
 import model.ExceptionIgnore;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
 
 import static java.awt.GridBagConstraints.CENTER;

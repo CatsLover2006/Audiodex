@@ -37,6 +37,7 @@ public class AudioFileLoaderTest {
         assertEquals(AudioFileType.EMPTY_OGG, getAudioFiletype("data/null.ogg"));
         assertEquals(AudioFileType.EMPTY, getAudioFiletype("data/null"));
         assertEquals(AudioFileType.MP3, getAudioFiletype("data/null.mp3"));
+        assertEquals(AudioFileType.EMPTY_MP4, getAudioFiletype("data/notScarlet.m4p"));
     }
 
     @Test

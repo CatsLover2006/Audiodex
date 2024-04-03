@@ -65,6 +65,7 @@ public class AudioFileLoader {
                 return oggAudioType(filename);
             case "mp4":
             case "m4a":
+            case "m4p":
                 return m4aAudioType(filename);
             default:
                 return AudioFileType.EMPTY;
