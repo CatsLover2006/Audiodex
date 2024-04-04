@@ -722,6 +722,23 @@ public class App {
             JMenuItem item = new JMenuItem("Play file");
             item.addActionListener(e -> playArbitraryFile());
             menu.add(item);
+            item = new JMenuItem("Re-encode file");
+            item.addActionListener(e ->
+                    new FilePopupFrame(fileSystemView.getDefaultDirectory().getAbsolutePath(),
+                            AudioFileLoader.KNOWN_FILETYPES, popup -> {
+                        AudioDataStructure structure = new AudioDataStructure((String) popup.getValue());
+                        if (!structure.isEmpty()) {
+                            new ConversionPopupFrame(structure, converter -> {
+                                audioConverterList.add((AudioConversion) converter.getValue());
+                                ((AudioConversion) converter.getValue()).start();
+                            });
+                        } else {
+                            new PopupManager.ErrorPopupFrame("File is corrupt or in an<br>unsupported format."
+                                    + "<br>Cannot re-encode file.",
+                                    ErrorImageTypes.ERROR, obj -> { });
+                        }
+                    }));
+            menu.add(item);
             item = new JMenuItem("Settings");
             item.addActionListener(e ->
                     new SettingsFrame(database.getSettings(), new SettingsFrame.Responder[]{
