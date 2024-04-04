@@ -3,10 +3,14 @@ package ui;
 import audio.AudioDataStructure;
 
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.LogManager;
@@ -23,10 +27,7 @@ import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.nodes.SVG;
 import com.github.weisj.jsvg.parser.SVGLoader;
 import com.jthemedetecor.OsThemeDetector;
-import model.AudioConversion;
-import model.DataManager;
-import model.ExceptionIgnore;
-import model.FileManager;
+import model.*;
 import org.apache.commons.lang3.SystemUtils;
 import org.fusesource.jansi.*;
 
@@ -41,6 +42,7 @@ import ui.PopupManager.*;
 
 import static java.io.File.separatorChar;
 import static java.lang.Math.floor;
+import static java.lang.System.exit;
 import static java.lang.Thread.*;
 
 // Main application class
@@ -281,8 +283,6 @@ public class App {
 
     // GUI mode
     static class Gui {
-
-        private static JFrame mainWindow;
         private static JFrame activeConversionsView = new JFrame("Active Conversions");
         private static JTable activeConversionsTable = new JTable(new ConverterTableModel());
 
@@ -576,14 +576,49 @@ public class App {
             }
         }
 
+        private static JFrame mainWindow = new JFrame("Audiodex");
+
+        // Setup main window close action
+        static {
+            mainWindow.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    new Thread(() -> {
+                        mainWindow.setVisible(false);
+                        if (!audioConverterList.isEmpty()) {
+                            ExceptionIgnore.ignoreExc(() -> SwingUtilities.invokeAndWait(() ->
+                                    new ErrorPopupFrame("Waiting for encoders<br>to finish...",
+                                            ErrorImageTypes.INFO, null).updateUI()));
+                            while (!audioConverterList.isEmpty()) {
+                                waitForFirstEncoder();
+                            }
+                        }
+                        mainWindow.dispose();
+                        EventLog.getInstance().iterator().forEachRemaining(event ->
+                                    AnsiConsole.out().println(String.format("%s: %s",
+                                            event.getDate().toString(), event.getDescription())));
+                        exit(0);
+                    }).start();
+                }
+            });
+        }
+
+
+
+        // Effects: waits for first audio encoding thread to finish
+        private static void waitForFirstEncoder() {
+            if (audioConverterList.isEmpty()) {
+                return;
+            }
+            audioConverterList.get(0).waitForEncoderFinish();
+        }
+
         // Modifies: this
         // Effects:  displays main window
         public static void doGui(String[] args) {
-            mainWindow = new JFrame("Audiodex");
             mainWindow.setSize(900, 500);
             mainWindow.setResizable(true);
             ExceptionIgnore.ignoreExc(() -> mainWindow.setIconImage(loadImage("AppIcon.png")));
-            mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             updateGuiList();
             createPlaybackBar();
             createControlsView();
@@ -908,7 +943,7 @@ public class App {
                 noShuffleInit = new JVectorIcon(loadVector("forward-arrow.svg"), 24, 16);
                 shuffleOnInit = new JVectorIcon(loadVector("shuffle.svg"), 24, 16);
             } catch (IOException e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
                 placeholderInit = new JVectorIcon(new SVGDocument(new SVG()), 64, 64);
                 skipInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
                 prevInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);

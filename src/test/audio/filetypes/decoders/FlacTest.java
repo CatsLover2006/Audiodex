@@ -36,6 +36,7 @@ public class FlacTest {
     @Test
     public void skipTest() {
         assertFalse(flacDecoder.isReady());
+        assertEquals(-1, flacDecoder.getCurrentTime());
         flacDecoder.prepareToPlayAudio();
         assertTrue(flacDecoder.isReady());
         assertEquals(0, flacDecoder.getCurrentTime());

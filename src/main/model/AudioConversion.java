@@ -12,6 +12,8 @@ import static audio.AudioFileLoader.getAudioFiletype;
 
 // Defines an audio conversion manager
 public class AudioConversion {
+    private static EventLog logger = EventLog.getInstance();
+
     // Nobody else needs to know about this
     // Defines this audio converter's thread
     private class AudioConverterThread extends Thread {
@@ -76,6 +78,8 @@ public class AudioConversion {
             return;
         }
         helper.setSource(source);
+        logger.logEvent(new Event("Prepared audio converter: " + sourceFile.getFilename()
+                + " -> " + targetFile));
     }
 
     // Effects: gets target string
@@ -97,6 +101,8 @@ public class AudioConversion {
         source.prepareToPlayAudio();
         helper.setAudioFormat(source.getAudioOutputFormat(), settings);
         source.closeAudioFile();
+        logger.logEvent(new Event("Set settings for converter: " + source.getFileName()
+                + " -> " + targetFile));
     }
 
     // Modifies: this
@@ -126,6 +132,8 @@ public class AudioConversion {
         converterThread = new AudioConverterThread();
         source.prepareToPlayAudio();
         converterThread.start();
+        logger.logEvent(new Event("Started converter: " + source.getFileName()
+                + " -> " + targetFile));
     }
 
     public boolean isFinished() {

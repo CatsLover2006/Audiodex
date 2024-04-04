@@ -1,6 +1,5 @@
 package model;
 
-import ca.ubc.cpsc210.alarm.model.Event;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

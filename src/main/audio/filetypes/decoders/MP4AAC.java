@@ -2,6 +2,8 @@ package audio.filetypes.decoders;
 
 import audio.*;
 import audio.filetypes.TagConversion;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import net.sourceforge.jaad.aac.AACException;
 import net.sourceforge.jaad.aac.Decoder;
@@ -70,7 +72,7 @@ public class MP4AAC implements AudioDecoder {
                     this.tracks.getChannelCount(), true, true);
             decoder = new Decoder(this.tracks.getDecoderSpecificInfo());
             ready = true;
-            System.out.println("AAC decoder ready!");
+            EventLog.getInstance().logEvent(new Event("AAC decoder ready!"));
         } catch (Throwable e) {
             ready = false;
             throw new RuntimeException(e);
@@ -113,7 +115,7 @@ public class MP4AAC implements AudioDecoder {
                 decoder.decodeFrame(frame.getData(), buffer);
                 return new AudioSample(buffer.getData());
             } catch (AACException e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             } catch (IOException e) {
                 return new AudioSample();
             }

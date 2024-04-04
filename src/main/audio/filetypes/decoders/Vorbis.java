@@ -2,6 +2,8 @@ package audio.filetypes.decoders;
 
 import audio.*;
 import audio.filetypes.TagConversion;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -71,7 +73,7 @@ public class Vorbis implements AudioDecoder {
             }
             header = decoded.getIdentificationHeader();
             ready = true;
-            System.out.println("Modern Vorbis decoder ready!");
+            EventLog.getInstance().logEvent(new Event("Modern Vorbis decoder ready!"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

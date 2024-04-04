@@ -5,6 +5,8 @@ import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.TagConversion;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -63,7 +65,7 @@ public class Aiff implements AudioDecoder {
             int frameSize = format.getFrameSize();
             bytesPerSecond = frameSize * audioFrameRate;
             duration = f.getAudioHeader().getPreciseTrackLength();
-            System.out.println("AIFF decoder ready!");
+            EventLog.getInstance().logEvent(new Event("AIFF decoder ready!"));
             ready = true;
         } catch (Exception e) {
             throw new RuntimeException(e);

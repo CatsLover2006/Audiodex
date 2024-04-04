@@ -121,9 +121,6 @@ public class AudioFilePlaybackBackend {
             failedReplayGainSet = true;
             App.replaygainFailure();
         }
-        for (Control control : line.getControls()) {
-            System.out.println(control.toString());
-        }
     }
 
     // Modifies: this
@@ -163,7 +160,6 @@ public class AudioFilePlaybackBackend {
                 App.audioQualityDegradation();
             }
             replayGainVal = loadedFile.getReplayGain();
-            System.out.println("Replaygain is: " + replayGainVal);
             setReplayGain(replayGain);
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
@@ -175,7 +171,6 @@ public class AudioFilePlaybackBackend {
     private void getAudioFormat() {
         audioFormat = loadedFile.getAudioOutputFormat();
         bytesPerSampleRead = audioFormat.getSampleSizeInBits() / 8;
-        System.out.println(bytesPerSampleRead);
         bytesPerSampleWrite = bytesPerSampleRead;
         do {
             audioFormat = new AudioFormat(
