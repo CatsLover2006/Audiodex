@@ -254,7 +254,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
             this.responder = responder;
         }
@@ -493,7 +493,7 @@ public class PopupManager {
             try {
                 out = file.getAbsolutePath().equals(file.getCanonicalPath()) ? 0 : 12;
             } catch (IOException e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
             if (file.isFile()) {
                 out++;
@@ -586,6 +586,7 @@ public class PopupManager {
             setupWindowLayout();
             System.out.println("Done objects...");
             selector.pack();
+            selector.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             selector.setAlwaysOnTop(true);
             selector.setVisible(true);
             allowOut = true;
@@ -638,7 +639,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
             this.responder = responder;
         }
@@ -686,6 +687,7 @@ public class PopupManager {
             setupWindowLayout();
             selector.setAlwaysOnTop(true);
             selector.pack();
+            selector.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             selector.setResizable(false);
             selector.setVisible(true);
             popupList.add(this);
@@ -728,7 +730,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
             this.responder = responder;
         }
@@ -741,7 +743,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
             this.responder = responder;
             this.noResponder = noResponder;
@@ -757,7 +759,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
             this.responder = responder;
         }
@@ -772,7 +774,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
             this.responder = responder;
             this.noResponder = noResponder;
@@ -823,6 +825,7 @@ public class PopupManager {
             setupWindowObjects();
             setupWindowLayout();
             selector.setAlwaysOnTop(true);
+            selector.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             selector.pack();
             selector.setResizable(false);
             selector.setVisible(true);
@@ -924,6 +927,7 @@ public class PopupManager {
             setupWindowObjects();
             setupWindowLayout();
             selector.pack();
+            selector.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             selector.setAlwaysOnTop(true);
             selector.setVisible(true);
             popupList.add(this);
@@ -940,7 +944,7 @@ public class PopupManager {
                     try {
                         SwingUtilities.invokeLater(() -> setup());
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        ExceptionIgnore.logException(e);
                     }
                 }
             });
@@ -1084,7 +1088,7 @@ public class PopupManager {
             try {
                 SwingUtilities.invokeLater(() -> setup());
             } catch (Exception e) {
-                e.printStackTrace();
+                ExceptionIgnore.logException(e);
             }
         }
 
@@ -1182,6 +1186,7 @@ public class PopupManager {
             editor.setSize(400, 400);
             setupWindowObjects();
             setupWindowLayout();
+            editor.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             editor.setAlwaysOnTop(false);
             editor.setVisible(true);
             popupList.add(this);

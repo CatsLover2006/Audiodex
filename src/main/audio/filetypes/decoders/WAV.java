@@ -4,6 +4,8 @@ import audio.AudioDecoder;
 import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import org.jaudiotagger.tag.images.Artwork;
 
@@ -51,7 +53,7 @@ public class WAV implements AudioDecoder {
             int frameSize = format.getFrameSize();
             bytesPerSecond = frameSize * audioFrameRate;
             duration = audioFileLength / (frameSize * audioFrameRate);
-            System.out.println("WAV/PCM decoder ready!");
+            EventLog.getInstance().logEvent(new Event("WAV/PCM decoder ready!"));
             ready = true;
         } catch (Exception e) {
             throw new RuntimeException(e);

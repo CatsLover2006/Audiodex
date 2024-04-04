@@ -5,6 +5,8 @@ import audio.AudioFileType;
 import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.TagConversion;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -65,7 +67,7 @@ public class Flac implements AudioDecoder {
                 decoder.decode();
                 info = decoder.getStreamInfo();
             }
-            System.out.println("FLAC decoder ready!");
+            EventLog.getInstance().logEvent(new Event("FLAC decoder ready!"));
         } catch (Exception e) {
             decoder = null;
             throw new RuntimeException(e);
@@ -132,6 +134,9 @@ public class Flac implements AudioDecoder {
     // Effects: returns the current time in the audio in seconds
     @Override
     public double getCurrentTime() {
+        if (!isReady()) {
+            return -1;
+        }
         return bytesPlayed / (info.getSampleRate() * info.getBitsPerSample() * info.getChannels() / 8.0);
     }
 

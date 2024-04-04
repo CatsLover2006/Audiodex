@@ -6,6 +6,8 @@ import audio.AudioSample;
 import audio.ID3Container;
 import audio.filetypes.TagConversion;
 import com.beatofthedrum.alacdecoder.Alac;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -63,7 +65,7 @@ public class MP4alac implements AudioDecoder {
                     false);
             data = new byte[0xFFFF]; // Make sure we have space
             bytesPerSecond = format.getSampleSizeInBits() * format.getChannels() * format.getSampleRate() / 8;
-            System.out.println("ALAC decoder ready!");
+            EventLog.getInstance().logEvent(new Event("ALAC decoder ready!"));
             ready = true;
         } catch (Exception e) {
             throw new RuntimeException(e);

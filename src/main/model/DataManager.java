@@ -21,6 +21,7 @@ public class DataManager {
     private long dbIndex;
     private String userDir;
     private boolean modified = false;
+    private static EventLog logger = EventLog.getInstance();
 
     // Modifies: this
     // Effects:  fileList is empty, loads database from (user home directory)/audiodex
@@ -61,8 +62,9 @@ public class DataManager {
         } catch (Exception e) {
             return;
         }
-        System.out.println("Sorting database by " + type + "...");
+        logger.logEvent(new Event("Sorting database by " + type + "..."));
         bubble(sortBy, songFilelist.size());
+        logger.logEvent(new Event("Sorted database by " + type + "."));
     }
 
     // Modifies: this
@@ -123,7 +125,7 @@ public class DataManager {
     // Modifies: this
     // Effects:  removes all null values from database
     public void sanitizeAudioDatabase() {
-        System.out.println("Sanitizing Database...");
+        logger.logEvent(new Event("Sanitizing Database..."));
         for (int i = 0; i < songFilelist.size(); i++) {
             if (songFilelist.get(i) == null || songFilelist.get(i).isEmpty()
                     || songDbContainsDuplicate(songFilelist.get(i).getFilename())) {
@@ -131,6 +133,7 @@ public class DataManager {
                 i--;
             }
         }
+        logger.logEvent(new Event("Sanitized Database!"));
     }
 
     // Effects: returns true if database contains file, false otherwise
@@ -147,29 +150,30 @@ public class DataManager {
     // Modifies: this
     // Effects:  adds specified file to database
     public void addFileToSongDatabase(String filename) {
+        logger.logEvent(new Event("Adding file " + filename + "..."));
         try {
             if (songDbContainsFile(new File(filename).getCanonicalPath())) {
-                System.out.println("File already in database, skipping.");
+                logger.logEvent(new Event("File already in database, skipping."));
                 return;
             }
         } catch (IOException e) {
-            System.out.println("Error while trying to get absolute path of file.");
+            logger.logEvent(new Event("Error while trying to get absolute path of file."));
             return;
         }
-        System.out.println("Adding file " + filename + "...");
         AudioDataStructure data = new AudioDataStructure(filename);
         if (data.isEmpty()) {
-            System.out.println("Unknown file type, ignored file.");
+            logger.logEvent(new Event("Unknown file type, ignored file."));
             return;
         }
         songFilelist.add(data);
+        logger.logEvent(new Event("Added file " + filename + "!"));
         modified = true;
     }
 
     // Modifies: this
     // Effects:  adds all files in specified directory to database
     public void addDirToSongDatabase(String dirname) {
-        System.out.println("Adding directory " + dirname + "...");
+        logger.logEvent(new Event("Adding directory " + dirname + "..."));
         File dir = new File(dirname);
         if (dir.isDirectory()) {
             File[] fileList = dir.listFiles();
@@ -177,6 +181,7 @@ public class DataManager {
                 return;
             }
             for (File file : fileList) { // Database uses absolute file paths, otherwise it would fail to load audio
+                logger.logEvent(new Event("Processing " + file.getAbsolutePath() + "..."));
                 if (file.isFile()) {
                     ExceptionIgnore.ignoreExc(() -> addFileToSongDatabase(file.getAbsolutePath()));
                 } else if (file.isDirectory()) {
@@ -184,21 +189,23 @@ public class DataManager {
                 }
             }
         }
+        logger.logEvent(new Event("Added directory " + dirname + "!"));
     }
 
     // Modifies: this
     // Effects:  loads database index from (userDir)/audiodex.dbindex and reloads database
     public void loadDatabase() {
         String filename = userDir + "index.audiodex.db";
+        logger.logEvent(new Event("Loading database index from " + filename + "..."));
         songFilelist.clear();
         try {
             dbIndex = Long.parseLong(readFile(filename), 36);
         } catch (Exception e) {
             dbIndex = 0;
-            System.out.println("New database.");
+            logger.logEvent(new Event("New database."));
             return;
         }
-        System.out.println("Successfully loaded database index: " + dbIndex);
+        logger.logEvent(new Event("Successfully loaded database index: " + dbIndex));
         loadDatabaseFile();
     }
 
@@ -212,6 +219,7 @@ public class DataManager {
     // Effects:  replaces file list with described data file
     public void loadDatabaseFile() {
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
+        logger.logEvent(new Event("Attempting to load database..."));
         JSONArray array;
         String file = readFile(filename);
         try {
@@ -221,15 +229,16 @@ public class DataManager {
         } catch (JSONException e) {
             try {
                 array = new JSONArray(file);
-                System.out.println("Legacy-style database.");
+                logger.logEvent(new Event("Legacy-style database."));
             } catch (JSONException e2) {
-                System.out.println("Error while decoding database.");
+                logger.logEvent(new Event("Error while decoding database."));
                 return;
             }
         }
         for (Object object : array) {
             songFilelist.add(AudioDataStructure.decode((JSONObject) object));
         }
+        logger.logEvent(new Event("Loaded database!"));
         modified = false;
     }
 
@@ -242,6 +251,7 @@ public class DataManager {
     // Effects:  replaces file list with described data file
     //           returns true on success, false on failure
     public boolean saveDatabaseFile() {
+        logger.logEvent(new Event("Saving database file..."));
         File userDirFile = new File(userDir);
         if (!userDirFile.exists()) {
             if (!userDirFile.mkdirs()) {
@@ -252,6 +262,7 @@ public class DataManager {
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         String toSave = getDatasave().toString();
         FileManager.writeToFile(filename, toSave);
+        logger.logEvent(new Event("Saved database file!"));
         if (saveDatabaseIndex()) {
             modified = false;
             return true;
@@ -274,24 +285,32 @@ public class DataManager {
     // Modifies: database files, specifically audiodex.dbindex
     // Effects:  saves current database pointer
     private boolean saveDatabaseIndex() {
-        return FileManager.writeToFile(userDir + "index.audiodex.db", Long.toString(dbIndex, 36));
+        logger.logEvent(new Event("Updating database index..."));
+        if (FileManager.writeToFile(userDir + "index.audiodex.db", Long.toString(dbIndex, 36))) {
+            logger.logEvent(new Event("Updated database index!"));
+            return true;
+        }
+        logger.logEvent(new Event("Error updating database index."));
+        return false;
     }
 
     // Modifies: database files
     // Effects:  reverts to previous database, if avaliable
     public void revertDb() {
         if (modified) {
+            logger.logEvent(new Event("Reverting unsaved changes..."));
             loadDatabase();
             return;
         }
+        logger.logEvent(new Event("Reverting database..."));
         dbIndex--;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         if (new File(filename).exists()) {
             loadDatabaseFile();
             saveDatabaseIndex();
-            System.out.println("Successfully reverted database!");
+            logger.logEvent(new Event("Successfully reverted database!"));
         } else {
-            System.out.println("Could not find previous version of database...");
+            logger.logEvent(new Event("Could not find previous version of database..."));
             dbIndex++;
         }
     }
@@ -300,10 +319,11 @@ public class DataManager {
     // Effects:  cleans (deletes all files for) database with specified filename
     public static void cleanDb(String filename) {
         if (new File(filename).exists()) {
-            System.out.println("Cleaning database at " + filename + "...");
+            logger.logEvent(new Event("Cleaning database at " + filename + "..."));
             ExceptionIgnore.ignoreExc(() -> delete(Paths.get(filename)));
+            logger.logEvent(new Event("Cleaned database at " + filename + "!"));
         } else {
-            System.out.println("No database to clean!");
+            logger.logEvent(new Event("No database to clean!"));
         }
     }
 
@@ -316,18 +336,22 @@ public class DataManager {
     // Modifies: database files
     // Effects:  cleans (deletes all files for) database for index
     public void cleanOldDb() {
+        logger.logEvent(new Event("Cleaning unused databases..."));
         for (long i = 0; i < dbIndex; i++) {
             cleanDb(i);
         }
+        logger.logEvent(new Event("Cleaned unused databases!"));
     }
 
     // Modifies: database files
     // Effects:  clean (delete all files for) all databases, reset the database pointer
     //           and saves the database again
     public void cleanDbFldr() {
+        logger.logEvent(new Event("Cleaning database folder..."));
         dbIndex = 0;
         File[] fileList = new File(userDir).listFiles();
         if (fileList == null) {
+            logger.logEvent(new Event("Folder empty."));
             return;
         }
         for (File f : fileList) {
@@ -337,16 +361,18 @@ public class DataManager {
             ExceptionIgnore.ignoreExc(() -> {
                 String filename = f.getAbsolutePath();
                 delete(f.toPath());
-                System.out.println("Deleted " + filename + ".");
+                logger.logEvent(new Event("Deleted " + filename + "."));
             });
         }
         saveDatabaseFile();
+        logger.logEvent(new Event("Cleaning database folder..."));
     }
 
     // Modifies: this
     // Effects:  sets user directory
     public void setUserDir(String nuDir) {
         userDir = nuDir;
+        logger.logEvent(new Event("Updated active directory to: " + userDir));
     }
 
     // Effects: returns a list of indexes to files that no longer exist
@@ -366,6 +392,7 @@ public class DataManager {
     // Effects:  removes file index from database
     public void removeSongIndex(int i) {
         songFilelist.remove(i);
+        logger.logEvent(new Event("Removed song at index " + i));
     }
 
     // Modifies: this
@@ -385,20 +412,21 @@ public class DataManager {
     public void updateAudioFile(int i, String newFileName) {
         try {
             if (songDbContainsFile(new File(newFileName).getCanonicalPath())) {
-                System.out.println("File already in database, skipping.");
+                logger.logEvent(new Event("File already in database, skipping."));
                 return;
             }
         } catch (IOException e) {
-            System.out.println("Error while trying to get absolute path of file.");
+            logger.logEvent(new Event("Error while trying to get absolute path of file."));
             return;
         }
-        System.out.println("Swapping in file " + newFileName + "...");
+        logger.logEvent(new Event("Swapping in file " + newFileName + "..."));
         AudioDataStructure data = new AudioDataStructure(newFileName);
         if (data.isEmpty()) {
-            System.out.println("Unknown file type, cannot use file.");
+            logger.logEvent(new Event("Unknown file type, cannot use file."));
             return;
         }
         songFilelist.set(i, data);
+        logger.logEvent(new Event("Updated file for index " + i + "!"));
     }
 
     // Modifies: this

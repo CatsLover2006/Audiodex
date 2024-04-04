@@ -12,6 +12,8 @@ import java.util.Map;
 import audio.filetypes.TagConversion;
 import javazoom.spi.mpeg.sampled.convert.DecodedMpegAudioInputStream;
 import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -64,10 +66,10 @@ public class MpegType implements AudioDecoder {
                     baseFormat.getChannels() * 2, baseFormat.getSampleRate(), false);
             decoded = new DecodedMpegAudioInputStream(format, in);
             audioFrameRate = baseFormat.getFrameRate();
-            System.out.println("MP3 decoder ready!");
+            EventLog.getInstance().logEvent(new Event("MP3 decoder ready!"));
             ready = true;
         } catch (FileNotFoundException e) {
-            System.out.println("File not found");
+            ExceptionIgnore.logException(e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -4,6 +4,9 @@ import audio.filetypes.decoders.*;
 import de.jarnbjo.ogg.FileStream;
 import de.jarnbjo.ogg.LogicalOggStream;
 import de.jarnbjo.ogg.PhysicalOggStream;
+import model.Event;
+import model.EventLog;
+import model.ExceptionIgnore;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 
@@ -13,6 +16,7 @@ import java.io.RandomAccessFile;
 // Simply allows you to pass a file into the loadFile function
 // and forwards that to the right filetype handler
 public class AudioFileLoader {
+    private static EventLog logger = EventLog.getInstance();
     public static final String[] KNOWN_FILETYPES = {
             "wav", "wave", "aif", "aiff", "aifc", "mp1", "mp2", "mp3",
             "ogg", "oga", "mogg", "mp4", "m4a", "flac"
@@ -78,7 +82,8 @@ public class AudioFileLoader {
         try {
             file = new File(filename);
             AudioFile audio = AudioFileIO.readAs(file, "m4a");
-            System.out.println("Got format: " + audio.getAudioHeader().getEncodingType().toLowerCase());
+            logger.logEvent(new Event("Got format " + audio.getAudioHeader().getEncodingType().toLowerCase()
+                    + " for file " + filename + "."));
             switch (audio.getAudioHeader().getEncodingType().toLowerCase()) {
                 case "aac":
                     return AudioFileType.AAC_MP4;
@@ -86,7 +91,7 @@ public class AudioFileLoader {
                     return AudioFileType.ALAC_MP4;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            ExceptionIgnore.logException(e);
         }
         return AudioFileType.EMPTY_MP4;
     }
@@ -109,7 +114,7 @@ public class AudioFileLoader {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            ExceptionIgnore.logException(e);
         }
         return AudioFileType.EMPTY_OGG;
     }
