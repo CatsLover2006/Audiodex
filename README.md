@@ -275,4 +275,4 @@ Fri Apr 05 12:49:56 PDT 2024: AAC decoder ready!
 
 ### Phase 4: Task 3
 
-There is very little refactoring I'd do if I had more time on this project. The one thing I *know* I would do is encrypt the *.JSON files so they couldn't be read easily.
+There is very little refactoring I'd do if I had more time on this project. The one thing I *know* I would do is encrypt the *.json files so they couldn't be read easily (probably just using an XOR key).
