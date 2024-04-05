@@ -1,13 +1,11 @@
 package ui;
 
-import model.EventLog;
+import org.apache.commons.lang3.SystemUtils;
 
-// Semi-bootstrap for application class
-// Here bc cpsc 210 limitations
+// Bootstrap for App class
 public class Main {
-
-
     public static void main(String[] args) {
+        Preloader.onLoad();
         App.startApp(args);
     }
 }
