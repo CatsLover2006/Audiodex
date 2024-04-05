@@ -106,7 +106,7 @@ public class App {
             maxBoundPlayedList();
             finishedSong();
         } else {
-            //Gui.songFinishedPlaying();
+            Gui.songFinishedPlaying();
         }
     }
 
