@@ -1,6 +1,6 @@
 # Chance's CPSC 210 Personal Project
 
-***NOTE 1***: This project expects you have music files to play. Thanks to non-copyright songs, I am able to include a full song for tests; that said, since lossy codecs aren't going to 100% match their lossless counterparts, I'm going to have to add one additional *.wav file for every codec. For the currently implemented tests (all but MP2) this has totaled to around 340MB. No doubt by the time I finish up with tests and adding encoders it'll be even larger.
+***NOTE 1***: This project expects you have music files to play while testing.
 
 ## AudioDex 
 ![GUI Preview](./previewgui.png)<br>
@@ -32,6 +32,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
   - M4B needs verification (I have none of these files)
 - [x] MP3, MP2
   - MP1 is probably decodable as well, but quite literally nobody uses this format so I can't test
+  - Needs improvement
 - [x] OGG, OGA, MOGG: Vorbis
 - [x] WAV
 - [x] AIFF
@@ -73,7 +74,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 
 ## Lucky Breaks
 - jaudiotagger handles most of the ID3 metadata I care about
-  - jaudiotagger header returns encoding type for *.m4a and *.ogg files
+  - jaudiotagger header returns encoding type for \*.m4a and \*.ogg files
   - jaudiotagger can ***write*** ID3 metadata
     - <big>jaudiotagger can ***write*** album artwork</big>
 - `InputStream.read(bytes[] b)` returns the number of bytes actually read
@@ -127,7 +128,7 @@ To put in in terms of the template:
 
 ### Phase 4: Task 2
 
-The ``log.txt`` and ``log_assetLoadFailure.txt`` contain full logs from using the application, the latter being a case where the application fails to load its assets from the *.jar file.
+The ``log.txt`` and ``log_assetLoadFailure.txt`` contain full logs from using the application, the latter being a case where the application fails to load its assets from the \*.jar file.
 ```
 Fri Apr 05 12:46:17 PDT 2024: Loading database index from /Users/hanabi/audiodex/index.audiodex.db...
 Fri Apr 05 12:46:17 PDT 2024: Successfully loaded database index: 2
@@ -275,4 +276,6 @@ Fri Apr 05 12:49:56 PDT 2024: AAC decoder ready!
 
 ### Phase 4: Task 3
 
-There is very little refactoring I'd do if I had more time on this project. The one thing I *know* I would do is encrypt the *.json files so they couldn't be read easily (probably just using an XOR key).
+There is very little refactoring I'd do if I had more time on this project. The one thing I *know* I would do is encrypt the \*.json files so they couldn't be read easily (probably just using an XOR key). I'm pretty sure that fully refactoring *anything* would either slow the program down (which isn't an option, I don't have much CPU time to spare in some cases) or make it harder to read. Put simply, there is no way to refactor my program without sacrificing functionality or speed, both of which are required in this program.<br>
+What I would do is try to find better audio decoders. For one thing, the MP3 decoder is relatively unstable; it's not an issue located in my own code, it's an issue with the library. I'd probably just switch to interfacing with the encoder library, which is a Java implementation of an industry standard library. If that counts as refactoring, that's what I'd refactor. I'd also try to add more decoders and encoders, in particular, a decoder for \*.ape files (yes, that's an acutal format spec), and an AAC or ALAC encoder.<br>
+The only completely new feature I could see myself adding in the foreseeable future is automatic playback of files in input arguments. At that point, I'd make it my default audio player on Linux; it's *that* good.
