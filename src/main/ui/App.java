@@ -5,12 +5,10 @@ import audio.AudioDataStructure;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.List;
 import java.util.logging.LogManager;
@@ -108,7 +106,7 @@ public class App {
             maxBoundPlayedList();
             finishedSong();
         } else {
-            Gui.songFinishedPlaying();
+            //Gui.songFinishedPlaying();
         }
     }
 
@@ -197,7 +195,6 @@ public class App {
         if (strArrContains(args, "--cli")) {
             USE_CLI = true;
         } else {
-            System.setProperty("apple.awt.application.appearance", "system");
             detector = OsThemeDetector.getDetector();
             setupSwing();
             GuiLoaderFrame.createLoadingThread();
@@ -213,6 +210,7 @@ public class App {
         if (USE_CLI) {
             Cli.cli(args);
         } else {
+            Gui.preLoad();
             Gui.doGui(args);
         }
     }
@@ -268,13 +266,14 @@ public class App {
 
     // GUI loader frame
     protected static class GuiLoaderFrame {
-        protected static final JFrame loadingFrame = new JFrame();
+        protected static JFrame loadingFrame;
         private static boolean needsSetup = true;
 
         // Modifies: this
         // Effects:  shows loading pane
         public static void createLoadingThread() {
             if (needsSetup) {
+                loadingFrame = new JFrame();
                 loadingFrame.setSize(200, 150);
                 loadingFrame.setResizable(false);
                 loadingFrame.setUndecorated(true);
@@ -296,11 +295,12 @@ public class App {
 
     // GUI mode
     static class Gui {
-        private static JFrame activeConversionsView = new JFrame("Active Conversions");
+        private static JFrame activeConversionsView;
         private static JTable activeConversionsTable = new JTable(new ConverterTableModel());
 
         // Setup conversion view
-        static {
+        private static void setupActiveConversionsView() {
+            activeConversionsView = new JFrame("Active Conversions");
             activeConversionsView.add(activeConversionsTable);
             activeConversionsView.setResizable(false);
             activeConversionsView.setAlwaysOnTop(true);
@@ -387,8 +387,20 @@ public class App {
                 addRemover(row);
             }
         }
+        
+        public static void preLoad() {
+            setupActiveConversionsView();
+            setupMusicTableEvents();
+            setupMainWindow();
+            fileLabel.putClientProperty("FlatLaf.styleClass", "h3.regular");
+            albumLabel.putClientProperty("FlatLaf.styleClass", "medium");
+            leftPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
+            rightPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
+            loadVectors();
+            setupButtons();
+        }
 
-        private static final String[] columns = {
+        private static String[] columns = {
                 "Title", "Artist", "Album", "Album Artist"
         };
 
@@ -514,11 +526,11 @@ public class App {
             }
         }
 
-        private static final JTable musicTable = new JTable(new MusicTableModel());
-        private static final JScrollPane musicList = new JScrollPane(musicTable);
+        private static JTable musicTable = new JTable(new MusicTableModel());
+        private static JScrollPane musicList = new JScrollPane(musicTable);
 
         // Setup music table events
-        static {
+        private static void setupMusicTableEvents() {
             musicTable.addMouseListener(new java.awt.event.MouseAdapter() {
                 @Override
                 public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -589,10 +601,11 @@ public class App {
             }
         }
 
-        private static JFrame mainWindow = new JFrame("Audiodex");
+        private static JFrame mainWindow;
 
         // Setup main window close action
-        static {
+        private static void setupMainWindow() {
+            mainWindow = new JFrame("Audiodex");
             mainWindow.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
@@ -816,9 +829,12 @@ public class App {
         // Modifies: this
         // Effects:  sets up menu bar for main window
         private static void setupMenubar() {
-            System.setProperty("apple.awt.application.name", "Audiodex");
-            System.setProperty("apple.laf.useScreenMenuBar", "true");
-            System.setProperty("flatlaf.menuBarEmbedded", "true");
+            if (SystemUtils.IS_OS_MAC_OSX) {
+                mainWindow.getRootPane().putClientProperty("apple.awt.fullscreenable", true);
+                System.setProperty("apple.laf.useScreenMenuBar", "true");
+            } else {
+                System.setProperty("flatlaf.menuBarEmbedded", "true");
+            }
             mainWindow.setJMenuBar(mainMenuBar);
         }
 
@@ -920,102 +936,74 @@ public class App {
             musicList.updateUI();
         }
 
-        private static final JSlider playbackSlider = new JSlider(0, 0);
-        private static final JLabel leftPlaybackLabel = new JLabel("X:XX");
-        private static final JLabel rightPlaybackLabel = new JLabel("X:XX");
-        private static final JPanel playbackStatusView = new JPanel(true);
-        private static final JPanel musicPlaybackView = new JPanel(true);
-        private static final JPanel controlsView = new JPanel(true);
-        private static final JLabel musicArt = new JLabel();
-        private static final JLabel fileLabel = new JLabel();
-        private static final JLabel albumLabel = new JLabel();
-        private static final JButton skipButton;
-        private static final JButton prevButton;
-        private static final JButton playButton;
-        private static final JButton shuffleButton;
-        private static final JButton loopButton;
-        private static final JVectorIcon skip;
-        private static final JVectorIcon prev;
-        private static final JVectorIcon placeholder;
-        private static final JVectorIcon play;
-        private static final JVectorIcon pause;
-        private static final JVectorIcon noLoop;
-        private static final JVectorIcon loopOne;
-        private static final JVectorIcon loopAll;
-        private static final JVectorIcon noShuffle;
-        private static final JVectorIcon shuffleOn;
+        private static JSlider playbackSlider = new JSlider(0, 0);
+        private static JLabel leftPlaybackLabel = new JLabel("X:XX");
+        private static JLabel rightPlaybackLabel = new JLabel("X:XX");
+        private static JPanel playbackStatusView = new JPanel(true);
+        private static JPanel musicPlaybackView = new JPanel(true);
+        private static JPanel controlsView = new JPanel(true);
+        private static JLabel musicArt = new JLabel();
+        private static JLabel fileLabel = new JLabel();
+        private static JLabel albumLabel = new JLabel();
+        private static JButton skipButton;
+        private static JButton prevButton;
+        private static JButton playButton;
+        private static JButton shuffleButton;
+        private static JButton loopButton;
+        private static JVectorIcon skip = null;
+        private static JVectorIcon prev = null;
+        private static JVectorIcon placeholder = null;
+        private static JVectorIcon play = null;
+        private static JVectorIcon pause = null;
+        private static JVectorIcon noLoop = null;
+        private static JVectorIcon loopOne = null;
+        private static JVectorIcon loopAll = null;
+        private static JVectorIcon noShuffle = null;
+        private static JVectorIcon shuffleOn = null;
 
         // Prepare visual elements
-        static {
-            fileLabel.putClientProperty("FlatLaf.styleClass", "h3.regular");
-            albumLabel.putClientProperty("FlatLaf.styleClass", "medium");
-            leftPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
-            rightPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
-            JVectorIcon pauseInit;
-            JVectorIcon playInit;
-            JVectorIcon prevInit;
-            JVectorIcon skipInit;
-            JVectorIcon placeholderInit;
-            JVectorIcon shuffleOnInit;
-            JVectorIcon noShuffleInit;
-            JVectorIcon loopAllInit;
-            JVectorIcon loopOneInit;
-            JVectorIcon noLoopInit;
+        private static void loadVectors() {
             try {
-                placeholderInit = new JVectorIcon(loadVector("music.svg"), 64, 64);
-                skipInit = new JVectorIcon(loadVector("forward.svg"), 24, 16);
-                prevInit = new JVectorIcon(loadVector("backward.svg"), 24, 16);
-                playInit = new JVectorIcon(loadVector("play.svg"), 48, 32);
-                pauseInit = new JVectorIcon(loadVector("pause.svg"), 48, 32);
-                noLoopInit = new JVectorIcon(loadVector("subdirectory.svg"), 24, 16);
-                loopOneInit = new JVectorIcon(loadVector("flip-backward.svg"), 24, 16);
-                loopAllInit = new JVectorIcon(loadVector("loop.svg"), 24, 16);
-                noShuffleInit = new JVectorIcon(loadVector("forward-arrow.svg"), 24, 16);
-                shuffleOnInit = new JVectorIcon(loadVector("shuffle.svg"), 24, 16);
+                placeholder = new JVectorIcon(loadVector("music.svg"), 64, 64);
+                skip = new JVectorIcon(loadVector("forward.svg"), 24, 16);
+                prev = new JVectorIcon(loadVector("backward.svg"), 24, 16);
+                play = new JVectorIcon(loadVector("play.svg"), 48, 32);
+                pause = new JVectorIcon(loadVector("pause.svg"), 48, 32);
+                noLoop = new JVectorIcon(loadVector("subdirectory.svg"), 24, 16);
+                loopOne = new JVectorIcon(loadVector("flip-backward.svg"), 24, 16);
+                loopAll = new JVectorIcon(loadVector("loop.svg"), 24, 16);
+                noShuffle = new JVectorIcon(loadVector("forward-arrow.svg"), 24, 16);
+                shuffleOn = new JVectorIcon(loadVector("shuffle.svg"), 24, 16);
             } catch (IOException e) {
                 ExceptionIgnore.logException(e);
-                placeholderInit = new JVectorIcon(new SVGDocument(new SVG()), 64, 64);
-                skipInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
-                prevInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
-                playInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 32);
-                pauseInit = new JVectorIcon(new SVGDocument(new SVG()), 48, 32);
-                noLoopInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
-                loopOneInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
-                loopAllInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
-                noShuffleInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
-                shuffleOnInit = new JVectorIcon(new SVGDocument(new SVG()), 24, 16);
             }
-            shuffleOn = shuffleOnInit;
-            noShuffle = noShuffleInit;
-            loopAll = loopAllInit;
-            loopOne = loopOneInit;
-            noLoop = noLoopInit;
-            placeholder = placeholderInit;
-            pause = pauseInit;
-            play = playInit;
-            prev = prevInit;
-            skip = skipInit;
         }
 
         // Set up buttons
-        static {
+        private static void setupButtons() {
             skipButton = new JButton(skip);
+            prevButton = new JButton(prev);
+            playButton = new JButton(play);
             skipButton.addActionListener(e -> playNext());
             skipButton.setVerticalAlignment(SwingConstants.TOP);
             skipButton.setMaximumSize(new Dimension(24, 16));
             skipButton.setMinimumSize(new Dimension(24, 16));
             skipButton.setEnabled(false);
-            prevButton = new JButton(prev);
             prevButton.addActionListener(e -> playPrevious());
             prevButton.setVerticalAlignment(SwingConstants.TOP);
             prevButton.setMaximumSize(new Dimension(24, 16));
             prevButton.setMinimumSize(new Dimension(24, 16));
             prevButton.setEnabled(false);
-            playButton = new JButton(play);
             playButton.setVerticalAlignment(SwingConstants.TOP);
             playButton.setMaximumSize(new Dimension(48, 32));
             playButton.setMinimumSize(new Dimension(48, 32));
             playButton.addActionListener(e -> togglePlayback());
+            makeShuffleButton();
+            makeLoopButton();
+        }
+        
+        // Effects: sets up shuffle button
+        private static void makeShuffleButton() {
             shuffleButton = new JButton(noShuffle);
             shuffleButton.addActionListener(e -> {
                 toggleShuffle();
@@ -1024,7 +1012,14 @@ public class App {
             shuffleButton.setVerticalAlignment(SwingConstants.TOP);
             shuffleButton.setMaximumSize(new Dimension(24, 16));
             shuffleButton.setMinimumSize(new Dimension(24, 16));
+        }
+        
+        // Effects: sets up loop button
+        private static void makeLoopButton() {
             loopButton = new JButton(noLoop);
+            loopButton.setVerticalAlignment(SwingConstants.TOP);
+            loopButton.setMaximumSize(new Dimension(24, 16));
+            loopButton.setMinimumSize(new Dimension(24, 16));
             loopButton.addActionListener(e -> {
                 switch (loop) {
                     case NO:
@@ -1041,9 +1036,6 @@ public class App {
                         break;
                 }
             });
-            loopButton.setVerticalAlignment(SwingConstants.TOP);
-            loopButton.setMaximumSize(new Dimension(24, 16));
-            loopButton.setMinimumSize(new Dimension(24, 16));
         }
 
         // Modifies: this
@@ -1335,6 +1327,7 @@ public class App {
             }
         }
     }
+    //*///
 
     // CLI mode
     private static class Cli {
