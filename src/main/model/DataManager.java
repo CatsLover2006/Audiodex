@@ -300,12 +300,14 @@ public class DataManager {
         if (modified) {
             logger.logEvent(new Event("Reverting unsaved changes..."));
             loadDatabase();
+            modified = false;
             return;
         }
         logger.logEvent(new Event("Reverting database..."));
         dbIndex--;
         String filename = userDir + Long.toString(dbIndex, 36) + ".audiodex.json";
         if (new File(filename).exists()) {
+            songFilelist.clear();
             loadDatabaseFile();
             saveDatabaseIndex();
             logger.logEvent(new Event("Successfully reverted database!"));

@@ -274,7 +274,7 @@ public class AudioFilePlaybackBackend {
         } else {
             decoderThread.start();
         }
-        App.CliInterface.updatePlaybackStatus();
+        App.updatePlaybackStatus();
     }
 
     // Modifies: this
@@ -282,7 +282,7 @@ public class AudioFilePlaybackBackend {
     public void pauseAudio() {
         paused = true;
         decoderThread.pause();
-        App.CliInterface.updatePlaybackStatus();
+        App.updatePlaybackStatus();
     }
 
     // Requires: 0 <= time <= audio length
@@ -290,7 +290,7 @@ public class AudioFilePlaybackBackend {
     // Effects:  sets playback pointer to the specified time
     public void seekTo(double time) {
         loadedFile.goToTime(time);
-        App.CliInterface.updatePlaybackStatus();
+        App.updatePlaybackStatus();
     }
 
     // Effects: waits for audio playback to finish

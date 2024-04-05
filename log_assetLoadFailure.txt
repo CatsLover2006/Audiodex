@@ -1,0 +1,25 @@
+BufferedImage@48b67364: type = 6 ColorModel: #pixelBits = 32 numComponents = 4 color space = java.awt.color.ICC_ColorSpace@189cbd7c transparency = 3 has alpha = true isAlphaPre = false ByteInterleavedRaster: width = 48 height = 48 #numDataElements 4 dataOff[0] = 3
+Fri Apr 05 12:43:20 PDT 2024: Loading database index from /Users/hanabi/audiodex/index.audiodex.db...
+Fri Apr 05 12:43:20 PDT 2024: Successfully loaded database index: 2
+Fri Apr 05 12:43:20 PDT 2024: Attempting to load database...
+Fri Apr 05 12:43:20 PDT 2024: Loaded database!
+Fri Apr 05 12:43:20 PDT 2024: Sorting database by Album_Title...
+Fri Apr 05 12:43:20 PDT 2024: Sorted database by Album_Title.
+Fri Apr 05 12:43:21 PDT 2024: Exception was ignored:
+java.desktop/javax.swing.SizeRequirements.calculateTiledPositions(SizeRequirements.java:314)
+java.desktop/javax.swing.BoxLayout.layoutContainer(BoxLayout.java:420)
+java.desktop/java.awt.Container.layout(Container.java:1541)
+java.desktop/java.awt.Container.doLayout(Container.java:1530)
+java.desktop/java.awt.Container.validateTree(Container.java:1725)
+java.desktop/java.awt.Container.validateTree(Container.java:1734)
+java.desktop/java.awt.Container.validateTree(Container.java:1734)
+java.desktop/java.awt.Container.validateTree(Container.java:1734)
+java.desktop/java.awt.Container.validate(Container.java:1660)
+java.desktop/javax.swing.SwingUtilities.updateComponentTreeUI(SwingUtilities.java:1356)
+ui.App$Gui.lambda$updateUI$2(App.java:656)
+model.ExceptionIgnore.ignoreExc(ExceptionIgnore.java:13)
+ui.App$Gui.updateUI(App.java:655)
+ui.App$Gui.doGui(App.java:647)
+ui.App.startApp(App.java:216)
+ui.Main.main(Main.java:11)
+
