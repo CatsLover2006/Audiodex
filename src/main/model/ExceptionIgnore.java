@@ -6,7 +6,6 @@ import java.util.stream.Stream;
 
 // Static class
 public class ExceptionIgnore {
-    private static EventLog logger = EventLog.getInstance();
 
     // Effects: do the thing but ignore the exception
     public static void ignoreExc(RunnableExc run) {
@@ -23,7 +22,7 @@ public class ExceptionIgnore {
         AtomicReference<String> str = new AtomicReference<>("");
         Arrays.stream(e.getStackTrace()).forEach(element ->
                 str.set(String.format("%s%s\n", str.get(), element.toString())));
-        logger.logEvent(new Event("Exception was ignored:\n" + str.get()));
+        EventLog.getInstance().logEvent(new Event("Exception was ignored:\n" + str.get()));
     }
 
     // Make a lambda for this

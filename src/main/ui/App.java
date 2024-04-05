@@ -106,7 +106,7 @@ public class App {
             played.addFirst(nowPlaying);
             nowPlaying = null;
             maxBoundPlayedList();
-            Cli.finishedSong();
+            finishedSong();
         } else {
             Gui.songFinishedPlaying();
         }
@@ -132,7 +132,7 @@ public class App {
             }
         }
         if (USE_CLI) {
-            Cli.finishedEncode();
+            finishedEncode();
         } else {
             Gui.updateConverterView();
         }
@@ -150,6 +150,19 @@ public class App {
             new PopupManager.ErrorPopupFrame("Cannot use Replaygain with currently<br>playing song on this computer."
                     + "<br>Sound will not be the correct volume.",
                     ErrorImageTypes.WARNING, obj -> { });
+        }
+    }
+
+
+    // Effects: updates playback status in current UI
+    public static void updatePlaybackStatus() {
+        if (notMain) {
+            return;
+        }
+        if (USE_CLI) {
+            Cli.doPlaybackStatusWrite();
+        } else {
+            Gui.updatePlaybackBar();
         }
     }
 
@@ -1323,17 +1336,6 @@ public class App {
         }
     }
 
-    // public interface to the private CLI class
-    public static class CliInterface {
-        // Public Cli.doPlaybackStatusWrite()
-        public static void updatePlaybackStatus() {
-            if (notMain) {
-                return;
-            }
-            Cli.doPlaybackStatusWrite();
-        }
-    }
-
     // CLI mode
     private static class Cli {
         private enum MenuState {
@@ -1385,7 +1387,7 @@ public class App {
                     if (playbackManager == null) {
                         return;
                     }
-                    Cli.doPlaybackStatusWrite();
+                    doPlaybackStatusWrite();
                 }
             }
         }
@@ -1482,22 +1484,22 @@ public class App {
                 playDbFile(songQueue.getFirst());
                 songQueue.removeFirst();
             }
-            switch (Cli.state) {
+            switch (state) {
                 case CLI_BROWSEMENU:
-                    Cli.printBrowseMenu();
+                    printBrowseMenu();
                     break;
                 case CLI_MAINMENU:
-                    Cli.printMenu();
+                    printMenu();
                     break;
             }
-            Cli.doPlaybackStatusWrite();
+            doPlaybackStatusWrite();
         }
 
         // Modifies: this
         // Effects:  finishedEncode() extension for CLI
         private static void finishedEncode() {
-            if (Objects.requireNonNull(Cli.state) == MenuState.CLI_MAINMENU) {
-                Cli.printMenu();
+            if (Objects.requireNonNull(state) == MenuState.CLI_MAINMENU) {
+                printMenu();
             }
         }
 
@@ -1597,7 +1599,7 @@ public class App {
                 songQueue.addLast(databaseClone.get(randNumb));
                 databaseClone.remove(randNumb);
             }
-            Cli.playDbFile(songQueue.getFirst());
+            playDbFile(songQueue.getFirst());
             songQueue.removeFirst();
         }
 
@@ -1658,7 +1660,7 @@ public class App {
                 converter.start();
             } else {
                 AnsiConsole.out().println("File no longer exists, or is currently inaccessible.");
-                wait(1000);
+                Cli.wait(1000);
             }
         }
 
