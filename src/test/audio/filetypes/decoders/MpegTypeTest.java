@@ -117,7 +117,6 @@ public class MpegTypeTest {
         AudioSample sample = mp3Decoder.getNextSample();
         wavDecoder.prepareToPlayAudio();
         AudioSample wavSample = wavDecoder.getNextSample();
-        int faults = 0;
         int wavOffset = 0;
         while (mp3Decoder.moreSamples()) {
             // Different sample size fixing

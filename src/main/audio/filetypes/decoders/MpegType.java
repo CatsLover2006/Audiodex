@@ -16,6 +16,7 @@ import org.jaudiotagger.tag.images.Artwork;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Date;
@@ -65,8 +66,7 @@ public class MpegType implements AudioDecoder {
             ready = true;
             EventLog.getInstance().logEvent(new Event("Modern MPEG-type decoder ready!"));
         } catch (Exception e) {
-            ExceptionIgnore.logException(e);
-            ready = false;
+            throw new RuntimeException(e);
         }
     }
 
@@ -86,7 +86,7 @@ public class MpegType implements AudioDecoder {
             buffer.put(i, (byte) 0x00);
         }
         decoder.decode(buffer);
-        for (; buffer.get(decodedSize - 1) != (byte) 0x00; decodedSize++) {
+        for (; decodedSize != decoder.getBufferSize() && buffer.get(decodedSize - 1) != (byte) 0x00; decodedSize++) {
             // It's all in the for statement
         }
         decoder = new LameDecoder(filename);
