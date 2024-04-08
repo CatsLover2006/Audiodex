@@ -29,13 +29,12 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="mp3spi 1.9.5.4" level="project" />
     <orderEntry type="library" name="JAADec 0.8.4" level="project" />
     <orderEntry type="library" name="Jansi 2.4.2 (Self-Compiled)" level="project" />
     <orderEntry type="library" name="tritonus 0.3.12 (Self-Compiled w/ AIFF-C support mod)" level="project" />
     <orderEntry type="library" name="vavi-sound-alac 0.3.2 (Self-Compiled)" level="project" />
     <orderEntry type="library" name="java-vorbis-support (1.2.1)" level="project" />
-    <orderEntry type="library" name="Java LAME 3.98.4" level="project" />
+    <orderEntry type="library" name="Java LAME 3.98.4 (Modified)" level="project" />
     <orderEntry type="library" name="JSON 2021/03/07" level="project" />
     <orderEntry type="library" name="JustFLAC 0.0.1 (Self-Compiled)" level="project" />
     <orderEntry type="library" name="FlatLaf 3.4" level="project" />
