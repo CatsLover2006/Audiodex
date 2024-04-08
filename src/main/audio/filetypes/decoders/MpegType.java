@@ -2,6 +2,8 @@ package audio.filetypes.decoders;
 
 import audio.*;
 import audio.filetypes.TagConversion;
+import model.Event;
+import model.EventLog;
 import model.ExceptionIgnore;
 import net.sourceforge.lame.lowlevel.LameDecoder;
 import org.jaudiotagger.audio.AudioFile;
@@ -32,6 +34,7 @@ public class MpegType implements AudioDecoder {
     private double length = -2;
     private long samplesPlayed;
     private boolean skipping = false;
+    private int decodedSize;
 
     // Effects: returns true if audio can be decoded currently
     @Override
@@ -48,8 +51,7 @@ public class MpegType implements AudioDecoder {
     @Override
     public void prepareToPlayAudio() {
         try {
-            decoder = new LameDecoder(filename);
-            buffer = ByteBuffer.allocate(decoder.getChannels() * decoder.getFrameSize() * 2);
+            makeDecoder();
             if (length == -2) {
                 MP3File f = (MP3File) getAudioFile(filename);
                 if (f == null) {
@@ -61,10 +63,34 @@ public class MpegType implements AudioDecoder {
             samplesPlayed = 0;
             hasSamples = true;
             ready = true;
+            EventLog.getInstance().logEvent(new Event("Modern MPEG-type decoder ready!"));
         } catch (Exception e) {
             ExceptionIgnore.logException(e);
             ready = false;
         }
+    }
+
+    // Effects: shrinks byte buffer to fit (and loads audio)
+    //          some files play at half speed at the default buffer size due excess bytes at the end
+    private void makeDecoder() {
+        decoder = new LameDecoder(filename);
+        buffer = ByteBuffer.allocate(decoder.getBufferSize());
+        for (int i = 0; i < decoder.getBufferSize(); i++) {
+            buffer.put(i, (byte) 0xFF);
+        }
+        decoder.decode(buffer);
+        for (decodedSize = decoder.getBufferSize(); buffer.get(decodedSize - 1) == (byte) 0xFF; decodedSize--) {
+            // It's all in the for statement
+        }
+        for (int i = 0; i < decoder.getBufferSize(); i++) {
+            buffer.put(i, (byte) 0x00);
+        }
+        decoder.decode(buffer);
+        for (; buffer.get(decodedSize - 1) != (byte) 0x00; decodedSize++) {
+            // It's all in the for statement
+        }
+        decoder = new LameDecoder(filename);
+        EventLog.getInstance().logEvent(new Event("Got decoder output size: " + decodedSize));
     }
 
     // Requires: prepareToPlayAudio() called
@@ -84,8 +110,9 @@ public class MpegType implements AudioDecoder {
             return new AudioSample();
         }
         hasSamples = decoder.decode(buffer);
-        AudioSample sample = new AudioSample(buffer.array());
-        samplesPlayed += sample.getLength() / 2;
+        byte[] samples = buffer.array();
+        AudioSample sample = new AudioSample(samples, decodedSize);
+        samplesPlayed += decodedSize / 2;
         return sample;
     }
 
@@ -101,7 +128,7 @@ public class MpegType implements AudioDecoder {
         }
         while (hasSamples && getCurrentTime() < time) {
             hasSamples = decoder.decode(buffer);
-            samplesPlayed += buffer.array().length / 2;
+            samplesPlayed += decodedSize / 2;
         }
         skipping = false;
     }
