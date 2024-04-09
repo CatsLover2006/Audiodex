@@ -1,20 +1,11 @@
 package audio.filetypes.decoders;
 
 import audio.*;
-
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import java.io.*;
-import java.time.Instant;
-import java.util.Date;
-import java.util.Map;
-
 import audio.filetypes.TagConversion;
-import javazoom.spi.mpeg.sampled.convert.DecodedMpegAudioInputStream;
-import javazoom.spi.mpeg.sampled.file.MpegAudioFileReader;
 import model.Event;
 import model.EventLog;
 import model.ExceptionIgnore;
+import net.sourceforge.lame.lowlevel.LameDecoder;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.mp3.MP3File;
@@ -23,21 +14,28 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.id3.ID3v24Tag;
 import org.jaudiotagger.tag.images.Artwork;
 
-import static audio.filetypes.TagConversion.*;
+import javax.sound.sampled.AudioFormat;
+import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Map;
+
+import static audio.filetypes.TagConversion.id3v2keyConv;
+import static audio.filetypes.TagConversion.keyConv;
 import static java.io.File.separatorChar;
 
-// MPEG-type audio file decoder class
 public class MpegType implements AudioDecoder {
-    private final String filename;
-    private AudioFormat format;
-    private DecodedMpegAudioInputStream decoded;
-    private AudioInputStream in;
+    private String filename;
     private boolean ready = false;
-    private final byte[] data = new byte[4096]; // 4kb sample buffer, seems standard
-    private int numberBytesRead = 0;
-    private long duration;
-    private double audioFrameRate;
+    private LameDecoder decoder;
+    private ByteBuffer buffer;
+    private boolean hasSamples;
+    private double length = -2;
+    private long samplesPlayed;
     private boolean skipping = false;
+    private int decodedSize;
 
     // Effects: returns true if audio can be decoded currently
     @Override
@@ -54,25 +52,45 @@ public class MpegType implements AudioDecoder {
     @Override
     public void prepareToPlayAudio() {
         try {
-            File file = new File(filename);
-            file.getCanonicalFile(); // Create IOException on invalid paths
-            InputStream input = new FileInputStream(file);
-            MpegAudioFileReader fileReader = new MpegAudioFileReader();
-            duration = (Long) fileReader.getAudioFileFormat(input, file.length()).properties().get("duration");
-            in = fileReader.getAudioInputStream(file);
-            AudioFormat baseFormat = in.getFormat();
-            format = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-                    baseFormat.getSampleRate(), 16, baseFormat.getChannels(),
-                    baseFormat.getChannels() * 2, baseFormat.getSampleRate(), false);
-            decoded = new DecodedMpegAudioInputStream(format, in);
-            audioFrameRate = baseFormat.getFrameRate();
-            EventLog.getInstance().logEvent(new Event("MP3 decoder ready!"));
+            makeDecoder();
+            if (length == -2) {
+                MP3File f = (MP3File) getAudioFile(filename);
+                if (f == null) {
+                    length = -1;
+                } else {
+                    length = f.getAudioHeader().getPreciseTrackLength();
+                }
+            }
+            samplesPlayed = 0;
+            hasSamples = true;
             ready = true;
-        } catch (FileNotFoundException e) {
-            ExceptionIgnore.logException(e);
+            EventLog.getInstance().logEvent(new Event("Modern MPEG-type decoder ready!"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // Effects: shrinks byte buffer to fit (and loads audio)
+    //          some files play at half speed at the default buffer size due excess bytes at the end
+    private void makeDecoder() {
+        decoder = new LameDecoder(filename);
+        buffer = ByteBuffer.allocate(decoder.getBufferSize());
+        for (int i = 0; i < decoder.getBufferSize(); i++) {
+            buffer.put(i, (byte) 0xFF);
+        }
+        decoder.decode(buffer);
+        for (decodedSize = decoder.getBufferSize(); buffer.get(decodedSize - 1) == (byte) 0xFF; decodedSize--) {
+            // It's all in the for statement
+        }
+        for (int i = 0; i < decoder.getBufferSize(); i++) {
+            buffer.put(i, (byte) 0x00);
+        }
+        decoder.decode(buffer);
+        for (; decodedSize != decoder.getBufferSize() && buffer.get(decodedSize - 1) != (byte) 0x00; decodedSize++) {
+            // It's all in the for statement
+        }
+        decoder = new LameDecoder(filename);
+        EventLog.getInstance().logEvent(new Event("Got decoder output size: " + decodedSize));
     }
 
     // Requires: prepareToPlayAudio() called
@@ -82,37 +100,20 @@ public class MpegType implements AudioDecoder {
     @Override
     public void closeAudioFile() {
         ready = false;
-        ExceptionIgnore.ignoreExc(() ->  {
-            decoded.close();
-            in.close();
-        });
-    }
-
-    // Effects: returns true if goToTime() is running
-    //          only exists due to having multiple threads
-    @Override
-    public boolean skipInProgress() {
-        return skipping;
     }
 
     // Requires: prepareToPlayAudio() called
     // Effects:  decodes and returns the next audio sample
     @Override
     public AudioSample getNextSample() {
-        while (moreSamples()) {
-            try {
-                numberBytesRead = decoded.read(data, 0, data.length);
-                if (numberBytesRead == -1) {
-                    break;
-                }
-                return new AudioSample(data, numberBytesRead);
-            } catch (IOException e) {
-                // Move along
-            } catch (ArrayIndexOutOfBoundsException e) {
-                decoded.skip(1); // Skip the bad byte
-            }
+        if (skipping) {
+            return new AudioSample();
         }
-        return new AudioSample();
+        hasSamples = decoder.decode(buffer);
+        byte[] samples = buffer.array();
+        AudioSample sample = new AudioSample(samples, decodedSize);
+        samplesPlayed += decodedSize / 2;
+        return sample;
     }
 
     // Requires: prepareToPlayAudio() called
@@ -122,23 +123,12 @@ public class MpegType implements AudioDecoder {
     @Override
     public void goToTime(double time) {
         skipping = true;
-        if (time > getFileDuration()) {
-            goToTime(Math.floor(getFileDuration()));
-            while (moreSamples()) {
-                getNextSample();
-            }
-        } else {
-            long toSkip = (long) (time * audioFrameRate) // Target frame
-                    - (Long) decoded.properties().get("mp3.frame"); // Minus current frame
-            if (toSkip < 0) { // We can't skip backwards for some reason
-                try {
-                    decoded.reset();
-                } catch (IOException e) {
-                    prepareToPlayAudio(); // Backup
-                }
-                toSkip = (long) (time * audioFrameRate);
-            }
-            decoded.skipFrames(toSkip);
+        if (getCurrentTime() > time) {
+            prepareToPlayAudio();
+        }
+        while (hasSamples && getCurrentTime() < time) {
+            hasSamples = decoder.decode(buffer);
+            samplesPlayed += decodedSize / 2;
         }
         skipping = false;
     }
@@ -146,30 +136,50 @@ public class MpegType implements AudioDecoder {
     // Effects: returns the current time in the audio in seconds
     @Override
     public double getCurrentTime() {
-        if (decoded == null) {
-            return -1;
-        } // format.getChannels() is a workaround for a library bug
-        return (Long)decoded.properties().get("mp3.position.microseconds") * 0.000002 / format.getChannels();
+        return (double)samplesPlayed / (decoder.getSampleRate() * decoder.getChannels());
     }
 
     // Effects: returns the duration of the audio in seconds
     @Override
-    public double getFileDuration() { // format.getChannels() is a workaround for a library bug
-        return duration * 0.000002 / format.getChannels(); // javax uses microseconds
+    public double getFileDuration() {
+        return length;
     }
 
-    // Requires: prepareToPlayAudio() called once
+    // Requires: prepareToPlayAudio() or setAudioOutputFormat() called once
     // Effects:  returns the audio format of the file
     @Override
     public AudioFormat getAudioOutputFormat() {
-        return format;
+        return new AudioFormat(decoder.getSampleRate(), 16, decoder.getChannels(), true, false);
     }
 
-    // Effects:  returns true if there are more samples to be played
-    //           will return false is no file is loaded
+    // Effects: returns true if there are more samples to be played
+    //          will return false is no file is loaded
     @Override
     public boolean moreSamples() {
-        return numberBytesRead != -1;
+        return hasSamples;
+    }
+
+    // Effects: returns true if goToTime() is running
+    //          only exists due to having multiple threads
+    @Override
+    public boolean skipInProgress() {
+        return skipping;
+    }
+
+    // Returns filetype of decoder
+    @Override
+    public AudioFileType getFileType() {
+        return AudioFileLoader.getAudioFiletype(filename);
+    }
+
+    // Effects: returns filename without directories
+    @Override
+    public String getFileName() {
+        int location = filename.lastIndexOf(separatorChar);
+        if (location == -1) {
+            location = 0;
+        }
+        return filename.substring(location + 1);
     }
 
     // Effects: returns decoded ID3 data
@@ -282,22 +292,6 @@ public class MpegType implements AudioDecoder {
             }
         }
     }//*///
-
-    // Effects: returns filename without directories
-    @Override
-    public String getFileName() {
-        int location = filename.lastIndexOf(separatorChar);
-        if (location == -1) {
-            location = 0;
-        }
-        return filename.substring(location + 1);
-    }
-
-    // Returns filetype of decoder
-    @Override
-    public AudioFileType getFileType() {
-        return AudioFileLoader.getAudioFiletype(filename);
-    }
 
     // Effects: returns album artwork if possible
     @Override

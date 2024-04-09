@@ -67,15 +67,19 @@ public class MpegTypeTest {
         assertEquals(16, format.getSampleSizeInBits());
         assertEquals(44100, format.getSampleRate());
         AudioSample sample = mp3Decoder.getNextSample();
-        assertEquals(4096, sample.getLength());
         wavDecoder.prepareToPlayAudio();
         AudioSample wavSample = wavDecoder.getNextSample();
+        int wavOffset = 0;
         while (mp3Decoder.moreSamples()) {
-            if (sample.getLength() == 0 || wavSample.getLength() == 0) {
-                return; // We're done now!
+            // Different sample size fixing
+            for (int i = 0; i < sample.getLength(); i++) {
+                if (i + wavOffset == 4096) {
+                    wavSample = wavDecoder.getNextSample();
+                    wavOffset = -i; // this works, trust me
+                }
+                assertEquals(sample.getData()[i], wavSample.getData()[i + wavOffset]);
             }
-            assertArrayEquals(wavSample.getData(), sample.getData());
-            wavSample = wavDecoder.getNextSample();
+            wavOffset += sample.getLength();
             sample = mp3Decoder.getNextSample();
         }
         mp3Decoder.closeAudioFile();
@@ -111,18 +115,19 @@ public class MpegTypeTest {
         assertEquals(16, format.getSampleSizeInBits());
         assertEquals(44100, format.getSampleRate());
         AudioSample sample = mp3Decoder.getNextSample();
-        assertEquals(4096, sample.getLength());
         wavDecoder.prepareToPlayAudio();
         AudioSample wavSample = wavDecoder.getNextSample();
-        int faults = 0;
+        int wavOffset = 0;
         while (mp3Decoder.moreSamples()) {
-            if (sample.getLength() == 0 || wavSample.getLength() == 0) {
-                return; // We're done now!
+            // Different sample size fixing
+            for (int i = 0; i < sample.getLength(); i++) {
+                if (i + wavOffset == 4096) {
+                    wavSample = wavDecoder.getNextSample();
+                    wavOffset = -i; // this works, trust me
+                }
+                assertEquals(sample.getData()[i], wavSample.getData()[i + wavOffset]);
             }
-            for (int i = 0; i < wavSample.getLength(); i ++) {
-                assertEquals(wavSample.getData()[i], sample.getData()[i]);
-            }
-            wavSample = wavDecoder.getNextSample();
+            wavOffset += sample.getLength();
             sample = mp3Decoder.getNextSample();
         }
         mp3Decoder.closeAudioFile();
