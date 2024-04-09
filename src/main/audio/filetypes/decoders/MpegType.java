@@ -257,8 +257,11 @@ public class MpegType implements AudioDecoder {
             Object data = container.getID3Data(entry.getKey());
             if (data != null) {
                 ExceptionIgnore.ignoreExc(() -> tag.setField(entry.getValue(), data.toString()));
+            } else if (tag.hasField(entry.getValue())) {
+                ExceptionIgnore.ignoreExc(() -> tag.deleteField(entry.getValue()));
             }
         }
+        f.setTag(tag);
     }
 
     /* Effects: sets relevant ID3v2 tags
