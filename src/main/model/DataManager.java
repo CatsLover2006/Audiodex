@@ -150,6 +150,11 @@ public class DataManager {
     // Modifies: this
     // Effects:  adds specified file to database
     public void addFileToSongDatabase(String filename) {
+        if (new File(filename).getName().startsWith("._") && new File(new File(filename).getParent()
+                + separatorChar + new File(filename).getName().substring(2)).exists()) {
+            logger.logEvent(new Event(String.format("File %s is a macOS resource fork, skipping.", filename)));
+            return;
+        }
         logger.logEvent(new Event("Adding file " + filename + "..."));
         try {
             if (songDbContainsFile(new File(filename).getCanonicalPath())) {
@@ -181,7 +186,6 @@ public class DataManager {
                 return;
             }
             for (File file : fileList) { // Database uses absolute file paths, otherwise it would fail to load audio
-                logger.logEvent(new Event("Processing " + file.getAbsolutePath() + "..."));
                 if (file.isFile()) {
                     ExceptionIgnore.ignoreExc(() -> addFileToSongDatabase(file.getAbsolutePath()));
                 } else if (file.isDirectory()) {
