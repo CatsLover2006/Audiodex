@@ -671,6 +671,7 @@ public class App {
                     if (!structure.isEmpty()) {
                         playDbFile(structure);
                         updatePlaybackBar();
+                        return; // Found the file! done
                     }
                 }
             }
