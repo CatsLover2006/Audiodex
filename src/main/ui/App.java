@@ -906,7 +906,7 @@ public class App {
         // Modifies: button
         // Effects:  makes button background transparent
         private static void makeButtonTransparent(JButton button) {
-            button.setBorder(null);
+            button.setBorder(new EmptyBorder(0, 0, 0, 0));
             button.setBorderPainted(false);
             button.setContentAreaFilled(false);
             button.setOpaque(false);
@@ -1209,7 +1209,11 @@ public class App {
                     musicArt.setIcon(new ImageIcon(new BaseMultiResolutionImage(
                             bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
                                     Image.SCALE_AREA_AVERAGING),
+                            bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
+                                    Image.SCALE_AREA_AVERAGING),
                             bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
+                                    Image.SCALE_AREA_AVERAGING),
+                            bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
                                     Image.SCALE_AREA_AVERAGING),
                             bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
                                     Image.SCALE_AREA_AVERAGING))));
