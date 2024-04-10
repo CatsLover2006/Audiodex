@@ -21,6 +21,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -1057,13 +1058,18 @@ public class PopupManager {
                     musicArt.setIcon(MUSIC_ICON);
                     BufferedImage bufferedImage = (BufferedImage) fileScanner.getArtwork().getImage();
                     if (bufferedImage != null) {
-                        int newWidth = (int)(Math.min(48.0 / bufferedImage.getWidth(),
-                                48.0 / bufferedImage.getHeight()) * bufferedImage.getWidth());
-                        int newHeight = (int)(Math.min(48.0 / bufferedImage.getWidth(),
-                                48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight());
-                        musicArt.setIcon(new ImageIcon(bufferedImage.getScaledInstance(newWidth, newHeight,
-                                Image.SCALE_AREA_AVERAGING)));
-                        musicArt.setPreferredSize(new Dimension(newWidth, newHeight));
+                        double newWidth = Math.min(48.0 / bufferedImage.getWidth(),
+                                48.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
+                        double newHeight = Math.min(48.0 / bufferedImage.getWidth(),
+                                48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
+                        musicArt.setIcon(new ImageIcon(new BaseMultiResolutionImage(
+                                bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
+                                        Image.SCALE_AREA_AVERAGING),
+                                bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
+                                        Image.SCALE_AREA_AVERAGING),
+                                bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
+                                        Image.SCALE_AREA_AVERAGING))));
+                        musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
                     }
                 });
             }

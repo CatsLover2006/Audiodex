@@ -5,6 +5,7 @@ import audio.AudioDataStructure;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -656,8 +657,8 @@ public class App {
             setupMainWindowLayout();
             setupMenubar();
             updatePlaybackBar();
-            mainWindow.setVisible(true);
             updateUI();
+            mainWindow.setVisible(true);
             GuiLoaderFrame.closeLoadingThread();
         }
 
@@ -671,6 +672,7 @@ public class App {
                 SwingUtilities.updateComponentTreeUI(GuiLoaderFrame.loadingFrame);
                 PopupManager.updatePopupTrees();
             });
+            updateControls();
         }
 
         // Effects: updates control icons
@@ -908,6 +910,7 @@ public class App {
             button.setBorderPainted(false);
             button.setContentAreaFilled(false);
             button.setOpaque(false);
+            button.setDisabledIcon(button.getIcon());
         }
 
         // Effects: converts ID3 tag to its corresponding menu bar item
@@ -1199,13 +1202,18 @@ public class App {
                 musicArt.setIcon(placeholder);
                 BufferedImage bufferedImage = playbackManager.getArtwork();
                 if (bufferedImage != null) {
-                    int newWidth = (int)(Math.min(64.0 / bufferedImage.getWidth(),
-                            64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth());
-                    int newHeight = (int)(Math.min(64.0 / bufferedImage.getWidth(),
-                            64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight());
-                    musicArt.setIcon(new ImageIcon(bufferedImage.getScaledInstance(newWidth, newHeight,
-                            Image.SCALE_AREA_AVERAGING)));
-                    musicArt.setPreferredSize(new Dimension(newWidth, newHeight));
+                    double newWidth = Math.min(64.0 / bufferedImage.getWidth(),
+                            64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
+                    double newHeight = Math.min(64.0 / bufferedImage.getWidth(),
+                            64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
+                    musicArt.setIcon(new ImageIcon(new BaseMultiResolutionImage(
+                            bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
+                                    Image.SCALE_AREA_AVERAGING),
+                            bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
+                                    Image.SCALE_AREA_AVERAGING),
+                            bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
+                                    Image.SCALE_AREA_AVERAGING))));
+                    musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
                 }
             }
         }
