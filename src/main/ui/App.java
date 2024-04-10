@@ -660,6 +660,20 @@ public class App {
             updateUI();
             mainWindow.setVisible(true);
             GuiLoaderFrame.closeLoadingThread();
+            playFileFromArgs(args);
+        }
+        
+        // Plays audio file passed in as input
+        private static void playFileFromArgs(String[] args) {
+            for (String arg : args) {
+                if (new File(arg).exists()) {
+                    AudioDataStructure structure = new AudioDataStructure(arg);
+                    if (!structure.isEmpty()) {
+                        playDbFile(structure);
+                        updatePlaybackBar();
+                    }
+                }
+            }
         }
 
         private List<PopupManager.Popup> popupList = new LinkedList<>();
