@@ -16,7 +16,6 @@ import org.jaudiotagger.tag.images.Artwork;
 
 import javax.sound.sampled.AudioFormat;
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Date;

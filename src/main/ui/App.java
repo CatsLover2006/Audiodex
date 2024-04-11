@@ -23,7 +23,6 @@ import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.github.weisj.jsvg.SVGDocument;
-import com.github.weisj.jsvg.nodes.SVG;
 import com.github.weisj.jsvg.parser.SVGLoader;
 import com.jthemedetecor.OsThemeDetector;
 import model.*;

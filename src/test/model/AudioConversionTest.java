@@ -1,8 +1,6 @@
 package model;
 
 import audio.AudioDataStructure;
-import audio.filetypes.encoders.AiffTest;
-import audio.filetypes.encoders.MP3Test;
 import org.junit.jupiter.api.ClassOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;

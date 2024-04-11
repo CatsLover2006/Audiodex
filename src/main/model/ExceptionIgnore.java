@@ -2,7 +2,6 @@ package model;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
 
 // Static class
 public class ExceptionIgnore {
