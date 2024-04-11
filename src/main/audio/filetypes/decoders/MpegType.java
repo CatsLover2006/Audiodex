@@ -135,7 +135,7 @@ public class MpegType implements AudioDecoder {
     // Effects: returns the current time in the audio in seconds
     @Override
     public double getCurrentTime() {
-        return (double)samplesPlayed / (decoder.getSampleRate() * decoder.getChannels());
+        return ready ? (double)samplesPlayed / (decoder.getSampleRate() * decoder.getChannels()) : -1;
     }
 
     // Effects: returns the duration of the audio in seconds
