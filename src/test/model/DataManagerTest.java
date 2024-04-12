@@ -143,7 +143,8 @@ public class DataManagerTest {
         try {
             FileInputStream fileInputStream = new FileInputStream(file);
             System.out.println("FileInputStream...");
-            byte[] fileContent = fileInputStream.readNBytes(18000);
+            byte[] fileContent = new byte[18000];
+            fileInputStream.read(fileContent);
             fileInputStream.close();
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             System.out.println("FileOutputStream...");

@@ -5,7 +5,6 @@ import com.github.weisj.jsvg.attributes.ViewBox;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 
 import static java.util.Arrays.asList;

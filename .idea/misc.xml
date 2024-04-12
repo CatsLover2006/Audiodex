@@ -10,7 +10,7 @@
   <component name="ProjectResources">
     <resource url="http://checkstyle.sourceforge.net/dtds/configuration_1_3.dtd" location="$PROJECT_DIR$/checkstyle.xml" />
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_9" default="true" project-jdk-name="9" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="azul-1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

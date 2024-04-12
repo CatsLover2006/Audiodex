@@ -5,7 +5,6 @@ import audio.AudioDataStructure;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -1240,17 +1239,8 @@ public class App {
                             64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
                     double newHeight = Math.min(64.0 / bufferedImage.getWidth(),
                             64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
-                    musicArt.setIcon(new ImageIcon(new BaseMultiResolutionImage(
-                            bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
-                                    Image.SCALE_AREA_AVERAGING),
-                            bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
-                                    Image.SCALE_AREA_AVERAGING),
-                            bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
-                                    Image.SCALE_AREA_AVERAGING),
-                            bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
-                                    Image.SCALE_AREA_AVERAGING),
-                            bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
-                                    Image.SCALE_AREA_AVERAGING))));
+                    musicArt.setIcon(new ImageIcon(bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
+                                    Image.SCALE_AREA_AVERAGING)));
                     musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
                 }
             }
