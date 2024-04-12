@@ -550,6 +550,33 @@ public class App {
                     }
                 }
             });
+            setupMusicTableSortEvents();
+        }
+        
+        private static int sortMode = -1;
+        
+        // Setup music table header events
+        private static void setupMusicTableSortEvents() {
+            musicTable.getTableHeader().addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int col = musicTable.columnAtPoint(evt.getPoint());
+                    if (col >= 0) {
+                        if (evt.getButton() == 1) {
+                            if (evt.getClickCount() == 1) {
+                                if (sortMode == col) {
+                                    database.sortSongList("Default");
+                                    sortMode = -1;
+                                } else {
+                                    database.sortSongList(convertValue(columns[col]));
+                                    sortMode = col;
+                                }
+                                updateGuiList();
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         private static SVGLoader loader = new SVGLoader();
