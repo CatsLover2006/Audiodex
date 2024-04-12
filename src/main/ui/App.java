@@ -25,7 +25,6 @@ import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.nodes.SVG;
 import com.github.weisj.jsvg.parser.SVGLoader;
-import com.jthemedetecor.OsThemeDetector;
 import model.*;
 import org.apache.commons.lang3.SystemUtils;
 import org.fusesource.jansi.*;
@@ -48,7 +47,6 @@ import static java.lang.Thread.*;
 public class App {
     private static FileSystemView fileSystemView = FileSystemView.getFileSystemView();
     private static boolean notMain = true;
-    private static OsThemeDetector detector;
     private static ID3Container id3;
     private static AudioFilePlaybackBackend playbackManager;
     private static boolean USE_CLI = false;
@@ -196,7 +194,6 @@ public class App {
         if (strArrContains(args, "--cli")) {
             USE_CLI = true;
         } else {
-            detector = OsThemeDetector.getDetector();
             setupSwing();
             GuiLoaderFrame.createLoadingThread();
         }
@@ -218,12 +215,7 @@ public class App {
 
     // Effects: sets up Swing UI
     private static void setupSwing() {
-        detector.registerListener(isDark -> {
-            SwingUtilities.invokeLater(() -> {
-                uiMod(isDark);
-            });
-        });
-        uiMod(detector.isDark());
+        uiMod(false);
     }
 
     // Effects: changes dark mode status
