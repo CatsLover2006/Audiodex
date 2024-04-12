@@ -6,7 +6,7 @@ import org.apache.commons.lang3.SystemUtils;
 public class Preloader {
     public static void onLoad() {
         if (SystemUtils.IS_OS_MAC_OSX) {
-            System.setProperty("apple.awt.application.appearance", "system");
+            System.setProperty("apple.awt.application.appearance", "NSAppearanceNameAqua");
             System.setProperty("apple.awt.application.name", "Audiodex");
         }
     }
