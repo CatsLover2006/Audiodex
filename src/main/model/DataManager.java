@@ -88,7 +88,7 @@ public class DataManager {
     }
     
     // Effects: parses long without exception
-    private long parseLong(String str) {
+    private static long parseLong(String str) {
         try {
             return Long.parseLong(str);
         } catch (NumberFormatException e) {
@@ -98,25 +98,22 @@ public class DataManager {
 
     // Effects: returns true if audio files are out of order
     //          I can't believe this is 25 lines
-    private boolean outOfOrder(SortingTypes sortBy, AudioDataStructure a, AudioDataStructure b) {
+    private static boolean outOfOrder(SortingTypes sortBy, AudioDataStructure a, AudioDataStructure b) {
         switch (sortBy) {
             case Default:
+            case Album:
                 int albumSort = getSortingValue("Album", a).compareTo(getSortingValue("Album", b));
                 if (albumSort == 0) {
                     long discDif = parseLong(getSortingValue("Disc", a)) - parseLong(getSortingValue("Disc", b));
-                    if (discDif == 0) {
-                        return parseLong(getSortingValue("Track", a))
-                                > parseLong(getSortingValue("Track", b));
-                    }
-                    return discDif > 0;
+                    return discDif == 0 ? parseLong(getSortingValue("Track", a))
+                            > parseLong(getSortingValue("Track", b)) : discDif > 0;
                 }
                 return albumSort > 0;
             case AlbumArtist:
             case Artist:
             case Title:
-            case Album:
-                return getSortingValue(sortBy.toString(), a)
-                        .compareTo(getSortingValue(sortBy.toString(), b)) > 0;
+                int dif = getSortingValue(sortBy.toString(), a).compareTo(getSortingValue(sortBy.toString(), b));
+                return dif == 0 ? outOfOrder(SortingTypes.Default, a, b) : dif > 0;
             case Filesize:
                 return a.getFilesize() > b.getFilesize();
         }
