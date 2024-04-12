@@ -49,7 +49,7 @@ public class DataManager {
         Artist,
         Album,
         AlbumArtist,
-        Album_Title,
+        Default,
         Filesize
     }
 
@@ -86,15 +86,29 @@ public class DataManager {
         songFilelist.set(first, songFilelist.get(second));
         songFilelist.set(second, firstValue);
     }
+    
+    // Effects: parses long without exception
+    private long parseLong(String str) {
+        try {
+            return Long.parseLong(str);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
 
     // Effects: returns true if audio files are out of order
+    //          I can't believe this is 25 lines
     private boolean outOfOrder(SortingTypes sortBy, AudioDataStructure a, AudioDataStructure b) {
         switch (sortBy) {
-            case Album_Title:
+            case Default:
                 int albumSort = getSortingValue("Album", a).compareTo(getSortingValue("Album", b));
                 if (albumSort == 0) {
-                    return getSortingValue("Title", a)
-                            .compareTo(getSortingValue("Title", b)) > 0;
+                    long discDif = parseLong(getSortingValue("Disc", a)) - parseLong(getSortingValue("Disc", b));
+                    if (discDif == 0) {
+                        return parseLong(getSortingValue("Track", a))
+                                > parseLong(getSortingValue("Track", b));
+                    }
+                    return discDif > 0;
                 }
                 return albumSort > 0;
             case AlbumArtist:

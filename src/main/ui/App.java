@@ -205,7 +205,7 @@ public class App {
         songQueue = new LinkedList<>();
         database = new DataManager();
         database.loadDatabase();
-        database.sortSongList("Album_Title");
+        database.sortSongList("Default");
         playbackManager = new AudioFilePlaybackBackend();
         playbackManager.setReplayGain(database.getSettings().doSoundCheck());
         if (USE_CLI) {
@@ -350,7 +350,7 @@ public class App {
                             AudioDecoder decoder = AudioFileLoader.loadFile(database.getAudioFile(row).getFilename());
                             decoder.prepareToPlayAudio();
                             decoder.setID3((ID3Container) obj.getValue());
-                            database.sortSongList("Album_Title");
+                            database.sortSongList("Default");
                             musicTable.updateUI();
                         }));
                 this.add(item);
@@ -878,7 +878,7 @@ public class App {
                         GuiLoaderFrame.createLoadingThread();
                         database.addFileToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
                         database.sanitizeAudioDatabase();
-                        database.sortSongList("Album_Title");
+                        database.sortSongList("Default");
                         updateGuiList();
                         GuiLoaderFrame.closeLoadingThread();
                     });
@@ -891,7 +891,7 @@ public class App {
                 GuiLoaderFrame.createLoadingThread();
                 database.addDirToSongDatabase(new File((String) popup.getValue()).getAbsolutePath());
                 database.sanitizeAudioDatabase();
-                database.sortSongList("Album_Title");
+                database.sortSongList("Default");
                 updateGuiList();
                 GuiLoaderFrame.closeLoadingThread();
             });
@@ -1752,7 +1752,7 @@ public class App {
             if (f.isFile()) { // Database uses absolute file paths, otherwise it would fail to load audio
                 database.addFileToSongDatabase(f.getAbsolutePath());
                 database.sanitizeAudioDatabase();
-                database.sortSongList("Album_Title");
+                database.sortSongList("Default");
             } else {
                 AnsiConsole.out().println("File doesn't exist, is a directory, or is inaccessible.");
                 wait(1000);
@@ -1774,7 +1774,7 @@ public class App {
             if (f.isDirectory()) { // Database uses absolute file paths, otherwise it would fail to load audio
                 database.addDirToSongDatabase(f.getAbsolutePath());
                 database.sanitizeAudioDatabase();
-                database.sortSongList("Album_Title");
+                database.sortSongList("Default");
             } else {
                 AnsiConsole.out().println("Directory doesn't exist, is a file, or is inaccessible.");
                 wait(1000);
