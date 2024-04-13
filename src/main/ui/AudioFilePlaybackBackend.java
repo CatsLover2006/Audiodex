@@ -78,6 +78,7 @@ public class AudioFilePlaybackBackend {
                 line.write(sample.getData(), 0, sample.getLength());
             }
             line.stop();
+            line.close();
             loadedFile.closeAudioFile();
             loadedFile = null;
             System.gc(); // Clean up potential decoder garbage
