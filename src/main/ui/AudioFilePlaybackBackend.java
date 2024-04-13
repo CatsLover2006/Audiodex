@@ -185,6 +185,7 @@ public class AudioFilePlaybackBackend {
                 line.close();
                 return;
             } catch (Exception e) {
+                line.close();
                 bytesPerSampleWrite--;
             }
         } while (bytesPerSampleWrite > 0);
@@ -205,8 +206,10 @@ public class AudioFilePlaybackBackend {
         if (decoderThread != null && decoderThread.isAlive()) {
             pauseAudio();
         }
-        if (line != null && line.isActive()) {
-            line.stop();
+        if (line != null && line.isOpen()) {
+            if (line.isActive()) {
+                line.stop();
+            }
             line.close();
         }
         if (loadedFile != null && loadedFile.isReady()) {
