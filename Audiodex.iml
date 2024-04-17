@@ -4,46 +4,16 @@
     <option name="activeLocationsIds" />
   </component>
   <component name="NewModuleRootManager">
-    <output url="file://$MODULE_DIR$/out/production/Project-Starter" />
-    <output-test url="file://$MODULE_DIR$/out/test/Project-Starter" />
+    <output url="file://$MODULE_DIR$/out/production/project_t0g1f" />
+    <output-test url="file://$MODULE_DIR$/out/test/project_t0g1f" />
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src/test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/main" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library" scope="TEST">
-      <library name="JUnit5.8.1">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/junit-jupiter-5.8.1.jar!/" />
-          <root url="jar://$MODULE_DIR$/lib/junit-jupiter-api-5.8.1.jar!/" />
-          <root url="jar://$MODULE_DIR$/lib/opentest4j-1.2.0.jar!/" />
-          <root url="jar://$MODULE_DIR$/lib/junit-platform-commons-1.8.1.jar!/" />
-          <root url="jar://$MODULE_DIR$/lib/apiguardian-api-1.1.2.jar!/" />
-          <root url="jar://$MODULE_DIR$/lib/junit-jupiter-params-5.8.1.jar!/" />
-          <root url="jar://$MODULE_DIR$/lib/junit-jupiter-engine-5.8.1.jar!/" />
-          <root url="jar://$MODULE_DIR$/lib/junit-platform-engine-1.8.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="library" name="JAADec 0.8.4" level="project" />
-    <orderEntry type="library" name="Jansi 2.4.2 (Self-Compiled)" level="project" />
-    <orderEntry type="library" name="tritonus 0.3.12 (Self-Compiled w/ AIFF-C support mod)" level="project" />
-    <orderEntry type="library" name="vavi-sound-alac 0.3.2 (Self-Compiled)" level="project" />
-    <orderEntry type="library" name="java-vorbis-support (1.2.1)" level="project" />
-    <orderEntry type="library" name="Java LAME 3.98.4 (Modified)" level="project" />
-    <orderEntry type="library" name="JSON 2021/03/07" level="project" />
-    <orderEntry type="library" name="JustFLAC 0.0.1 (Self-Compiled)" level="project" />
-    <orderEntry type="library" name="FlatLaf 3.4" level="project" />
-    <orderEntry type="library" name="Apache Commons Lang 3.14.0" level="project" />
-    <orderEntry type="library" name="jSystemThemeDetector 3.8" level="project" />
-    <orderEntry type="library" name="slf4j 2.0.12" level="project" />
-    <orderEntry type="library" name="jsvg 1.4.0" level="project" />
-    <orderEntry type="library" name="j-ogg-vorbis 1.0.4" level="project" />
-    <orderEntry type="library" name="oshi-core 5.8.6" level="project" />
-    <orderEntry type="library" name="jaudiotagger 2.2.6" level="project" />
+    <orderEntry type="library" name="spec" level="project" />
+    <orderEntry type="library" name="lib" level="project" />
   </component>
 </module>
