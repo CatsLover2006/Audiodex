@@ -85,12 +85,10 @@ public class Vorbis implements AudioDecoder {
     //           getAudioOutputFormat() and atEndOfFile() remain valid
     @Override
     public void closeAudioFile() {
-        ExceptionIgnore.ignoreExc(() -> {
-            decoded.close();
-            stream.close();
-            oggStream.close();
-            file.close();
-        });
+        ExceptionIgnore.ignoreExc(() -> decoded.close());
+        ExceptionIgnore.ignoreExc(() -> stream.close());
+        ExceptionIgnore.ignoreExc(() -> oggStream.close());
+        ExceptionIgnore.ignoreExc(() -> file.close());
         ready = false;
     }
 
@@ -172,7 +170,7 @@ public class Vorbis implements AudioDecoder {
         base.setID3Data("Title", getFileName());
         AudioFile f;
         try {
-            f = AudioFileIO.read(new File(filename));
+            f = AudioFileIO.readAs(new File(filename), "ogg");
         } catch (Exception e) {
             return base;
         }
@@ -195,9 +193,10 @@ public class Vorbis implements AudioDecoder {
     // Effects:  updates ID3 data
     @Override
     public void setID3(ID3Container container) {
-        AudioFile f;
+        return; // Corrupts file ATM
+        /*AudioFile f;
         try {
-            f = AudioFileIO.read(new File(filename));
+            f = AudioFileIO.readAs(new File(filename), "ogg");
         } catch (Exception e) {
             return;
         }
@@ -211,7 +210,7 @@ public class Vorbis implements AudioDecoder {
             }
         }
         f.setTag(tag);
-        ExceptionIgnore.ignoreExc(() -> f.commit());
+        ExceptionIgnore.ignoreExc(() -> f.commit());//*///
     }
 
     // Effects: returns filename without directories
@@ -229,7 +228,7 @@ public class Vorbis implements AudioDecoder {
     public Artwork getArtwork() {
         AudioFile f;
         try {
-            f = AudioFileIO.read(new File(filename));
+            f = AudioFileIO.readAs(new File(filename), "ogg");
             Tag tag = f.getTag();
             for (Artwork art : tag.getArtworkList()) {
                 if (art.getPictureType() == 0) {
@@ -246,7 +245,7 @@ public class Vorbis implements AudioDecoder {
     @Override
     public void setArtwork(Artwork image) {
         ExceptionIgnore.ignoreExc(() -> {
-            AudioFile f = AudioFileIO.read(new File(filename));
+            AudioFile f = AudioFileIO.readAs(new File(filename), "ogg");
             f.getTag().setField(image);
             f.commit();
         });
@@ -267,7 +266,7 @@ public class Vorbis implements AudioDecoder {
     public float getReplayGain() {
         float[] ret = new float[] {-6};
         ExceptionIgnore.ignoreExc(() ->  {
-            AudioFile f = AudioFileIO.read(new File(filename));
+            AudioFile f = AudioFileIO.readAs(new File(filename), "ogg");
             ret[0] = TagConversion.getReplayGain(f.getTag());
         });
         return ret[0];
