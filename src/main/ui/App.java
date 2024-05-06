@@ -398,6 +398,11 @@ public class App {
             rightPlaybackLabel.putClientProperty("FlatLaf.styleClass", "mini");
             loadVectors();
             setupButtons();
+            makeButtonTransparent(skipButton);
+            makeButtonTransparent(prevButton);
+            makeButtonTransparent(playButton);
+            makeButtonTransparent(shuffleButton);
+            makeButtonTransparent(loopButton);
         }
 
         private static String[] columns = {
@@ -961,16 +966,13 @@ public class App {
             constraints.anchor = GridBagConstraints.FIRST_LINE_START;
             constraints.gridx = 0;
             constraints.fill = GridBagConstraints.HORIZONTAL;
+            constraints.gridy = 0;
             layout.setConstraints(musicPlaybackView, constraints);
+            constraints.gridy++;
             constraints.fill = GridBagConstraints.BOTH;
             constraints.weighty = 1.0;
             layout.setConstraints(musicList, constraints);
             mainWindow.setLayout(layout);
-            makeButtonTransparent(skipButton);
-            makeButtonTransparent(prevButton);
-            makeButtonTransparent(playButton);
-            makeButtonTransparent(shuffleButton);
-            makeButtonTransparent(loopButton);
         }
 
         // Modifies: button
