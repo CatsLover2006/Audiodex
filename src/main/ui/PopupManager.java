@@ -693,6 +693,7 @@ public class PopupManager {
             selector.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             selector.setResizable(false);
             selector.revalidate();
+            selector.getContentPane().repaint();
             selector.setVisible(true);
             popupList.add(this);
         }
@@ -834,6 +835,7 @@ public class PopupManager {
             selector.pack();
             selector.setResizable(false);
             selector.revalidate();
+            selector.getContentPane().repaint();
             selector.setVisible(true);
             popupList.add(this);
         }
