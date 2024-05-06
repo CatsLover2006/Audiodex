@@ -1068,9 +1068,10 @@ public class PopupManager {
                                 48.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
                         double newHeight = Math.min(48.0 / bufferedImage.getWidth(),
                                 48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
-                        musicArt.setIcon(new ImageIcon(new BaseMultiResolutionImage(
-                                bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
-                                        Image.SCALE_AREA_AVERAGING),
+                        Image quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
+                                Image.SCALE_AREA_AVERAGING);
+                        musicArt.setIcon(new ImageIcon(quickSize));
+                        musicArt.setIcon(new ImageIcon(new BaseMultiResolutionImage(quickSize,
                                 bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
                                         Image.SCALE_AREA_AVERAGING),
                                 bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
