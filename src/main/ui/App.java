@@ -3,8 +3,7 @@ package ui;
 import audio.AudioDataStructure;
 
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -58,6 +57,10 @@ public class App {
     private static LinkedList<AudioDataStructure> played;
     private static AudioDataStructure nowPlaying;
     private static boolean loop = false;
+
+    public static Image getAppImage() {
+        return Gui.mainWindow.getIconImage();
+    }
 
     // Effects: returns formatted time
     private static String formatTime(long seconds) {
@@ -662,9 +665,12 @@ public class App {
             });
         }
 
+        private static int miniplayerHeight = -1;
+
         // Setup miniplayer window
         private static void setupMiniplayerWindow() {
             miniplayerWindow = new JFrame("Audiodex Miniplayer");
+            ExceptionIgnore.ignoreExc(() -> miniplayerWindow.setIconImage(mainWindow.getIconImage()));
             miniplayerWindow.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
             miniplayerWindow.addWindowListener(new WindowAdapter() {
                 @Override
@@ -672,7 +678,15 @@ public class App {
                     miniplayerWindow.setVisible(false);
                     mainWindow.add(musicPlaybackView);
                     setupMainWindowLayout();
+                    mainWindow.setLocation(miniplayerWindow.getLocation());
                     mainWindow.setVisible(true);
+                }
+            });
+            miniplayerWindow.addComponentListener(new ComponentAdapter() {
+                @Override
+                public void componentResized(ComponentEvent e) {
+                    super.componentResized(e);
+                    miniplayerWindow.setSize(miniplayerWindow.getWidth(), miniplayerHeight);
                 }
             });
         }
@@ -682,7 +696,12 @@ public class App {
             mainWindow.setVisible(false);
             miniplayerWindow.add(musicPlaybackView);
             miniplayerWindow.pack();
-            miniplayerWindow.setSize(300, miniplayerWindow.getHeight());
+            miniplayerHeight = miniplayerWindow.getHeight();
+            miniplayerWindow.setSize(320, miniplayerHeight);
+            miniplayerWindow.setMaximumSize(new Dimension(Integer.MAX_VALUE, miniplayerHeight));
+            miniplayerWindow.setMinimumSize(new Dimension(256, miniplayerHeight));
+            miniplayerWindow.setMaximizedBounds(new Rectangle(Integer.MAX_VALUE, miniplayerHeight));
+            miniplayerWindow.setLocation(mainWindow.getLocation());
             miniplayerWindow.setVisible(true);
         }
 
@@ -726,6 +745,7 @@ public class App {
                     if (!structure.isEmpty()) {
                         playDbFile(structure);
                         updatePlaybackBar();
+                        miniplayerLoad();
                         return; // Found the file! done
                     }
                 }

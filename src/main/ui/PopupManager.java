@@ -581,6 +581,7 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             selector = new JFrame("File Selector Window");
+            selector.setIconImage(App.getAppImage());
             selector.setSize(300, 300);
             selector.setResizable(true);
             setupWindowObjects();
@@ -684,6 +685,7 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             selector = new JFrame("Error");
+            selector.setIconImage(App.getAppImage());
             setupWindowObjects();
             setupWindowLayout();
             selector.setAlwaysOnTop(true);
@@ -823,6 +825,7 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             selector = new JFrame("Confirmation");
+            selector.setIconImage(App.getAppImage());
             setupWindowObjects();
             setupWindowLayout();
             selector.setAlwaysOnTop(true);
@@ -922,6 +925,7 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             selector = new JFrame("Converter");
+            selector.setIconImage(App.getAppImage());
             selector.setResizable(false);
             ExceptionIgnore.ignoreExc(() -> converter.getOptions().forEach((key, value) ->
                     options.put(key, new JComboBox<>(value.toArray()))));
@@ -1192,6 +1196,7 @@ public class PopupManager {
         // Effects: does the work
         private void setup() {
             editor = new JFrame(file.getFilename());
+            editor.setIconImage(App.getAppImage());
             editor.setResizable(true);
             editor.setSize(400, 400);
             setupWindowObjects();

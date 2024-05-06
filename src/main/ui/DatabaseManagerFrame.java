@@ -38,6 +38,7 @@ public class DatabaseManagerFrame extends JFrame {
     DatabaseManagerFrame(DataManager database) {
         super("Here be dragons...");
         this.database = database;
+        setIconImage(App.getAppImage());
         add(revertButton);
         add(cleanButton);
         add(refreshButton);
