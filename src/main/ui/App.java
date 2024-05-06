@@ -629,6 +629,7 @@ public class App {
         }
 
         private static JFrame mainWindow;
+        private static JFrame miniplayerWindow;
 
         // Setup main window close action
         private static void setupMainWindow() {
@@ -656,7 +657,29 @@ public class App {
             });
         }
 
+        // Setup miniplayer window
+        private static void setupMiniplayerWindow() {
+            miniplayerWindow = new JFrame("Audiodex Miniplayer");
+            miniplayerWindow.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+            miniplayerWindow.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    miniplayerWindow.setVisible(false);
+                    mainWindow.add(musicPlaybackView);
+                    setupMainWindowLayout();
+                    mainWindow.setVisible(true);
+                }
+            });
+        }
 
+        // Loads miniplayer
+        private static void miniplayerLoad() {
+            mainWindow.setVisible(false);
+            miniplayerWindow.add(musicPlaybackView);
+            miniplayerWindow.pack();
+            miniplayerWindow.setSize(300, miniplayerWindow.getHeight());
+            miniplayerWindow.setVisible(true);
+        }
 
         // Effects: waits for first audio encoding thread to finish
         private static void waitForFirstEncoder() {
@@ -683,6 +706,7 @@ public class App {
             setupMainWindowLayout();
             setupMenubar();
             updatePlaybackBar();
+            setupMiniplayerWindow();
             updateUI();
             mainWindow.setVisible(true);
             GuiLoaderFrame.closeLoadingThread();
@@ -848,6 +872,11 @@ public class App {
                     moveDbFolder();
                 }
             });
+            menu.add(item);
+            mainMenuBar.add(menu);
+            menu = new JMenu("View");
+            item = new JMenuItem("Use Miniplayer");
+            item.addActionListener(e -> miniplayerLoad());
             menu.add(item);
             mainMenuBar.add(menu);
         }
