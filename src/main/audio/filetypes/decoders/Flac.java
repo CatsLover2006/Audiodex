@@ -134,7 +134,7 @@ public class Flac implements AudioDecoder {
     // Effects: returns the current time in the audio in seconds
     @Override
     public double getCurrentTime() {
-        if (!isReady()) {
+        if (!isReady() || info == null) {
             return -1;
         }
         return bytesPlayed / (info.getSampleRate() * info.getBitsPerSample() * info.getChannels() / 8.0);
