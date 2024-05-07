@@ -1073,7 +1073,7 @@ public class PopupManager {
                         Image quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
                                 Image.SCALE_AREA_AVERAGING);
                         musicArt.setIcon(new ImageIcon(quickSize));
-                        musicArt.setIcon(new ImageIcon(new BaseMultiResolutionImage(quickSize,
+                        BaseMultiResolutionImage conv = new BaseMultiResolutionImage(quickSize,
                                 bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
                                         Image.SCALE_AREA_AVERAGING),
                                 bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
@@ -1081,7 +1081,8 @@ public class PopupManager {
                                 bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
                                         Image.SCALE_AREA_AVERAGING),
                                 bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
-                                        Image.SCALE_AREA_AVERAGING))));
+                                        Image.SCALE_AREA_AVERAGING));
+                        musicArt.setIcon(new ImageIcon(conv));
                         musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
                     }
                 });
