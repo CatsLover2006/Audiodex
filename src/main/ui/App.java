@@ -1309,8 +1309,8 @@ public class App {
                             bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
                                     Image.SCALE_AREA_AVERAGING),
                             bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
-                                    Image.SCALE_AREA_AVERAGING));
-                    musicArt.setIcon(new ImageIcon(conv));2
+                                    Image.SCALE_AREA_AVERAGING), bufferedImage);
+                    musicArt.setIcon(new ImageIcon(conv));
                     musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
                 }
             }
