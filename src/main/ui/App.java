@@ -1288,19 +1288,24 @@ public class App {
 
         // Thread to update album artwork
         private static class AlbumArtworkUpdater extends Thread {
+            double newWidth;
+            double newHeight;
+            Image quickSize;
+
             @Override
             public void run() {
                 Thread.currentThread().setPriority(2);
                 musicArt.setIcon(placeholder);
                 BufferedImage bufferedImage = playbackManager.getArtwork();
                 if (bufferedImage != null) {
-                    double newWidth = Math.min(64.0 / bufferedImage.getWidth(),
+                    newWidth = Math.min(64.0 / bufferedImage.getWidth(),
                             64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
-                    double newHeight = Math.min(64.0 / bufferedImage.getWidth(),
+                    newHeight = Math.min(64.0 / bufferedImage.getWidth(),
                             64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
-                    Image quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
+                    quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
                             Image.SCALE_AREA_AVERAGING);
                     musicArt.setIcon(new ImageIcon(quickSize));
+                    musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
                     BaseMultiResolutionImage conv = new BaseMultiResolutionImage(quickSize,
                             bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
                                     Image.SCALE_AREA_AVERAGING),

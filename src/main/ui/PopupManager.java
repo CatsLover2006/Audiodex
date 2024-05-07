@@ -1059,6 +1059,10 @@ public class PopupManager {
 
         // Thread to update album artwork
         private class AlbumArtworkUpdater extends Thread {
+            double newWidth;
+            double newHeight;
+            Image quickSize;
+
             @Override
             public void run() {
                 Thread.currentThread().setPriority(2);
@@ -1066,24 +1070,27 @@ public class PopupManager {
                     musicArt.setIcon(MUSIC_ICON);
                     BufferedImage bufferedImage = (BufferedImage) fileScanner.getArtwork().getImage();
                     if (bufferedImage != null) {
-                        double newWidth = Math.min(48.0 / bufferedImage.getWidth(),
+                        newWidth = Math.min(48.0 / bufferedImage.getWidth(),
                                 48.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
-                        double newHeight = Math.min(48.0 / bufferedImage.getWidth(),
+                        newHeight = Math.min(48.0 / bufferedImage.getWidth(),
                                 48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
-                        Image quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
+                        quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
                                 Image.SCALE_AREA_AVERAGING);
                         musicArt.setIcon(new ImageIcon(quickSize));
-                        BaseMultiResolutionImage conv = new BaseMultiResolutionImage(quickSize,
-                                bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
-                                        Image.SCALE_AREA_AVERAGING),
-                                bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
-                                        Image.SCALE_AREA_AVERAGING),
-                                bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
-                                        Image.SCALE_AREA_AVERAGING),
-                                bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
-                                        Image.SCALE_AREA_AVERAGING), bufferedImage);
-                        musicArt.setIcon(new ImageIcon(conv));
                         musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
+                        new Thread(() -> {
+                            BaseMultiResolutionImage conv = new BaseMultiResolutionImage(quickSize,
+                                    bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
+                                            Image.SCALE_AREA_AVERAGING),
+                                    bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
+                                            Image.SCALE_AREA_AVERAGING),
+                                    bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
+                                            Image.SCALE_AREA_AVERAGING),
+                                    bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
+                                            Image.SCALE_AREA_AVERAGING), bufferedImage);
+                            musicArt.setIcon(new ImageIcon(conv));
+                            musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
+                        }).start();
                     }
                 });
             }
