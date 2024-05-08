@@ -24,13 +24,24 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
         }
     }
     
+    // This is more complex than it needs to be
+    // to get around a Java bug around the ToolkitImage class
+    // FUCK ToolkitImage FOR BEING USELESS AND JUST CREATING PAIN AND SUFFERING
     private void makeImage(int width, int height) {
         if (ratio > 1) { // wide
-            images.put(width,
-                    bufferedImage.getScaledInstance(width, (int) (width / ratio), Image.SCALE_AREA_AVERAGING));
+            height = (int) (width / ratio);
         } else { // tall
-            images.put(height,
-                    bufferedImage.getScaledInstance((int) (height / ratio), height, Image.SCALE_AREA_AVERAGING));
+            width = (int) (height / ratio);
+        }
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D draw = image.createGraphics();
+        draw.drawImage(bufferedImage.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING), 0, 0, null);
+        draw.dispose();
+        image.flush();
+        if (ratio > 1) { // wide
+            images.put(width, image);
+        } else { // tall
+            images.put(height, image);
         }
     }
     
