@@ -1264,7 +1264,6 @@ public class App {
 
         // Effects: updates music playback view
         public static void updatePlaybackBar() {
-            updateMusicIcon();
             fileLabel.setText(playbackManager.getPlaybackString(false));
             String artistLabel = "";
             Object obj = playbackManager.getID3().getID3Data("Artist");
@@ -1280,6 +1279,7 @@ public class App {
             }
             albumLabel.setText(artistLabel);
             updateControls();
+            updateMusicIcon();
         }
         
         private static Icon artIcon;
