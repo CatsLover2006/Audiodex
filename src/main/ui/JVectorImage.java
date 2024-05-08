@@ -4,20 +4,20 @@ import com.github.weisj.jsvg.SVGDocument;
 import com.github.weisj.jsvg.attributes.ViewBox;
 
 import java.awt.*;
+import java.awt.image.AbstractMultiResolutionImage;
 import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
 // Vector Image class; unused but useful for future
-public class JVectorImage extends BaseMultiResolutionImage {
+public class JVectorImage extends AbstractMultiResolutionImage {
     private SVGDocument svg;
     private int width;
     private int height;
     
     // Effects: "registers" the SVGDocument
     public JVectorImage(SVGDocument document, int w, int h) {
-        super(getDefaultImage(document, w, h));
         svg = document;
         width = w;
         height = h;
@@ -76,5 +76,17 @@ public class JVectorImage extends BaseMultiResolutionImage {
         List<Image> defaults = new ArrayList<>();
         defaults.add(getResolutionVariant(width, height));
         return defaults;
+    }
+    
+    /**
+     * Return the base image representing the best version of the image for
+     * rendering at the default width and height.
+     *
+     * @return the base image of the set of multi-resolution images
+     * @since 9
+     */
+    @Override
+    protected Image getBaseImage() {
+        return getResolutionVariant(width, height);
     }
 }

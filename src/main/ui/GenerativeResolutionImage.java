@@ -3,6 +3,7 @@ package ui;
 import java.awt.*;
 import java.awt.image.AbstractMultiResolutionImage;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.util.*;
 import java.util.List;
 
@@ -43,6 +44,14 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
         }
     }
     
+    private boolean hasImage(int width, int height) {
+        if (ratio > 1) { // wide
+            return width > originalWidth || images.containsKey(width);
+        } else { // tall
+            return height > originalHeight || images.containsKey(height);
+        }
+    }
+    
     public GenerativeResolutionImage(BufferedImage image, int displayWidth, int displayHeight) {
         bufferedImage = image;
         baseWidth = displayWidth;
@@ -68,20 +77,32 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
     }
     
     /**
+     * This method simply delegates to the same method on the base image and
+     * it is equivalent to: {@code getBaseImage().getProperty(name, observer)}.
+     *
+     * @param name name
+     * @param observer observer
+     * @return the value of the named property in the base image
+     * @see #getBaseImage()
+     * @since 9
+     */
+    @Override
+    public Object getProperty(String name, ImageObserver observer) {
+        return bufferedImage.getProperty(name, observer);
+    }
+    
+    /**
      * Gets a specific image that is the best variant to represent
      * this logical image at the indicated size.
      *
      * @param destImageWidth  the width of the destination image, in pixels.
      * @param destImageHeight the height of the destination image, in pixels.
      * @return image resolution variant.
-     * @throws IllegalArgumentException if {@code destImageWidth} or
-     *                                  {@code destImageHeight} is less than or equal to zero, infinity,
-     *                                  or NaN.
      * @since 9
      */
     @Override
     public Image getResolutionVariant(double destImageWidth, double destImageHeight) {
-        if (getImage((int) destImageWidth, (int) destImageHeight) == null) {
+        if (!hasImage((int) destImageWidth, (int) destImageHeight)) {
             makeImage((int) destImageWidth, (int) destImageHeight);
         }
         return getImage((int) destImageWidth, (int) destImageHeight);
@@ -99,7 +120,14 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
     @Override
     public List<Image> getResolutionVariants() {
         List<Image> imageList = new ArrayList<>();
-        imageList.addAll(images.values());
+        List<Integer> sizeList = new ArrayList<>();
+        for (Integer i : images.keySet()) {
+            sizeList.add(i);
+        }
+        sizeList.sort(null);
+        for (int size : sizeList) {
+            imageList.add(images.get(size));
+        }
         return imageList;
     }
 }

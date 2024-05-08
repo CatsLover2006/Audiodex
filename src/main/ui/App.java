@@ -1259,6 +1259,8 @@ public class App {
                 }
             }
         }
+        
+        private static AudioDataStructure loadedMusicIcon = null;
 
         // Effects: updates music playback view
         public static void updatePlaybackBar() {
@@ -1280,20 +1282,18 @@ public class App {
             updateControls();
         }
         
+        private static Icon artIcon;
+        
         // Effects: sets music icon
         private static void updateMusicIcon() {
             BufferedImage bufferedImage = playbackManager.getArtwork();
             if (bufferedImage != null) {
-                double newWidth = Math.min(64.0 / bufferedImage.getWidth(),
-                        64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
-                double newHeight = Math.min(64.0 / bufferedImage.getWidth(),
-                        64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
-                musicArt.setIcon(new ImageIcon(
-                        new GenerativeResolutionImage(bufferedImage, (int) newWidth, (int) newHeight)));
-                musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
+                artIcon = new ImageIcon(new GenerativeResolutionImage(bufferedImage, 64, 64));
             } else {
-                musicArt.setIcon(placeholder);
+                artIcon = placeholder;
             }
+            musicArt.setIcon(artIcon);
+            musicArt.setPreferredSize(new Dimension(64, 64));
         }
 
         // Effects: sets up the playback bar
