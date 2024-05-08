@@ -1279,7 +1279,10 @@ public class App {
             }
             albumLabel.setText(artistLabel);
             updateControls();
-            updateMusicIcon();
+            if (loadedMusicIcon != nowPlaying) {
+                updateMusicIcon();
+                loadedMusicIcon = nowPlaying;
+            }
         }
         
         private static Icon artIcon;
@@ -1357,8 +1360,8 @@ public class App {
         private static void playDbFile(AudioDataStructure audioDataStructure) {
             File f = new File(audioDataStructure.getFilename());
             if (f.isFile()) {
-                nowPlaying = audioDataStructure;
                 playbackManager.loadAudio(f.getAbsolutePath());
+                nowPlaying = audioDataStructure;
                 setPlaybackBarLength(playbackManager.getFileDuration());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
@@ -2100,8 +2103,8 @@ public class App {
             if (f.isFile()) {
                 visualizerThread.killThread();
                 visualizerThread.safeJoin();
-                nowPlaying = audioDataStructure;
                 playbackManager.loadAudio(f.getAbsolutePath());
+                nowPlaying = audioDataStructure;
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
                 id3 = playbackManager.getID3();
