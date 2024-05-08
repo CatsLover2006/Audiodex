@@ -1260,15 +1260,9 @@ public class App {
             }
         }
 
-        private static AlbumArtworkUpdater updater;
-
         // Effects: updates music playback view
         public static void updatePlaybackBar() {
-            if (updater != null && updater.isAlive()) {
-                ExceptionIgnore.ignoreExc(() -> updater.join());
-            }
-            updater = new AlbumArtworkUpdater();
-            updater.start();
+            updateMusicIcon();
             fileLabel.setText(playbackManager.getPlaybackString(false));
             String artistLabel = "";
             Object obj = playbackManager.getID3().getID3Data("Artist");
@@ -1285,39 +1279,20 @@ public class App {
             albumLabel.setText(artistLabel);
             updateControls();
         }
-
-        // Thread to update album artwork
-        private static class AlbumArtworkUpdater extends Thread {
-            double newWidth;
-            double newHeight;
-            Image quickSize;
-
-            @Override
-            public void run() {
-                Thread.currentThread().setPriority(2);
+        
+        // Effects: sets music icon
+        private static void updateMusicIcon() {
+            BufferedImage bufferedImage = playbackManager.getArtwork();
+            if (bufferedImage != null) {
+                double newWidth = Math.min(64.0 / bufferedImage.getWidth(),
+                        64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
+                double newHeight = Math.min(64.0 / bufferedImage.getWidth(),
+                        64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
+                musicArt.setIcon(new ImageIcon(
+                        new GenerativeResolutionImage(bufferedImage, (int) newWidth, (int) newHeight)));
+                musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
+            } else {
                 musicArt.setIcon(placeholder);
-                BufferedImage bufferedImage = playbackManager.getArtwork();
-                if (bufferedImage != null) {
-                    newWidth = Math.min(64.0 / bufferedImage.getWidth(),
-                            64.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
-                    newHeight = Math.min(64.0 / bufferedImage.getWidth(),
-                            64.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
-                    quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
-                            Image.SCALE_AREA_AVERAGING);
-                    musicArt.setIcon(new ImageIcon(quickSize));
-                    musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
-                    BaseMultiResolutionImage conv = new BaseMultiResolutionImage(quickSize,
-                            bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
-                                    Image.SCALE_AREA_AVERAGING),
-                            bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
-                                    Image.SCALE_AREA_AVERAGING),
-                            bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
-                                    Image.SCALE_AREA_AVERAGING),
-                            bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
-                                    Image.SCALE_AREA_AVERAGING), bufferedImage);
-                    musicArt.setIcon(new ImageIcon(conv));
-                    musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
-                }
             }
         }
 

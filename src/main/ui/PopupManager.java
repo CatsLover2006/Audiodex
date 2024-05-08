@@ -1057,45 +1057,6 @@ public class PopupManager {
             MUSIC_ICON = temp;
         }
 
-        // Thread to update album artwork
-        private class AlbumArtworkUpdater extends Thread {
-            double newWidth;
-            double newHeight;
-            Image quickSize;
-
-            @Override
-            public void run() {
-                Thread.currentThread().setPriority(2);
-                ExceptionIgnore.ignoreExc(() -> {
-                    musicArt.setIcon(MUSIC_ICON);
-                    BufferedImage bufferedImage = (BufferedImage) fileScanner.getArtwork().getImage();
-                    if (bufferedImage != null) {
-                        newWidth = Math.min(48.0 / bufferedImage.getWidth(),
-                                48.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
-                        newHeight = Math.min(48.0 / bufferedImage.getWidth(),
-                                48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
-                        quickSize = bufferedImage.getScaledInstance((int) newWidth, (int) newHeight,
-                                Image.SCALE_AREA_AVERAGING);
-                        musicArt.setIcon(new ImageIcon(quickSize));
-                        musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
-                        new Thread(() -> {
-                            BaseMultiResolutionImage conv = new BaseMultiResolutionImage(quickSize,
-                                    bufferedImage.getScaledInstance((int) (newWidth * 1.5), (int) (newHeight * 1.5),
-                                            Image.SCALE_AREA_AVERAGING),
-                                    bufferedImage.getScaledInstance((int) (newWidth * 2), (int) (newHeight * 2),
-                                            Image.SCALE_AREA_AVERAGING),
-                                    bufferedImage.getScaledInstance((int) (newWidth * 2.5), (int) (newHeight * 2.5),
-                                            Image.SCALE_AREA_AVERAGING),
-                                    bufferedImage.getScaledInstance((int) (newWidth * 3), (int) (newHeight * 3),
-                                            Image.SCALE_AREA_AVERAGING), bufferedImage);
-                            musicArt.setIcon(new ImageIcon(conv));
-                            musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
-                        }).start();
-                    }
-                });
-            }
-        }
-
         // Effects:  returns updated ID3 data
         @Override
         public Object getValue() {
@@ -1135,7 +1096,23 @@ public class PopupManager {
             filenameLabel.setBorder(new EmptyBorder(0, 4, 0, 4));
             editor.add(scrollPane);
             scrollPane.setBorder(new EmptyBorder(0, 0, 0, 0));
-            new AlbumArtworkUpdater().start();
+            updateMusicIcon();
+        }
+        
+        // Effects: sets music icon
+        private void updateMusicIcon() {
+            try {
+                BufferedImage bufferedImage = (BufferedImage) fileScanner.getArtwork().getImage();
+                double newWidth = Math.min(48.0 / bufferedImage.getWidth(),
+                        48.0 / bufferedImage.getHeight()) * bufferedImage.getWidth();
+                double newHeight = Math.min(48.0 / bufferedImage.getWidth(),
+                        48.0 / bufferedImage.getHeight()) * bufferedImage.getHeight();
+                musicArt.setIcon(new ImageIcon(
+                        new GenerativeResolutionImage(bufferedImage, (int) newWidth, (int) newHeight)));
+                musicArt.setPreferredSize(new Dimension((int) newWidth, (int) newHeight));
+            } catch (Exception e) {
+                musicArt.setIcon(MUSIC_ICON);
+            }
         }
 
         // Virtual class for JTextField which stores its key (makes life easier)
