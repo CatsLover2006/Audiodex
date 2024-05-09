@@ -727,6 +727,7 @@ public class App {
             visualizerThread.start();
             mainWindow.add(musicPlaybackView);
             mainWindow.add(musicList);
+            musicArt.setIcon(placeholder);
             setupMainWindowLayout();
             setupMenubar();
             updatePlaybackBar();
