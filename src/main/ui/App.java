@@ -4,11 +4,11 @@ import audio.AudioDataStructure;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 import java.util.List;
 import java.util.logging.LogManager;
@@ -35,6 +35,8 @@ import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 
+import org.mpris.MediaPlayer2.MediaPlayer2;
+import org.mpris.MediaPlayer2.Player;
 import ui.PopupManager.*;
 
 import static java.io.File.separatorChar;
@@ -297,7 +299,7 @@ public class App {
     }
 
     // GUI mode
-    static class Gui {
+    abstract static class Gui implements Player, MediaPlayer2 {
         private static JFrame activeConversionsView;
         private static JTable activeConversionsTable = new JTable(new ConverterTableModel());
 
@@ -329,7 +331,68 @@ public class App {
                 });
             }
         }
-
+        
+        @Override
+        public void Next() {
+            playNext();
+        }
+        
+        @Override
+        public void OpenUri(String s) {
+            ExceptionIgnore.ignoreExc(() -> playDbFile(new AudioDataStructure(new URI(s).toURL().getFile())));
+        }
+        
+        @Override
+        public void Pause() {
+            if (!playbackManager.paused()) {
+                togglePlayback();
+            }
+        }
+        
+        @Override
+        public void Play() {
+            if (playbackManager.paused()) {
+                togglePlayback();
+            }
+        }
+        
+        @Override
+        public void PlayPause() {
+            togglePlayback();
+        }
+        
+        @Override
+        public void Previous() {
+            playPrevious();
+        }
+        
+        @Override
+        public void Seek(long l) {
+            playbackManager.seekTo(l / 1000000.0);
+        }
+        
+        @Override
+        public void Stop() {
+            playbackManager.cleanBackend();
+            updatePlaybackStatus();
+        }
+        
+        @Override
+        public void Quit() {
+        
+        }
+        
+        @Override
+        public void Raise() {
+            if (miniplayerWindow.isVisible()) {
+                miniplayerWindow.toFront();
+                miniplayerWindow.requestFocus();
+            } else {
+                mainWindow.toFront();
+                mainWindow.requestFocus();
+            }
+        }
+        
         private enum LoopType {
             NO,
             ONE,

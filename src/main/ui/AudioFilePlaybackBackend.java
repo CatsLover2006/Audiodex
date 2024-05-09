@@ -5,9 +5,14 @@ import audio.AudioFileLoader;
 import audio.AudioSample;
 import audio.ID3Container;
 import model.ExceptionIgnore;
+import org.mpris.MediaPlayer2.MediaPlayer2;
+import org.mpris.MediaPlayer2.Player;
 
 import javax.sound.sampled.*;
 import java.awt.image.BufferedImage;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 // Backend for allowing interactions between the UI and filesystem
 // Specific to decoding audio
@@ -16,7 +21,7 @@ public class AudioFilePlaybackBackend {
     private boolean done = false;
     private int bytesPerSampleRead = 2;
     private int bytesPerSampleWrite = 2;
-
+    
     // No other class needs to know this
     // This is the audio decoding thread
     private class DecodingThread extends Thread {
