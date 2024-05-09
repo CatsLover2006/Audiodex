@@ -69,7 +69,7 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
         baseHeight = displayHeight;
         originalWidth = bufferedImage.getWidth();
         originalHeight = bufferedImage.getHeight();
-        ratio = (double) displayWidth / displayHeight;
+        ratio = (double) originalWidth / originalHeight;
         images = new HashMap<>();
         makeImage(baseWidth, baseHeight);
         setImage(originalWidth, originalHeight, bufferedImage);
