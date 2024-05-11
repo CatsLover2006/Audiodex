@@ -44,6 +44,7 @@
       </element>
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/jaudiotagger-2.2.6-SNAPSHOT.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/mpris.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/spec/dbus-java-core-4.3.2.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

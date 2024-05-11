@@ -299,9 +299,75 @@ public class App {
     }
 
     // GUI mode
-    abstract static class Gui implements Player, MediaPlayer2 {
+    static class Gui {
         private static JFrame activeConversionsView;
         private static JTable activeConversionsTable = new JTable(new ConverterTableModel());
+        private static MprisPlayer mprisPlayer = new MprisPlayer() {
+            @Override
+            public void Next() {
+                playNext();
+            }
+            
+            @Override
+            public void OpenUri(String s) {
+                ExceptionIgnore.ignoreExc(() -> playDbFile(new AudioDataStructure(new URI(s).toURL().getFile())));
+            }
+            
+            @Override
+            public void Pause() {
+                if (!playbackManager.paused()) {
+                    togglePlayback();
+                }
+            }
+            
+            @Override
+            public void Play() {
+                if (playbackManager.paused()) {
+                    togglePlayback();
+                }
+            }
+            
+            @Override
+            public void PlayPause() {
+                togglePlayback();
+            }
+            
+            @Override
+            public void Previous() {
+                playPrevious();
+            }
+            
+            @Override
+            public void Seek(long l) {
+                playbackManager.seekTo(l / 1000000.0);
+            }
+            
+            @Override
+            public void Stop() {
+                playbackManager.cleanBackend();
+                updatePlaybackStatus();
+            }
+            
+            @Override
+            public void Quit() {
+            
+            }
+            
+            @Override
+            public void Raise() {
+                if (miniplayerWindow.isVisible()) {
+                    miniplayerWindow.toFront();
+                    miniplayerWindow.requestFocus();
+                } else {
+                    mainWindow.toFront();
+                    mainWindow.requestFocus();
+                }
+            }
+            @Override
+            public String getObjectPath() {
+                return "~/.local/applications/audiodex.desktop";
+            }
+        };
 
         // Setup conversion view
         private static void setupActiveConversionsView() {
@@ -329,67 +395,6 @@ public class App {
                         activeConversionsView.setVisible(true);
                     }
                 });
-            }
-        }
-        
-        @Override
-        public void Next() {
-            playNext();
-        }
-        
-        @Override
-        public void OpenUri(String s) {
-            ExceptionIgnore.ignoreExc(() -> playDbFile(new AudioDataStructure(new URI(s).toURL().getFile())));
-        }
-        
-        @Override
-        public void Pause() {
-            if (!playbackManager.paused()) {
-                togglePlayback();
-            }
-        }
-        
-        @Override
-        public void Play() {
-            if (playbackManager.paused()) {
-                togglePlayback();
-            }
-        }
-        
-        @Override
-        public void PlayPause() {
-            togglePlayback();
-        }
-        
-        @Override
-        public void Previous() {
-            playPrevious();
-        }
-        
-        @Override
-        public void Seek(long l) {
-            playbackManager.seekTo(l / 1000000.0);
-        }
-        
-        @Override
-        public void Stop() {
-            playbackManager.cleanBackend();
-            updatePlaybackStatus();
-        }
-        
-        @Override
-        public void Quit() {
-        
-        }
-        
-        @Override
-        public void Raise() {
-            if (miniplayerWindow.isVisible()) {
-                miniplayerWindow.toFront();
-                miniplayerWindow.requestFocus();
-            } else {
-                mainWindow.toFront();
-                mainWindow.requestFocus();
             }
         }
         
