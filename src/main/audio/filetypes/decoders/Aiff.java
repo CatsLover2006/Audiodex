@@ -254,6 +254,18 @@ public class Aiff implements AudioDecoder {
             f.commit();
         });
     }
+    
+    // Effects: removes the album artwork if possible
+    @Override
+    public void removeArtwork() {
+        ExceptionIgnore.ignoreExc(() -> {
+            AudioFile f = AudioFileIO.read(new File(filename));
+            while (!f.getTag().getArtworkList().isEmpty()) {
+                f.getTag().deleteArtworkField();
+            }
+            f.commit();
+        });
+    }
 
     // Effects: returns replaygain value
     //          defaults to -6

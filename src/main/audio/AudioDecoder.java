@@ -63,6 +63,9 @@ public interface AudioDecoder {
 
     // Effects: sets album artwork if possible
     void setArtwork(Artwork image);
+    
+    // Effects: removes album artwork if possible
+    void removeArtwork();
 
     // Effects: returns true if goToTime() is running
     //          only exists due to having multiple threads

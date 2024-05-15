@@ -7,6 +7,8 @@ import audio.ID3Container;
 import model.Event;
 import model.EventLog;
 import model.ExceptionIgnore;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.images.Artwork;
 
 import javax.sound.sampled.AudioFormat;
@@ -180,6 +182,12 @@ public class WAV implements AudioDecoder {
     // Effects: sets the album artwork if possible
     @Override
     public void setArtwork(Artwork image) {
+        // lol wat
+    }
+    
+    // Effects: removes the album artwork if possible
+    @Override
+    public void removeArtwork() {
         // lol wat
     }
 

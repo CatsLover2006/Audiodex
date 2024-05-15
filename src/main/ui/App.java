@@ -46,7 +46,7 @@ import static java.lang.Thread.*;
 
 // Main application class
 public class App {
-    private static FileSystemView fileSystemView = FileSystemView.getFileSystemView();
+    static FileSystemView fileSystemView = FileSystemView.getFileSystemView();
     private static boolean notMain = true;
     private static OsThemeDetector detector;
     private static ID3Container id3;

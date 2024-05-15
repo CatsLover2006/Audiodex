@@ -2213,6 +2213,7 @@
       <option name="ignoredClasses">
         <set>
           <option value="java.lang.Thread" />
+          <option value="ui.ArtworkUpdaterFrame" />
           <option value="ui.PopupManager.ConfirmationPopupFrame" />
           <option value="ui.PopupManager.ConversionPopupFrame" />
           <option value="ui.PopupManager.ErrorPopupFrame" />

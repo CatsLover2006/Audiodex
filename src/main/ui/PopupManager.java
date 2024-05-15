@@ -83,7 +83,7 @@ public class PopupManager {
     private static SVGLoader loader = new SVGLoader();
 
     // Effects: loads image from data directory (/data/spec or (jar)/data)
-    private static SVGDocument loadVector(String filename) throws IOException {
+    static SVGDocument loadVector(String filename) throws IOException {
         try {
             SVGDocument t = loader.load(Main.class.getResource("/data/" + filename));
             if (t == null) {
@@ -972,12 +972,32 @@ public class PopupManager {
         private AudioDecoder fileScanner;
         private PopupResponder responder;
         private boolean hasEdited;
-        private JLabel musicArt = new JLabel();
+        private JButton musicArt = new JButton();
         private JLabel filenameLabel = new JLabel();
         private JPanel valuesPanel = new JPanel(true);
         private JScrollPane scrollPane;
         private JButton cancelButton = new JButton("Cancel");
         private JButton okButton = new JButton("Ok");
+        
+        // Modifies: button
+        // Effects:  makes button background transparent
+        private static void makeButtonTransparent(JButton button) {
+            button.setBorder(new EmptyBorder(0, 0, 0, 0));
+            button.setBorderPainted(false);
+            button.setContentAreaFilled(false);
+            button.setOpaque(false);
+            button.setDisabledIcon(button.getIcon());
+        }
+        
+        // Set up music art button
+        {
+            makeButtonTransparent(musicArt);
+            musicArt.addActionListener(e -> {
+                new ArtworkUpdaterFrame(file, new SettingsFrame.Responder[]{
+                        () -> System.out.println("Done updating artwork.")
+                });
+            });
+        }
 
         // Effects: external update UI function
         @Override
