@@ -95,6 +95,11 @@ public class WAV implements AudioDecoder {
         return skipping;
     }
 
+    // Effects: returns bytes per sample
+    private int bytesPerSample() {
+        return (format.getSampleSizeInBits() * format.getChannels()) / 8;
+    }
+
     // Requires: prepareToPlayAudio() called
     //           0 <= time <= audio length
     // Modifies: this
@@ -105,6 +110,7 @@ public class WAV implements AudioDecoder {
         ExceptionIgnore.ignoreExc(() -> {
             prepareToPlayAudio(); // Reset doesn't work
             bytesPlayed = (long) Math.min(time * bytesPerSecond, duration * bytesPerSecond);
+            bytesPlayed = (long) (Math.floor(bytesPlayed / bytesPerSample()) * bytesPerSample());
             long toSkip = bytesPlayed;
             long skipped;
             while (toSkip != 0) {

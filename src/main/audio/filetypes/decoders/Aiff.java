@@ -105,6 +105,11 @@ public class Aiff implements AudioDecoder {
         return skipping;
     }
 
+    // Effects: returns bytes per sample
+    private int bytesPerSample() {
+        return (format.getSampleSizeInBits() * format.getChannels()) / 8;
+    }
+
     // Requires: prepareToPlayAudio() called
     //           0 <= time <= audio length
     // Modifies: this
@@ -112,12 +117,14 @@ public class Aiff implements AudioDecoder {
     @Override
     public void goToTime(double time) {
         skipping = true;
+        System.out.println(time);
         ExceptionIgnore.ignoreExc(() -> {
             prepareToPlayAudio(); // Reset doesn't work
             bytesPlayed = (long) Math.min(time * bytesPerSecond, duration * bytesPerSecond);
+            bytesPlayed = (long) (Math.floor(bytesPlayed / bytesPerSample()) * bytesPerSample());
             long toSkip = bytesPlayed;
             long skipped;
-            while (toSkip != 0) {
+            while (toSkip > 0) {
                 skipped = in.skip(toSkip);
                 toSkip -= skipped;
                 if (skipped == 0) {
