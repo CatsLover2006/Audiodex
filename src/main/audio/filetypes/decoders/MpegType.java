@@ -88,6 +88,7 @@ public class MpegType implements AudioDecoder {
         for (; decodedSize != decoder.getBufferSize() && buffer.get(decodedSize - 1) != (byte) 0x00; decodedSize++) {
             // It's all in the for statement
         }
+        decodedSize = (int) (Math.floor(decodedSize / decoder.getChannels() / 2) * decoder.getChannels() * 2);
         decoder = new LameDecoder(filename);
         EventLog.getInstance().logEvent(new Event("Got decoder output size: " + decodedSize));
     }

@@ -178,13 +178,13 @@ public class App {
         if (USE_CLI) {
             // Do CLI stuff
         } else {
-            if (!nowPlaying.qualityErrorAlreadyOccured()) {
+            if (nowPlaying == null || !nowPlaying.qualityErrorAlreadyOccured()) {
                 new PopupManager.ErrorPopupFrame("Cannot play this song at full<br>quality on this system.",
                         ErrorImageTypes.WARNING, obj -> {
                 });
             }
         }
-        nowPlaying.markQualityErrorOccured();
+        if (nowPlaying != null) nowPlaying.markQualityErrorOccured();
     }
 
     static { // Disable jaudiotagger (library) logging
@@ -1429,8 +1429,8 @@ public class App {
         private static void playDbFile(AudioDataStructure audioDataStructure) {
             File f = new File(audioDataStructure.getFilename());
             if (f.isFile()) {
-                nowPlaying = audioDataStructure;
                 playbackManager.loadAudio(f.getAbsolutePath());
+                nowPlaying = audioDataStructure;
                 setPlaybackBarLength(playbackManager.getFileDuration());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
