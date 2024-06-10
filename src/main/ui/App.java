@@ -1429,8 +1429,8 @@ public class App {
         private static void playDbFile(AudioDataStructure audioDataStructure) {
             File f = new File(audioDataStructure.getFilename());
             if (f.isFile()) {
-                playbackManager.loadAudio(f.getAbsolutePath());
                 nowPlaying = audioDataStructure;
+                playbackManager.loadAudio(f.getAbsolutePath());
                 setPlaybackBarLength(playbackManager.getFileDuration());
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
