@@ -1,9 +1,6 @@
 package ui;
 
-import audio.AudioDecoder;
-import audio.AudioFileLoader;
-import audio.AudioSample;
-import audio.ID3Container;
+import audio.*;
 import model.ExceptionIgnore;
 import org.mpris.MediaPlayer2.MediaPlayer2;
 import org.mpris.MediaPlayer2.Player;
@@ -148,7 +145,7 @@ public class AudioFilePlaybackBackend {
     // Requires: filename points to file (in order for anything to happen)
     // Modifies: this
     // Effects:  loads audio and gets decoder thread to
-    public void loadAudio(String filename) {
+    public void loadAudio(String filename, AudioDataStructure structure) {
         unloadAudio();
         loadedFile = AudioFileLoader.loadFile(filename);
         if (loadedFile == null) {
@@ -163,7 +160,7 @@ public class AudioFilePlaybackBackend {
             line = AudioSystem.getSourceDataLine(audioFormat);
             line.open(audioFormat);
             if (bytesPerSampleWrite != bytesPerSampleRead) {
-                App.audioQualityDegradation();
+                App.audioQualityDegradation(structure);
             }
             replayGainVal = loadedFile.getReplayGain();
             setReplayGain(replayGain);

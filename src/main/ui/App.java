@@ -58,7 +58,6 @@ public class App {
     private static List<AudioConversion> audioConverterList;
     private static LinkedList<AudioDataStructure> played;
     private static AudioDataStructure nowPlaying;
-    private static AudioDataStructure qualityCheck;
     private static boolean loop = false;
 
     public static Image getAppImage() {
@@ -172,7 +171,7 @@ public class App {
 
     // Modifies: this
     // Effects:  is run when audio quality had to be reduced
-    public static void audioQualityDegradation() {
+    public static void audioQualityDegradation(AudioDataStructure qualityCheck) {
         if (end || notMain) {
             return;
         }
@@ -185,7 +184,9 @@ public class App {
                 });
             }
         }
-        if (qualityCheck != null) qualityCheck.markQualityErrorOccured();
+        if (qualityCheck != null) {
+            qualityCheck.markQualityErrorOccured();
+        }
     }
 
     static { // Disable jaudiotagger (library) logging
@@ -364,6 +365,7 @@ public class App {
                     mainWindow.requestFocus();
                 }
             }
+
             @Override
             public String getObjectPath() {
                 return "~/.local/applications/audiodex.desktop";
@@ -1430,8 +1432,7 @@ public class App {
         private static void playDbFile(AudioDataStructure audioDataStructure) {
             File f = new File(audioDataStructure.getFilename());
             if (f.isFile()) {
-                qualityCheck = audioDataStructure;
-                playbackManager.loadAudio(f.getAbsolutePath());
+                playbackManager.loadAudio(f.getAbsolutePath(), audioDataStructure);
                 nowPlaying = audioDataStructure;
                 setPlaybackBarLength(playbackManager.getFileDuration());
                 playbackManager.startAudioDecoderThread();
@@ -1955,7 +1956,7 @@ public class App {
                 visualizerThread.killThread();
                 visualizerThread.safeJoin();
                 nowPlaying = new AudioDataStructure(f.getAbsolutePath());
-                playbackManager.loadAudio(f.getAbsolutePath());
+                playbackManager.loadAudio(f.getAbsolutePath(), nowPlaying);
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
                 id3 = playbackManager.getID3();
@@ -2174,7 +2175,7 @@ public class App {
             if (f.isFile()) {
                 visualizerThread.killThread();
                 visualizerThread.safeJoin();
-                playbackManager.loadAudio(f.getAbsolutePath());
+                playbackManager.loadAudio(f.getAbsolutePath(), nowPlaying);
                 nowPlaying = audioDataStructure;
                 playbackManager.startAudioDecoderThread();
                 playbackManager.playAudio();
