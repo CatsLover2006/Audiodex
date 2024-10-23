@@ -58,6 +58,7 @@ public class App {
     private static List<AudioConversion> audioConverterList;
     private static LinkedList<AudioDataStructure> played;
     private static AudioDataStructure nowPlaying;
+    private static AudioDataStructure qualityCheck;
     private static boolean loop = false;
 
     public static Image getAppImage() {
@@ -178,13 +179,13 @@ public class App {
         if (USE_CLI) {
             // Do CLI stuff
         } else {
-            if (nowPlaying == null || !nowPlaying.qualityErrorAlreadyOccured()) {
+            if (qualityCheck == null || !qualityCheck.qualityErrorAlreadyOccured()) {
                 new PopupManager.ErrorPopupFrame("Cannot play this song at full<br>quality on this system.",
                         ErrorImageTypes.WARNING, obj -> {
                 });
             }
         }
-        if (nowPlaying != null) nowPlaying.markQualityErrorOccured();
+        if (qualityCheck != null) qualityCheck.markQualityErrorOccured();
     }
 
     static { // Disable jaudiotagger (library) logging
@@ -1429,6 +1430,7 @@ public class App {
         private static void playDbFile(AudioDataStructure audioDataStructure) {
             File f = new File(audioDataStructure.getFilename());
             if (f.isFile()) {
+                qualityCheck = audioDataStructure;
                 playbackManager.loadAudio(f.getAbsolutePath());
                 nowPlaying = audioDataStructure;
                 setPlaybackBarLength(playbackManager.getFileDuration());
