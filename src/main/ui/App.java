@@ -109,7 +109,7 @@ public class App {
             played.addFirst(nowPlaying);
             nowPlaying = null;
             maxBoundPlayedList();
-            finishedSong();
+            Cli.finishedSong();
         } else {
             Gui.songFinishedPlaying();
         }

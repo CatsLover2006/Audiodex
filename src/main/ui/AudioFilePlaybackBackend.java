@@ -145,6 +145,13 @@ public class AudioFilePlaybackBackend {
     // Requires: filename points to file (in order for anything to happen)
     // Modifies: this
     // Effects:  loads audio and gets decoder thread to
+    public void loadAudio(String filename) {
+        loadAudio(filename, new AudioDataStructure(filename));
+    }
+
+    // Requires: filename points to file (in order for anything to happen)
+    // Modifies: this
+    // Effects:  loads audio and gets decoder thread to
     public void loadAudio(String filename, AudioDataStructure structure) {
         unloadAudio();
         loadedFile = AudioFileLoader.loadFile(filename);
@@ -216,7 +223,12 @@ public class AudioFilePlaybackBackend {
         }
         if (loadedFile != null && loadedFile.isReady()) {
             loadedFile.closeAudioFile();
-            loadedFile = null;
+            decoderThread.killThread();
+            try {
+                decoderThread.join(100);
+            } catch (Exception e) {
+                System.err.println("Error occured when waiting for decoder thread to exit.");
+            }
         }
         paused = false;
     }
