@@ -232,6 +232,7 @@ public class AudioFilePlaybackBackend {
                 System.err.println("Error occured when waiting for decoder thread to exit.");
             }
         }
+        decoderThread = null;
         paused = false;
     }
 
