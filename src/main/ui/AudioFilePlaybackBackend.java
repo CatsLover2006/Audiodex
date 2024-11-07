@@ -38,10 +38,12 @@ public class AudioFilePlaybackBackend {
         }
 
         private volatile boolean run = true;
+        private volatile boolean kill = false;
 
         // Modifies: this
         // Effects:  ends thread
         public void killThread() {
+            kill = true;
             run = false;
         }
 
@@ -84,7 +86,7 @@ public class AudioFilePlaybackBackend {
             loadedFile.closeAudioFile();
             loadedFile = null;
             System.gc(); // Clean up potential decoder garbage
-            new FinishedSongThread().start();
+            if (!kill) new FinishedSongThread().start();
             decoderThread = null;
         }
     }
