@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -26,6 +27,17 @@ import com.github.weisj.jsvg.parser.SVGLoader;
 import com.jthemedetecor.OsThemeDetector;
 import model.*;
 import org.apache.commons.lang3.SystemUtils;
+import org.freedesktop.dbus.DBusMap;
+import org.freedesktop.dbus.DBusMatchRule;
+import org.freedesktop.dbus.DBusPath;
+import org.freedesktop.dbus.connections.impl.DBusConnection;
+import org.freedesktop.dbus.exceptions.DBusException;
+import org.freedesktop.dbus.interfaces.DBus;
+import org.freedesktop.dbus.interfaces.Properties;
+import org.freedesktop.dbus.messages.DBusSignal;
+import org.freedesktop.dbus.messages.Message;
+import org.freedesktop.dbus.types.DBusMapType;
+import org.freedesktop.dbus.types.Variant;
 import org.fusesource.jansi.*;
 
 import javax.imageio.ImageIO;
@@ -302,59 +314,100 @@ public class App {
 
     // GUI mode
     static class Gui {
-        private static JFrame activeConversionsView;
-        private static JTable activeConversionsTable = new JTable(new ConverterTableModel());
-        private static MprisPlayer mprisPlayer = new MprisPlayer() {
+        static class Mpris implements MediaPlayer2, Player, Properties {
+            private String uid;
+
+            private DBusConnection connection;
+
+            public void playerUpdate(String[] propertyNames) {
+                ArrayList<String> removed = new ArrayList<>();
+                HashMap<String, Variant<?>> updates = new HashMap<>();
+                for (String property : propertyNames) {
+                    if (Get("org.mpris.MediaPlayer2.Player", property) == null) {
+                        removed.add(property);
+                        continue;
+                    }
+                    switch (property) {
+                        case "Metadata": {
+                            updates.put(property, new Variant(Get("org.mpris.MediaPlayer2.Player", property), "a{sv}"));
+                            break;
+                        }
+                        default: {
+                            updates.put(property, new Variant(Get("org.mpris.MediaPlayer2.Player", property)));
+                            break;
+                        }
+                    }
+                }
+                try {
+                    connection.sendMessage(new PropertiesChanged("/org/mpris/MediaPlayer2",
+                            "org.mpris.MediaPlayer2.Player", updates, removed));
+                } catch (DBusException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            public Mpris() {
+                uid = String.valueOf(Objects.hash(System.currentTimeMillis()));
+                try {
+                    connection = DBusConnection.getConnection(DBusConnection.DBusBusType.SESSION);
+                    connection.exportObject(this);
+                    connection.requestBusName("org.mpris.MediaPlayer2.audiodex");
+                } catch (DBusException e) {
+                    System.err.println(e);
+                    System.out.println("Error in MPRIS");
+                }
+            }
+
             @Override
             public void Next() {
                 playNext();
             }
-            
+
             @Override
             public void OpenUri(String s) {
                 ExceptionIgnore.ignoreExc(() -> playDbFile(new AudioDataStructure(new URI(s).toURL().getFile())));
             }
-            
+
             @Override
             public void Pause() {
                 if (!playbackManager.paused()) {
                     togglePlayback();
                 }
             }
-            
+
             @Override
             public void Play() {
                 if (playbackManager.paused()) {
                     togglePlayback();
                 }
             }
-            
+
             @Override
             public void PlayPause() {
                 togglePlayback();
             }
-            
+
             @Override
             public void Previous() {
                 playPrevious();
             }
-            
+
             @Override
             public void Seek(long l) {
-                playbackManager.seekTo(l / 1000000.0);
+                playbackManager.seekTo((l / 1000000.0) + playbackManager.getCurrentTime());
             }
-            
+
             @Override
             public void Stop() {
                 playbackManager.cleanBackend();
                 updatePlaybackStatus();
             }
-            
+
             @Override
             public void Quit() {
-            
+
             }
-            
+
             @Override
             public void Raise() {
                 if (miniplayerWindow.isVisible()) {
@@ -368,9 +421,193 @@ public class App {
 
             @Override
             public String getObjectPath() {
-                return "~/.local/applications/audiodex.desktop";
+                return "/org/mpris/MediaPlayer2";
             }
-        };
+
+            @Override
+            public boolean isRemote() {
+                return false;
+            }
+
+            @Override
+            public <A> A Get(String interfaceName, String propertyName) {
+                switch (interfaceName) {
+                    case "org.mpris.MediaPlayer2":
+                        switch (propertyName) {
+                            case "SupportedUriSchemes":
+                                return (A) new String[]{"file"};
+                            case "SupportedMimeTypes":
+                                return (A) new String[]{"audio/flac", "audio/mp3", "audio/mp2", "audio/mp4",
+                                        "audio/mpeg", "audio/ogg", "audio/vnd.wave", "audio/x-aifc", "audio/x-aiff"};
+                            case "Identity":
+                                return (A) "Audiodex";
+                            case "DesktopEntry":
+                                return (A) ("file://" + System.getProperty("user.home")
+                                        + "/.local/share/applications/audiodex.desktop");
+                            case "CanQuit":
+                                return (A) new Boolean(false);
+                            case "Fullscreen":
+                                return (A) new Boolean(false);
+                            case "CanSetFullscreen":
+                                return (A) new Boolean(false);
+                            case "HasTrackList":
+                                return (A) new Boolean(false);
+                            case "CanRaise":
+                                return (A) new Boolean(true);
+                        }
+                    case "org.mpris.MediaPlayer2.Player":
+                        switch (propertyName) {
+                            case "CanControl":
+                                return (A) new Boolean(true);
+                            case "CanSeek":
+                                return (A) new Boolean(playbackManager.audioIsLoaded());
+                            case "CanPause":
+                                return (A) new Boolean(playbackManager.audioIsLoaded());
+                            case "CanPlay":
+                                return (A) new Boolean(playbackManager.audioIsLoaded());
+                            case "CanGoPrevious":
+                                return (A) new Boolean(!played.isEmpty());
+                            case "CanGoNext":
+                                return (A) new Boolean(!songQueue.isEmpty());
+                            case "MaximumRate":
+                                return (A) new Double(1.0);
+                            case "MinimumRate":
+                                return (A) new Double(1.0);
+                            case "Position":
+                                return (A) (Long) (long) Math.floor(playbackManager.getCurrentTime() * 1000000);
+                            case "Volume":
+                                return (A) new Double(1.0);
+                            case "PlaybackStatus":
+                                return (A) (playbackManager.audioIsLoaded() ?
+                                        (playbackManager.paused() ? "Paused" : "Playing") : "Stopped");
+                            case "LoopStatus":
+                                switch (loop) {
+                                    case ALL:
+                                        return (A) "Playlist";
+                                    case ONE:
+                                        return (A) "Track";
+                                    case NO:
+                                    default:
+                                        return (A) "None";
+                                }
+                            case "Shuffle":
+                                return (A) new Boolean(shuffle);
+                            case "Metadata": {
+                                // More complex
+                                if (playbackManager.audioIsLoaded()) {
+                                    HashMap<String, Variant<?>> metadata = new HashMap();
+                                    metadata.put("mpris:trackid", new Variant(new DBusPath("/audiodex/audioplayback")));
+                                    metadata.put("mpris:length", new Variant((long)
+                                            Math.floor(playbackManager.getFileDuration() * 1000000)));
+                                    if (artworkUrl != null)
+                                        metadata.put("mpris:artUrl", new Variant(artworkUrl));
+                                    ID3Container container = playbackManager.getID3();
+                                    if (container != null) {
+                                        if (container.getID3Data("Album") != null)
+                                            metadata.put("xesam:album", new Variant(container.getID3Data("Album")));
+                                        if (container.getID3Data("AlbumArtist") != null)
+                                            metadata.put("xesam:albumArtist", new Variant(new String[]{(String) container.getID3Data("AlbumArtist")}));
+                                        if (container.getID3Data("Title") != null)
+                                            metadata.put("xesam:title", new Variant(container.getID3Data("Title")));
+                                        if (container.getID3Data("Artist") != null)
+                                            metadata.put("xesam:artist", new Variant(new String[]{(String) container.getID3Data("Artist")}));
+                                        if (container.getID3Data("Lyrics") != null)
+                                            metadata.put("xesam:asText", new Variant(container.getID3Data("Lyrics")));
+                                        if (container.getID3Data("BPM") != null)
+                                            metadata.put("xesam:audioBPM", new Variant(container.getID3Data("BPM")));
+                                        if (container.getID3Data("Comment") != null)
+                                            metadata.put("xesam:comment", new Variant(new String[]{(String) container.getID3Data("Comment")}));
+                                        if (container.getID3Data("Composer") != null)
+                                            metadata.put("xesam:composer", new Variant(new String[]{(String) container.getID3Data("Composer")}));
+                                        if (container.getID3Data("Track") != null)
+                                            metadata.put("xesam:trackNumber", new Variant(container.getID3Data("Track")));
+                                        if (container.getID3Data("Disc") != null)
+                                            metadata.put("xesam:discNumber", new Variant(container.getID3Data("Disc")));
+                                        if (container.getID3Data("GenreString") != null)
+                                            metadata.put("xesam:genre", new Variant(new String[]{(String) container.getID3Data("GenreString")}));
+                                    }
+                                    return (A) metadata;
+                                }
+                            }
+                        }
+                }
+                return null;
+            }
+
+            @Override
+            public <A> void Set(String interfaceName, String propertyName, A a) {
+                switch (interfaceName) {
+                    case "org.mpris.MediaPlayer2.Player":
+                        switch (propertyName) {
+                            case "LoopStatus": {
+                                switch ((String) a) {
+                                    case "Playlist": {
+                                        loop = LoopType.ALL;
+                                        loopButton.setIcon(loopAll);
+                                        break;
+                                    }
+                                    case "Track": {
+                                        loop = LoopType.ONE;
+                                        loopButton.setIcon(loopOne);
+                                        break;
+                                    }
+                                    case "None":
+                                    default: {
+                                        loop = LoopType.NO;
+                                        loopButton.setIcon(noLoop);
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                            case "Shuffle": {
+                                shuffle = (Boolean) a;
+                                shuffleButton.setIcon(shuffle ? shuffleOn : noShuffle);
+                                break;
+                            }
+                        }
+                }
+                updateControls();
+            }
+
+            @Override
+            public Map<String, Variant<?>> GetAll(String interfaceName) {
+                HashMap<String, Variant<?>> updates = new HashMap<>();
+                String[] propertyNames;
+                switch (interfaceName) {
+                    case "org.mpris.MediaPlayer2": {
+                        propertyNames = new String[]{"SupportedUriSchemes", "SupportedMimeTypes", "Identity",
+                                "DesktopEntry", "CanQuit", "Fullscreen", "CanSetFullscreen", "HasTrackList",
+                                "CanRaise"};
+                        break;
+                    }
+                    case "org.mpris.MediaPlayer2.Player": {
+                        propertyNames = new String[]{"CanControl", "CanSeek", "CanPause", "CanPlay", "CanGoPrevious",
+                                "CanGoNext", "MaximumRate", "MinimumRate", "Position", "Volume", "PlaybackStatus",
+                                "LoopStatus", "Shuffle", "Metadata"};
+                        break;
+                    }
+                    default:
+                        propertyNames = new String[]{};
+                }
+                for (String property : propertyNames) {
+                    switch (property) {
+                        case "Metadata": {
+                            updates.put(property, new Variant(Get(interfaceName, property), "a{sv}"));
+                            break;
+                        }
+                        default: {
+                            updates.put(property, new Variant(Get(interfaceName, property)));
+                            break;
+                        }
+                    }
+                } //*/
+                return updates;
+            }
+        }
+
+        private static JFrame activeConversionsView;
+        private static JTable activeConversionsTable = new JTable(new ConverterTableModel());
 
         // Setup conversion view
         private static void setupActiveConversionsView() {
@@ -385,6 +622,8 @@ public class App {
             activeConversionsTable.getColumnModel().getColumn(1).setMinWidth(192);
             activeConversionsTable.getColumnModel().getColumn(1).setCellRenderer(new ProgressCellRender());
         }
+
+        private static String artworkUrl = null;
 
         // Effects: hides active conversion view if there are no active conversions, otherwise updates the view
         public static void updateConverterView() {
@@ -677,6 +916,12 @@ public class App {
             }
         }
 
+        private static void updateMpris(String[] toUpdate) {
+            if (mpris != null) {
+                mpris.playerUpdate(toUpdate);
+            }
+        }
+
         // Effects: loads image from data directory (/data/spec or (jar)/data)
         private static BufferedImage loadImage(String filename) throws IOException {
             try {
@@ -709,10 +954,17 @@ public class App {
 
         private static JFrame mainWindow;
         private static JFrame miniplayerWindow;
+        private static Mpris mpris;
 
         // Setup main window close action
         private static void setupMainWindow() {
             mainWindow = new JFrame("Audiodex");
+            try {
+                mpris = new Mpris();
+            } catch (Throwable e) {
+                System.err.println(e);
+                System.out.println("MPRIS failed to load for some reason.");
+            }
             mainWindow.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
@@ -1351,6 +1603,7 @@ public class App {
             }
             albumLabel.setText(artistLabel);
             updateControls();
+            updateMpris(new String[] {"PlaybackStatus", "LoopStatus", "Shuffle", "Metadata", "CanGoNext", "CanGoPrevious", "CanPlay", "CanPause", "CanSeek"});
             if (loadedMusicIcon != nowPlaying) {
                 updateMusicIcon();
                 loadedMusicIcon = nowPlaying;
@@ -1362,8 +1615,20 @@ public class App {
         // Effects: sets music icon
         private static void updateMusicIcon() {
             BufferedImage bufferedImage = playbackManager.getArtwork();
+            artworkUrl = null;
             if (bufferedImage != null) {
                 artIcon = new ImageIcon(new GenerativeResolutionImage(bufferedImage, 64, 64));
+                new Thread(() -> {
+                    try {
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        ImageIO.write(bufferedImage, "PNG", out);
+                        byte[] bytes = out.toByteArray();
+                        artworkUrl = "data:image/png;base64,"
+                                + Base64.getEncoder().encodeToString(bytes);
+                        updateMpris(new String[] {"Metadata"});
+                    } catch (Exception e) {
+                        System.err.println(e);
+                    }}).run();
             } else {
                 artIcon = placeholder;
             }

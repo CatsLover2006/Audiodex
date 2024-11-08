@@ -16,6 +16,7 @@
     <orderEntry type="library" name="spec" level="project" />
     <orderEntry type="library" name="lib" level="project" />
     <orderEntry type="library" name="mpris" level="project" />
-    <orderEntry type="library" name="dbus-java-core-4.3.2" level="project" />
+    <orderEntry type="library" name="github.hypfvieh.dbus.java.transport.junixsocket" level="project" />
+    <orderEntry type="library" name="dus-java-transport-junixsocket 4.3.1" level="project" />
   </component>
 </module>
