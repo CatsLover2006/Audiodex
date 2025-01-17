@@ -16,6 +16,23 @@
     <orderEntry type="library" name="spec" level="project" />
     <orderEntry type="library" name="lib" level="project" />
     <orderEntry type="library" name="mpris" level="project" />
-    <orderEntry type="library" name="dbus-java-core-4.3.2" level="project" />
+    <orderEntry type="library" name="dus-java-transport-junixsocket 4.3.1" level="project" />
+    <orderEntry type="library" name="Apache Commons Lang 3.14.0" level="project" />
+    <orderEntry type="library" name="FlatLaf 3.4" level="project" />
+    <orderEntry type="library" name="j-ogg-vorbis 1.0.4" level="project" />
+    <orderEntry type="library" name="JAADec 0.8.4" level="project" />
+    <orderEntry type="library" name="Jansi 2.4.2 (Self-Compiled)" level="project" />
+    <orderEntry type="library" name="jaudiotagger 2.2.6" level="project" />
+    <orderEntry type="library" name="java-vorbis-support (1.2.1)" level="project" />
+    <orderEntry type="library" name="Java LAME 3.98.4 (Modified)" level="project" />
+    <orderEntry type="library" name="JSON 2021/03/07" level="project" />
+    <orderEntry type="library" name="jsvg 1.4.0" level="project" />
+    <orderEntry type="library" name="jSystemThemeDetector 3.8" level="project" />
+    <orderEntry type="library" name="JustFLAC 0.0.1 (Self-Compiled)" level="project" />
+    <orderEntry type="library" name="oshi-core 5.8.6" level="project" />
+    <orderEntry type="library" name="slf4j 2.0.12" level="project" />
+    <orderEntry type="library" name="tritonus 0.3.12 (Self-Compiled w/ AIFF-C support mod)" level="project" />
+    <orderEntry type="library" name="vavi-sound" level="project" />
+    <orderEntry type="library" name="vavi-sound-alac 0.3.2 (Self-Compiled)" level="project" />
   </component>
 </module>

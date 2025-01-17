@@ -163,7 +163,11 @@ public class Flac implements AudioDecoder {
     // Effects: returns the duration of the audio in seconds
     @Override
     public double getFileDuration() {
-        return (double) info.getTotalSamples() / info.getSampleRate();
+        try {
+            return (double) info.getTotalSamples() / info.getSampleRate();
+        } catch (NullPointerException e) {
+            return -1;
+        }
     }
 
     // Effects: returns true if goToTime() is running

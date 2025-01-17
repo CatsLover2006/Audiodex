@@ -1,9 +1,6 @@
 package ui;
 
-import audio.AudioDecoder;
-import audio.AudioFileLoader;
-import audio.AudioSample;
-import audio.ID3Container;
+import audio.*;
 import model.ExceptionIgnore;
 import org.mpris.MediaPlayer2.MediaPlayer2;
 import org.mpris.MediaPlayer2.Player;
@@ -41,10 +38,12 @@ public class AudioFilePlaybackBackend {
         }
 
         private volatile boolean run = true;
+        private volatile boolean kill = false;
 
         // Modifies: this
         // Effects:  ends thread
         public void killThread() {
+            kill = true;
             run = false;
         }
 
@@ -87,7 +86,7 @@ public class AudioFilePlaybackBackend {
             loadedFile.closeAudioFile();
             loadedFile = null;
             System.gc(); // Clean up potential decoder garbage
-            new FinishedSongThread().start();
+            if (!kill) new FinishedSongThread().start();
             decoderThread = null;
         }
     }
@@ -149,6 +148,13 @@ public class AudioFilePlaybackBackend {
     // Modifies: this
     // Effects:  loads audio and gets decoder thread to
     public void loadAudio(String filename) {
+        loadAudio(filename, new AudioDataStructure(filename));
+    }
+
+    // Requires: filename points to file (in order for anything to happen)
+    // Modifies: this
+    // Effects:  loads audio and gets decoder thread to
+    public void loadAudio(String filename, AudioDataStructure structure) {
         unloadAudio();
         loadedFile = AudioFileLoader.loadFile(filename);
         if (loadedFile == null) {
@@ -163,7 +169,7 @@ public class AudioFilePlaybackBackend {
             line = AudioSystem.getSourceDataLine(audioFormat);
             line.open(audioFormat);
             if (bytesPerSampleWrite != bytesPerSampleRead) {
-                App.audioQualityDegradation();
+                App.audioQualityDegradation(structure);
             }
             replayGainVal = loadedFile.getReplayGain();
             setReplayGain(replayGain);
@@ -219,8 +225,14 @@ public class AudioFilePlaybackBackend {
         }
         if (loadedFile != null && loadedFile.isReady()) {
             loadedFile.closeAudioFile();
-            loadedFile = null;
+            decoderThread.killThread();
+            try {
+                decoderThread.join(100);
+            } catch (Exception e) {
+                System.err.println("Error occured when waiting for decoder thread to exit.");
+            }
         }
+        decoderThread = null;
         paused = false;
     }
 
