@@ -959,11 +959,13 @@ public class App {
         // Setup main window close action
         private static void setupMainWindow() {
             mainWindow = new JFrame("Audiodex");
-            try {
-                mpris = new Mpris();
-            } catch (Throwable e) {
-                System.err.println(e);
-                System.out.println("MPRIS failed to load for some reason.");
+            if (SystemUtils.IS_OS_LINUX) {
+                try {
+                    mpris = new Mpris();
+                } catch (Throwable e) {
+                    System.err.println(e);
+                    System.out.println("MPRIS failed to load for some reason.");
+                }
             }
             mainWindow.addWindowListener(new WindowAdapter() {
                 @Override
