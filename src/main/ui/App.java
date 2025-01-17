@@ -793,9 +793,10 @@ public class App {
             createMusicView();
             visualizerThread = new PlaybackThread();
             visualizerThread.start();
+            musicArt.setIcon(placeholder);
+            playFileFromArgs(args);
             mainWindow.add(musicPlaybackView);
             mainWindow.add(musicList);
-            musicArt.setIcon(placeholder);
             setupMainWindowLayout();
             setupMenubar();
             updatePlaybackBar();
@@ -803,7 +804,19 @@ public class App {
             updateUI();
             mainWindow.setVisible(true);
             GuiLoaderFrame.closeLoadingThread();
-            playFileFromArgs(args);
+            playFileFromArgsAfter();
+        }
+        
+        // Removed file error frame
+        private static void replaceRemovedAudioFiles() {
+            List<Integer> indexes = database.getRemovedAudioFiles();
+        }
+        
+        // Plays audio file passed in as input
+        private static void playFileFromArgsAfter() {
+            if (playbackManager.audioIsLoaded()) {
+                miniplayerLoad();
+            }
         }
         
         // Plays audio file passed in as input
@@ -813,8 +826,6 @@ public class App {
                     AudioDataStructure structure = new AudioDataStructure(arg);
                     if (!structure.isEmpty()) {
                         playDbFile(structure);
-                        updatePlaybackBar();
-                        miniplayerLoad();
                         return; // Found the file! done
                     }
                 }
