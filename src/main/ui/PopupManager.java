@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.awt.GridBagConstraints.*;
 import static java.io.File.separatorChar;
@@ -208,6 +209,8 @@ public class PopupManager {
         public void updateUI() {
             SwingUtilities.updateComponentTreeUI(selector);
         }
+        
+        private int lastSortType = 0;
 
         // Setup file table events
         {
@@ -235,6 +238,53 @@ public class PopupManager {
                             }
                         } else if (evt.getButton() == 3) {
                             System.out.println("Right click!");
+                        }
+                    }
+                }
+            });
+            fileTable.getTableHeader().addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int col = fileTable.columnAtPoint(evt.getPoint());
+                    if (col >= 0) {
+                        switch(col) {
+                            case 1: {
+                                if (lastSortType != 1) {
+                                    dirList = Arrays.stream(dirList).sorted(Comparator.comparing(File::getName)).toArray(size -> new File[size]);
+                                    lastSortType = 1;
+                                } else {
+                                    dirList = Arrays.stream(dirList).sorted((file1, file2) -> file2.getName().compareTo(file1.getName())).toArray(size -> new File[size]);
+                                    lastSortType = 0;
+                                }
+                                break;
+                            }
+                            case 2: {
+                                if (lastSortType != 2) {
+                                    dirList = Arrays.stream(dirList).sorted(Comparator.comparing(File::length)).toArray(size -> new File[size]);
+                                    lastSortType = 2;
+                                } else {
+                                    dirList = Arrays.stream(dirList).sorted((file1, file2) -> (int) (file2.length() - file1.length())).toArray(size -> new File[size]);
+                                    lastSortType = 0;
+                                }
+                                break;
+                            }
+                            case 3: {
+                                dirList = Arrays.stream(dirList).sorted((file1, file2) -> getFileExt(file1).compareTo(getFileExt(file2))).toArray(size -> new File[size]);
+                                lastSortType = 3;
+                                break;
+                            }
+                            case 4: {
+                                if (lastSortType != 4) {
+                                    dirList = Arrays.stream(dirList).sorted(Comparator.comparing(File::lastModified)).toArray(size -> new File[size]);
+                                    lastSortType = 4;
+                                } else {
+                                    dirList = Arrays.stream(dirList).sorted((file1, file2) -> (int) (file2.lastModified() - file1.lastModified())).toArray(size -> new File[size]);
+                                    lastSortType = 0;
+                                }
+                                break;
+                            }
+                            default:
+                                System.out.println(col);
                         }
                     }
                 }
@@ -285,6 +335,7 @@ public class PopupManager {
             fileTable.getColumnModel().getColumn(0).setMinWidth(20);
             fileTable.setRowHeight(20);
             FileManager.updateRootStores();
+            lastSortType = 0;
             fileList.updateUI();
         }
 
