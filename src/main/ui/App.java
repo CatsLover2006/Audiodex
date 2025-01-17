@@ -1059,7 +1059,6 @@ public class App {
             updatePlaybackBar();
             setupMiniplayerWindow();
             updateUI();
-            mainWindow.setVisible(true);
             GuiLoaderFrame.closeLoadingThread();
             playFileFromArgsAfter();
         }
@@ -1073,6 +1072,8 @@ public class App {
         private static void playFileFromArgsAfter() {
             if (playbackManager.audioIsLoaded()) {
                 miniplayerLoad();
+            } else {
+                mainWindow.setVisible(true);
             }
         }
         
