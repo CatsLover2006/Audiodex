@@ -1132,6 +1132,25 @@ public class PopupManager {
                 return dataValue;
             }
         }
+        
+        // boolean data container class
+        private static class DataClassBool implements DataClass {
+            public DataClassBool(String key, String value) {
+                dataKey = key;
+                dataValue = value;
+            }
+            
+            private String dataKey;
+            private String dataValue;
+            
+            public String getDataKey() {
+                return dataKey;
+            }
+            
+            public String getDataValue() {
+                return dataValue;
+            }
+        }
 
         private static final List<DataClass> dataList = new ArrayList<>();
 
@@ -1143,6 +1162,7 @@ public class PopupManager {
             dataList.add(new DataClassStr("Artist (sorting order)", "Artist-Sort"));
             dataList.add(new DataClassStr("Album", "Album"));
             dataList.add(new DataClassStr("Album (sorting order)", "Album-Sort"));
+            dataList.add(new DataClassBool("Album is Compilation?", "IsCompilation"));
             dataList.add(new DataClassStr("Album Artist", "AlbumArtist"));
             dataList.add(new DataClassStr("Album Artist (sorting order)", "AlbumArtist-Sort"));
             dataList.add(new DataClassStr("Arranger", "Arranger"));
@@ -1179,7 +1199,8 @@ public class PopupManager {
         public Object getValue() {
             ID3Container nu = new ID3Container();
             for (KeySet field : fields) {
-                nu.setID3Long(field.getKey(), field.getText());
+                if (field.getKey().equals("IsCompilation")) nu.setID3Data(field.getKey(), field.getText().equals("Yes"));
+                else nu.setID3Long(field.getKey(), field.getText());
             }
             return nu;
         }
@@ -1297,6 +1318,32 @@ public class PopupManager {
                 return this.getValue().toString();
             }
         }
+        
+        private static class JCheckboxKey extends JCheckBox implements KeySet {
+            private String key;
+            
+            // Modifies: this
+            // Effects:  sets key
+            public void setKey(String nuKey) {
+                key = nuKey;
+            }
+            
+            // Effects: gets key
+            public String getKey() {
+                return key;
+            }
+            
+            private List<String> positiveValues = List.of("yes", "1", "true");
+            
+            @Override
+            public String getText() {
+                return this.isSelected() ? "Yes" : "No";
+            }
+            
+            public void setText(String value) {
+                this.setSelected(positiveValues.contains(value.toLowerCase()));
+            }
+        }
 
         private List<KeySet> fields = new ArrayList<KeySet>();
         
@@ -1321,6 +1368,13 @@ public class PopupManager {
                 JComponent component;
                 String className = data.getClass().toString();
                 switch (className.substring(className.lastIndexOf('$') + 1)) {
+                    case "DataClassBool": {
+                        JCheckboxKey field = new JCheckboxKey();
+                        key = field;
+                        component = field;
+                        constraints.insets = noInsets;
+                        break;
+                    }
                     case "DataClassInt": {
                         JNumberFieldKey field = new JNumberFieldKey();
                         key = field;
