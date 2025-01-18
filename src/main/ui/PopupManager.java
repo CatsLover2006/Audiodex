@@ -1320,7 +1320,6 @@ public class PopupManager {
                 KeySet key;
                 JComponent component;
                 String className = data.getClass().toString();
-                System.out.println(className.substring(className.lastIndexOf('$') + 1));
                 switch (className.substring(className.lastIndexOf('$') + 1)) {
                     case "DataClassInt": {
                         JNumberFieldKey field = new JNumberFieldKey();
