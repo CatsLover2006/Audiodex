@@ -21,13 +21,13 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static java.awt.GridBagConstraints.*;
 import static java.io.File.separatorChar;
@@ -1070,11 +1070,15 @@ public class PopupManager {
                 responder.run(this);
             });
         }
+        
+        private static interface DataClass {
+            public String getDataKey();
+            public String getDataValue();
+        }
 
-        // data container class
-        // using a few public fields would make this so much easier
-        private static class DataClass {
-            public DataClass(String key, String value) {
+        // string data container class
+        private static class DataClassStr implements DataClass {
+            public DataClassStr(String key, String value) {
                 dataKey = key;
                 dataValue = value;
             }
@@ -1090,29 +1094,71 @@ public class PopupManager {
                 return dataValue;
             }
         }
+        
+        // integer data container class
+        private static class DataClassInt implements DataClass {
+            public DataClassInt(String key, String value) {
+                dataKey = key;
+                dataValue = value;
+            }
+            
+            private String dataKey;
+            private String dataValue;
+            
+            public String getDataKey() {
+                return dataKey;
+            }
+            
+            public String getDataValue() {
+                return dataValue;
+            }
+        }
+        
+        // static data container class
+        private static class DataClassStatic implements DataClass {
+            public DataClassStatic(String key, String value) {
+                dataKey = key;
+                dataValue = value;
+            }
+            
+            private String dataKey;
+            private String dataValue;
+            
+            public String getDataKey() {
+                return dataKey;
+            }
+            
+            public String getDataValue() {
+                return dataValue;
+            }
+        }
 
         private static final List<DataClass> dataList = new ArrayList<>();
 
         // Set up value list
         static {
-            dataList.add(new DataClass("Title", "Title"));
-            dataList.add(new DataClass("Title (sorting order)", "Title-Sort"));
-            dataList.add(new DataClass("Artist", "Artist"));
-            dataList.add(new DataClass("Artist (sorting order)", "Artist-Sort"));
-            dataList.add(new DataClass("Album", "Album"));
-            dataList.add(new DataClass("Album (sorting order)", "Album-Sort"));
-            dataList.add(new DataClass("Album Artist", "AlbumArtist"));
-            dataList.add(new DataClass("Album Artist (sorting order)", "AlbumArtist-Sort"));
-            dataList.add(new DataClass("Arranger", "Arranger"));
-            dataList.add(new DataClass("Arranger (sorting order)", "Arranger-Sort"));
-            dataList.add(new DataClass("Composer", "Composer"));
-            dataList.add(new DataClass("Producer", "Producer"));
-            dataList.add(new DataClass("Genre", "GenreString"));
-            dataList.add(new DataClass("Track Number", "Track"));
-            dataList.add(new DataClass("Total Tracks", "Tracks"));
-            dataList.add(new DataClass("Disc Number", "Disc"));
-            dataList.add(new DataClass("Total Discs", "Discs"));
-            dataList.add(new DataClass("Comment", "Comment"));
+            dataList.add(new DataClassStr("Title", "Title"));
+            dataList.add(new DataClassStr("Title (sorting order)", "Title-Sort"));
+            dataList.add(new DataClassStr("Artist", "Artist"));
+            dataList.add(new DataClassStr("Artist (sorting order)", "Artist-Sort"));
+            dataList.add(new DataClassStr("Album", "Album"));
+            dataList.add(new DataClassStr("Album (sorting order)", "Album-Sort"));
+            dataList.add(new DataClassStr("Album Artist", "AlbumArtist"));
+            dataList.add(new DataClassStr("Album Artist (sorting order)", "AlbumArtist-Sort"));
+            dataList.add(new DataClassStr("Arranger", "Arranger"));
+            dataList.add(new DataClassStr("Arranger (sorting order)", "Arranger-Sort"));
+            dataList.add(new DataClassInt("Year", "Year"));
+            dataList.add(new DataClassInt("BPM", "BPM"));
+            dataList.add(new DataClassStr("Composer", "Composer"));
+            dataList.add(new DataClassStr("Producer", "Producer"));
+            dataList.add(new DataClassStr("Publisher", "Publisher"));
+            dataList.add(new DataClassStr("Genre", "GenreString"));
+            dataList.add(new DataClassInt("Track Number", "Track"));
+            dataList.add(new DataClassInt("Total Tracks", "Tracks"));
+            dataList.add(new DataClassInt("Disc Number", "Disc"));
+            dataList.add(new DataClassInt("Total Discs", "Discs"));
+            dataList.add(new DataClassStatic("Copyright", "Copyright"));
+            dataList.add(new DataClassStr("Comment", "Comment"));
         }
 
         private static final JVectorIcon MUSIC_ICON;
@@ -1132,7 +1178,7 @@ public class PopupManager {
         @Override
         public Object getValue() {
             ID3Container nu = new ID3Container();
-            for (JTextFieldKey field : fields) {
+            for (KeySet field : fields) {
                 nu.setID3Long(field.getKey(), field.getText());
             }
             return nu;
@@ -1185,11 +1231,17 @@ public class PopupManager {
                 musicArt.setIcon(MUSIC_ICON);
             }
         }
-
-        // Virtual class for JTextField which stores its key (makes life easier)
-        private static class JTextFieldKey extends JEditorPane {
+        
+        private static interface KeySet {
+            public void setKey(String key);
+            public String getKey();
+            public void setText(String text);
+            public String getText();
+        }
+        
+        private static class JTextFieldKey extends JEditorPane implements KeySet {
             private String key;
-
+            
             // Modifies: this
             // Effects:  sets key
             public void setKey(String nuKey) {
@@ -1201,8 +1253,55 @@ public class PopupManager {
                 return key;
             }
         }
+        
+        private static class JStaticTextKey extends JTextFieldKey {
+            @Override
+            public boolean isEditable() {
+                return false;
+            }
+        }
+        
+        private static class JNumberFieldKey extends JSpinner implements KeySet {
+            private String key;
+            
+            public JNumberFieldKey() {
+                this.setModel(new SpinnerNumberModel());
+            }
+            
+            // Modifies: this
+            // Effects:  sets key
+            public void setKey(String nuKey) {
+                key = nuKey;
+            }
+            
+            // Effects: gets key
+            public String getKey() {
+                return key;
+            }
+            
+            public void setText(String text) {
+                try {
+                    this.setValue(Integer.parseInt(text));
+                } catch (NumberFormatException e) {
+                   try {
+                       this.setValue(LocalDate.parse(text).getYear());
+                   } catch (DateTimeParseException ex) {
+                       e.printStackTrace();
+                       ex.printStackTrace();
+                   }
+                }
+            }
+            
+            public String getText() {
+                if ((int) this.getValue() == 0) return "";
+                return this.getValue().toString();
+            }
+        }
 
-        private List<JTextFieldKey> fields = new ArrayList<>();
+        private List<KeySet> fields = new ArrayList<KeySet>();
+        
+        Insets noInsets = new Insets(0, 0, 0, 0);
+        Insets inset = new Insets(1, 1, 1, 1);
 
         // Effects: sets up value pane (objects and layout)
         private void setupValuePane() {
@@ -1218,12 +1317,39 @@ public class PopupManager {
                 valuesLayout.setConstraints(keyLabel, constraints);
                 constraints.weightx = 1;
                 constraints.gridx = 1;
-                JTextFieldKey field = new JTextFieldKey();
-                valuesPanel.add(field);
-                fields.add(field);
-                field.setKey(data.getDataValue());
-                field.setText(getID3Value(data.getDataValue()));
-                valuesLayout.setConstraints(field, constraints);
+                KeySet key;
+                JComponent component;
+                String className = data.getClass().toString();
+                System.out.println(className.substring(className.lastIndexOf('$') + 1));
+                switch (className.substring(className.lastIndexOf('$') + 1)) {
+                    case "DataClassInt": {
+                        JNumberFieldKey field = new JNumberFieldKey();
+                        key = field;
+                        component = field;
+                        constraints.insets = noInsets;
+                        break;
+                    }
+                    case "DataClassStatic": {
+                        JStaticTextKey field = new JStaticTextKey();
+                        key = field;
+                        component = field;
+                        constraints.insets = inset;
+                        break;
+                    }
+                    case "DataClassStr":
+                    default: {
+                        JTextFieldKey field = new JTextFieldKey();
+                        key = field;
+                        component = field;
+                        constraints.insets = inset;
+                        break;
+                    }
+                }
+                valuesPanel.add(component);
+                fields.add(key);
+                key.setKey(data.getDataValue());
+                key.setText(getID3Value(data.getDataValue()));
+                valuesLayout.setConstraints(component, constraints);
                 constraints.gridy++;
             }
             valuesPanel.setLayout(valuesLayout);

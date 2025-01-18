@@ -26,12 +26,6 @@ public class TagConversion {
 
     // Initalizes values since you can't do that at compile time for a hashmap
     static {
-        FieldKey[] ignoreList = {
-                FieldKey.COPYRIGHT
-        }; // Don't overwrite these
-        String[] id3v2ignoreList = {
-                ID3v24Frames.FRAME_ID_COPYRIGHTINFO
-        }; // Don't overwrite these
         keyConv = new HashMap<>();
         keyConv.put(FieldKey.ARTIST, "Artist");
         keyConv.put(FieldKey.ALBUM, "Album");
@@ -90,15 +84,11 @@ public class TagConversion {
         id3v2keyConv.put(ID3v24Frames.FRAME_ID_ALBUM_ARTIST_SORT_ORDER_ITUNES, "AlbumArtist-Sort");
         valConv = new HashMap<>();
         for (Map.Entry<FieldKey, String> entry : keyConv.entrySet()) {
-            if (!arrContains(ignoreList, entry.getKey())) {
-                valConv.put(entry.getValue(), entry.getKey());
-            }
+            valConv.put(entry.getValue(), entry.getKey());
         }
         id3v2valConv = new HashMap<>();
         for (Map.Entry<String, String> entry : id3v2keyConv.entrySet()) {
-            if (!arrContains(id3v2ignoreList, entry.getKey())) {
-                id3v2valConv.put(entry.getValue(), entry.getKey());
-            }
+            id3v2valConv.put(entry.getValue(), entry.getKey());
         }
     }
 
