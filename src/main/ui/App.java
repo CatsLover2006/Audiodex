@@ -1041,10 +1041,6 @@ public class App {
         // Modifies: this
         // Effects:  displays main window
         public static void doGui(String[] args) {
-            mainWindow.setSize(900, 500);
-            mainWindow.setResizable(true);
-            ExceptionIgnore.ignoreExc(() -> mainWindow.setIconImage(loadImage("AppIcon.png")));
-            updateGuiList();
             createPlaybackBar();
             createControlsView();
             createMusicView();
@@ -1052,6 +1048,10 @@ public class App {
             visualizerThread.start();
             musicArt.setIcon(placeholder);
             playFileFromArgs(args);
+            mainWindow.setSize(900, 500);
+            mainWindow.setResizable(true);
+            ExceptionIgnore.ignoreExc(() -> mainWindow.setIconImage(loadImage("AppIcon.png")));
+            updateGuiList();
             mainWindow.add(musicPlaybackView);
             mainWindow.add(musicList);
             setupMainWindowLayout();
