@@ -20,6 +20,7 @@ public class DataManager {
     private ApplicationSettings settings;
     private long dbIndex;
     private String userDir;
+    private int settingsHash;
     private boolean modified = false;
     private static EventLog logger = EventLog.getInstance();
 
@@ -255,6 +256,7 @@ public class DataManager {
         }
         logger.logEvent(new Event("Loaded database!"));
         modified = false;
+        settingsHash = settings.hashCode();
     }
 
     // Effects: returns the ApplicationSettings struct
@@ -267,6 +269,7 @@ public class DataManager {
     //           returns true on success, false on failure
     public boolean saveDatabaseFile() {
         logger.logEvent(new Event("Saving database file..."));
+        if (settingsHash != settings.hashCode()) modified = false;
         if (!modified) {
             logger.logEvent(new Event("Database file already up to date! No need to save."));
             return true;
