@@ -1316,6 +1316,7 @@ public class App {
                         database.sortSongList("Default");
                         updateGuiList();
                         GuiLoaderFrame.closeLoadingThread();
+                        if (database.getSettings().doSaveOnImport()) database.saveDatabaseFile();
                     });
         }
 
