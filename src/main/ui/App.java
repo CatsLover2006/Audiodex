@@ -1105,7 +1105,7 @@ public class App {
 
         // Effects: updates control icons
         public static void updateControls() {
-            playButton.setIcon(playbackManager.paused() ? pause : play);
+            playButton.setIcon(playbackManager.paused() ? play : pause);
             UIDefaults defaults = getThemeStatus().getDefaults();
             prevButton.setForeground(played.isEmpty() ? defaults.getColor("Button.disabledText") :
                     defaults.getColor("RootPane.foreground"));
