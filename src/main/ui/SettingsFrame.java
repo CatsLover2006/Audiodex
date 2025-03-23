@@ -48,10 +48,14 @@ public class SettingsFrame extends JFrame {
     // Sets the settings checkboxes
     private void setSettings() {
         checkBoxes[0].setSelected(settings.doSoundCheck());
+        checkBoxes[1].setSelected(settings.doSaveOnImport());
+        checkBoxes[2].setSelected(settings.doSaveOnClose());
     }
 
     JCheckBox[] checkBoxes = new JCheckBox[] {
-            new JCheckBox("ReplayGain")
+            new JCheckBox("ReplayGain"),
+            new JCheckBox("Save Database On File Import"),
+            new JCheckBox("Save Database On Close")
     };
 
     // Set up update listeners
@@ -61,6 +65,18 @@ public class SettingsFrame extends JFrame {
                 settings.toggleSoundCheck();
             }
             ExceptionIgnore.ignoreExc(() -> responder[0].run());
+        });
+        checkBoxes[1].addChangeListener(e -> {
+            if (checkBoxes[1].isSelected() != settings.doSaveOnImport()) {
+                settings.toggleSaveOnImport();
+            }
+            ExceptionIgnore.ignoreExc(() -> responder[1].run());
+        });
+        checkBoxes[2].addChangeListener(e -> {
+            if (checkBoxes[2].isSelected() != settings.doSaveOnClose()) {
+                settings.toggleSaveOnClose();
+            }
+            ExceptionIgnore.ignoreExc(() -> responder[2].run());
         });
     }
 }

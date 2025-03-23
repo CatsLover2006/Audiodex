@@ -405,7 +405,7 @@ public class App {
 
             @Override
             public void Quit() {
-
+                // No
             }
 
             @Override
@@ -981,6 +981,7 @@ public class App {
                             }
                         }
                         mainWindow.dispose();
+                        if (database.getSettings().doSaveOnClose()) database.saveDatabaseFile();
                         EventLog.getInstance().iterator().forEachRemaining(event ->
                                     AnsiConsole.out().println(String.format("%s: %s",
                                             event.getDate().toString(), event.getDescription())));
@@ -1312,6 +1313,7 @@ public class App {
                 database.sortSongList("Default");
                 updateGuiList();
                 GuiLoaderFrame.closeLoadingThread();
+                if (database.getSettings().doSaveOnImport()) database.saveDatabaseFile();
             });
         }
 

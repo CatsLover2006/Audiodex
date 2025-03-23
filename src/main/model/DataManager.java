@@ -181,9 +181,9 @@ public class DataManager {
             logger.logEvent(new Event("Unknown file type, ignored file."));
             return;
         }
+        modified = true;
         songFilelist.add(data);
         logger.logEvent(new Event("Added file " + filename + "!"));
-        modified = true;
     }
 
     // Modifies: this
@@ -267,6 +267,10 @@ public class DataManager {
     //           returns true on success, false on failure
     public boolean saveDatabaseFile() {
         logger.logEvent(new Event("Saving database file..."));
+        if (!modified) {
+            logger.logEvent(new Event("Database file already up to date! No need to save."));
+            return true;
+        }
         File userDirFile = new File(userDir);
         if (!userDirFile.exists()) {
             if (!userDirFile.mkdirs()) {
