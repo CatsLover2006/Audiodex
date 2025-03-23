@@ -1,6 +1,8 @@
 package model;
 
-import java.util.ArrayList;
+import org.fusesource.jansi.AnsiConsole;
+
+import java.util.LinkedList;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -13,14 +15,14 @@ import java.util.Iterator;
 public class EventLog implements Iterable<Event> {
     /** the only EventLog in the system (Singleton Design Pattern) */
     private static EventLog theLog;
-    private Collection<Event> events;
+    private LinkedList<Event> events;
     
     /**
      * Prevent external construction.
      * (Singleton Design Pattern).
      */
     private EventLog() {
-        events = new ArrayList<Event>();
+        events = new LinkedList<Event>();
     }
     
     /**
@@ -42,6 +44,15 @@ public class EventLog implements Iterable<Event> {
      */
     public void logEvent(Event e) {
         events.add(e);
+        // Keep size under control
+        if (events.size() > 4096) {
+            // When we accumulate 4096 events, dump all but 1024 to the console
+            while (events.size() > 1024) {
+                Event event = events.removeLast();
+                AnsiConsole.out().println(String.format("%s: %s",
+                        event.getDate().toString(), event.getDescription()));
+            }
+        }
     }
     
     /**
