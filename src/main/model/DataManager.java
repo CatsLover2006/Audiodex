@@ -269,7 +269,7 @@ public class DataManager {
     //           returns true on success, false on failure
     public boolean saveDatabaseFile() {
         logger.logEvent(new Event("Saving database file..."));
-        if (settingsHash != settings.hashCode()) modified = false;
+        if (settingsHash != settings.hashCode()) modified = true;
         if (!modified) {
             logger.logEvent(new Event("Database file already up to date! No need to save."));
             return true;
