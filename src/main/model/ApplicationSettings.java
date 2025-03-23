@@ -73,6 +73,6 @@ public class ApplicationSettings {
     // Effects: generates a hash code using all settings
     @Override
     public int hashCode() {
-        return Objects.hash(soundCheck, saveOnClose, saveOnImport);
+        return (soundCheck ? 1 : 0) + (saveOnClose ? 2 : 0) + (saveOnImport ? 4 : 0);
     }
 }
