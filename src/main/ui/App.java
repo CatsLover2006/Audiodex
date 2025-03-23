@@ -981,14 +981,25 @@ public class App {
                             }
                         }
                         mainWindow.dispose();
-                        if (database.getSettings().doSaveOnClose()) database.saveDatabaseFile();
-                        EventLog.getInstance().iterator().forEachRemaining(event ->
-                                    AnsiConsole.out().println(String.format("%s: %s",
-                                            event.getDate().toString(), event.getDescription())));
-                        exit(0);
+                        if (database.getSettings().doSaveOnClose()) {
+                            database.saveDatabaseFile();
+                            quitApp();
+                        }
+                        new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
+                                + "Save before quitting?", ErrorImageTypes.WARNING, popup -> {
+                            database.saveDatabaseFile();
+                            quitApp();
+                        }, popup -> quitApp(), "Yes", "No");
                     }).start();
                 }
             });
+        }
+        
+        private static void quitApp() {
+            EventLog.getInstance().iterator().forEachRemaining(event ->
+                    AnsiConsole.out().println(String.format("%s: %s",
+                            event.getDate().toString(), event.getDescription())));
+            exit(0);
         }
 
         private static int miniplayerHeight = -1;
@@ -1227,11 +1238,16 @@ public class App {
             item = new JMenuItem("Change Database");
             item.addActionListener(e -> {
                 if (database.beenModified()) {
-                    new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
-                            + "Save before loading?", ErrorImageTypes.WARNING, popup -> {
-                                database.saveDatabaseFile();
-                                moveDbFolder();
-                            }, popup -> moveDbFolder(), "Yes", "No");
+                    if (database.getSettings().doSaveOnClose()) {
+                        database.saveDatabaseFile();
+                        moveDbFolder();
+                    } else {
+                        new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
+                                + "Save before loading?", ErrorImageTypes.WARNING, popup -> {
+                            database.saveDatabaseFile();
+                            moveDbFolder();
+                        }, popup -> moveDbFolder(), "Yes", "No");
+                    }
                 } else {
                     moveDbFolder();
                 }
