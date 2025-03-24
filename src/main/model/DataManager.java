@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import static java.nio.file.Files.delete;
@@ -17,6 +18,7 @@ import static java.io.File.separatorChar;
 // Instantiable class to handle the file list
 public class DataManager {
     private final List<AudioDataStructure> songFilelist;
+    private final LinkedList<Integer> knownHashes;
     private ApplicationSettings settings;
     private long dbIndex;
     private String userDir;
@@ -28,6 +30,7 @@ public class DataManager {
     // Effects:  fileList is empty, loads database from (user home directory)/audiodex
     public DataManager() {
         songFilelist = new ArrayList<>();
+        knownHashes = new LinkedList<>();
         settings = new ApplicationSettings();
         userDir = System.getProperty("user.home") + separatorChar + "audiodex" + separatorChar;
     }
@@ -227,7 +230,10 @@ public class DataManager {
 
     // Effects: returns if database has been modified since last save
     public boolean beenModified() {
+        if (modified) return true; // Optimization
         if (settingsHash != settings.hashCode()) modified = true;
+        if (songFilelist.stream().anyMatch(structure -> !knownHashes.contains(structure.getId3Data().hashCode())))
+            modified = true;
         return modified;
     }
 
@@ -258,6 +264,9 @@ public class DataManager {
         logger.logEvent(new Event("Loaded database!"));
         modified = false;
         settingsHash = settings.hashCode();
+        knownHashes.clear();
+        for (AudioDataStructure structure : songFilelist) knownHashes.addLast(structure.getId3Data().hashCode());
+        logger.logEvent(new Event("Updated cached data."));
     }
 
     // Effects: returns the ApplicationSettings struct
@@ -274,6 +283,9 @@ public class DataManager {
             logger.logEvent(new Event("Database file already up to date! No need to save."));
             return true;
         }
+        settingsHash = settings.hashCode();
+        knownHashes.clear();
+        for (AudioDataStructure structure : songFilelist) knownHashes.addLast(structure.getId3Data().hashCode());
         File userDirFile = new File(userDir);
         if (!userDirFile.exists()) {
             if (!userDirFile.mkdirs()) {
