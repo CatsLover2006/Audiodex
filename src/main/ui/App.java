@@ -970,38 +970,38 @@ public class App {
             mainWindow.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    new Thread(() -> {
-                        mainWindow.setVisible(false);
-                        if (!audioConverterList.isEmpty()) {
-                            ExceptionIgnore.ignoreExc(() -> SwingUtilities.invokeAndWait(() ->
-                                    new ErrorPopupFrame("Waiting for encoders<br>to finish...",
-                                            ErrorImageTypes.INFO, null).updateUI()));
-                            while (!audioConverterList.isEmpty()) {
-                                waitForFirstEncoder();
-                            }
+                    if (database.beenModified()) {
+                        if (database.getSettings().doSaveOnClose()) {
+                            database.saveDatabaseFile();
+                            quitApp();
                         }
-                        mainWindow.dispose();
-                        if (database.beenModified()) {
-                            if (database.getSettings().doSaveOnClose()) {
-                                database.saveDatabaseFile();
-                                quitApp();
-                            }
-                            new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
-                                    + "Save before quitting?", ErrorImageTypes.WARNING, popup -> {
-                                database.saveDatabaseFile();
-                                quitApp();
-                            }, popup -> quitApp(), "Yes", "No");
-                        } else quitApp();
-                    }).start();
+                        new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
+                                + "Save before quitting?", ErrorImageTypes.WARNING, popup -> {
+                            database.saveDatabaseFile();
+                            quitApp();
+                        }, popup -> quitApp(), "Yes", "No");
+                    } else quitApp();
                 }
             });
         }
         
         private static void quitApp() {
-            EventLog.getInstance().iterator().forEachRemaining(event ->
-                    AnsiConsole.out().println(String.format("%s: %s",
-                            event.getDate().toString(), event.getDescription())));
-            exit(0);
+            new Thread(() -> {
+                mainWindow.setVisible(false);
+                if (!audioConverterList.isEmpty()) {
+                    ExceptionIgnore.ignoreExc(() -> SwingUtilities.invokeAndWait(() ->
+                            new ErrorPopupFrame("Waiting for encoders<br>to finish...",
+                                    ErrorImageTypes.INFO, null).updateUI()));
+                    while (!audioConverterList.isEmpty()) {
+                        waitForFirstEncoder();
+                    }
+                }
+                mainWindow.dispose();
+                EventLog.getInstance().iterator().forEachRemaining(event ->
+                        AnsiConsole.out().println(String.format("%s: %s",
+                                event.getDate().toString(), event.getDescription())));
+                exit(0);
+            }).start();
         }
 
         private static int miniplayerHeight = -1;
