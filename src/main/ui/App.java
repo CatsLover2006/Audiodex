@@ -981,15 +981,17 @@ public class App {
                             }
                         }
                         mainWindow.dispose();
-                        if (database.getSettings().doSaveOnClose()) {
-                            database.saveDatabaseFile();
-                            quitApp();
-                        }
-                        new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
-                                + "Save before quitting?", ErrorImageTypes.WARNING, popup -> {
-                            database.saveDatabaseFile();
-                            quitApp();
-                        }, popup -> quitApp(), "Yes", "No");
+                        if (database.beenModified()) {
+                            if (database.getSettings().doSaveOnClose()) {
+                                database.saveDatabaseFile();
+                                quitApp();
+                            }
+                            new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
+                                    + "Save before quitting?", ErrorImageTypes.WARNING, popup -> {
+                                database.saveDatabaseFile();
+                                quitApp();
+                            }, popup -> quitApp(), "Yes", "No");
+                        } else quitApp();
                     }).start();
                 }
             });
