@@ -71,7 +71,7 @@ public class Flac implements AudioEncoder {
             FLACFileOutputStream outputStream = new FLACFileOutputStream(outFile);
             flac.setOutputStream(outputStream);
             AudioSample sample;
-            int[] integerSampleRepresentation;
+            int[] integerSampleRepresentation = new int[format.getFrameSize()];
             int framesRead, recodedSample; // Memory optimization
             byte[] sampleData;
             flac.openFLACStream();
@@ -79,7 +79,7 @@ public class Flac implements AudioEncoder {
                 sample = decoder.getNextSample();
                 framesRead = sample.getLength() / bytesPerSample;
                 sampleData = sample.getData();
-                integerSampleRepresentation = new int[framesRead];
+                if (integerSampleRepresentation.length < framesRead) integerSampleRepresentation = new int[framesRead];
                 for (int i = 0, j = 0; i < sample.getLength(); i += bytesPerSample, j++) {
                     recodedSample = 0;
                     if (bigEndian) {
