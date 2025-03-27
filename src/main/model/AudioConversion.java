@@ -119,6 +119,9 @@ public class AudioConversion {
             case MP3:
                 helper = new MP3();
                 break;
+            case FLAC:
+                helper = new Flac();
+                break;
             default:  // We done here
                 error = true;
                 done = true;
