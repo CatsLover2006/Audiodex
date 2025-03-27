@@ -50,8 +50,7 @@ An audiofile (hehe get it?) manager, which can play audio and reencode audio int
 - [ ] (Hopefully) OGG: Vorbis
 - [x] WAV
 - [x] AIFF
-- [ ] (Maybe) FLAC
-  - [_Found library!_](https://sourceforge.net/projects/javaflacencoder/)
+- [x] FLAC
 - [ ] (Maybe) M4A: ALAC
 - [ ] (Maybe) APE
 - [ ] (Maybe) WMA
