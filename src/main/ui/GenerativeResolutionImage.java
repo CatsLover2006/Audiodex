@@ -1,7 +1,9 @@
 package ui;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.AbstractMultiResolutionImage;
+import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.util.*;
@@ -33,11 +35,47 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
         } else { // tall
             width = (int) (height / ratio);
         }
+        //*// Original method
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D draw = image.createGraphics();
         draw.drawImage(bufferedImage.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING), 0, 0, null);
         draw.dispose();
         image.flush();
+        /*//*//*/// AffineTransform method
+        int tHeight = originalHeight;
+        int tWidth = originalWidth;
+        BufferedImage buffer = bufferedImage;
+        BufferedImage image;
+        AffineTransformOp scaleOperation;
+        AffineTransform scaleTransform;
+        while (tWidth > width * 2 || tHeight > height * 2) {
+            if (!hasImage(Math.floorDiv(tWidth, 2), Math.floorDiv(tHeight, 2))) {
+                scaleTransform = // Seems pointless but should hold quality better outside powers of 2
+                        AffineTransform.getScaleInstance(Math.floorDiv(tWidth, 2) / (double) tWidth,
+                                Math.floorDiv(tHeight, 2) / (double) tHeight);
+                scaleOperation = new AffineTransformOp(scaleTransform, AffineTransformOp.TYPE_BICUBIC);
+                image = scaleOperation.filter(buffer, new BufferedImage(Math.floorDiv(tWidth, 2), Math.floorDiv(tHeight, 2), BufferedImage.TYPE_INT_ARGB));
+                if (ratio > 1) { // wide
+                    images.put(image.getWidth(), image);
+                } else { // tall
+                    images.put(image.getHeight(), image);
+                }
+            }
+            buffer = (BufferedImage) getImage(Math.floorDiv(tWidth, 2), Math.floorDiv(tHeight, 2));
+            tWidth = buffer.getWidth();
+            tHeight = buffer.getHeight();
+        }
+        AffineTransform finalScaleTransform = AffineTransform.getScaleInstance(width / (double)tWidth, height / (double)tHeight);
+        AffineTransformOp finalScaleOperation = new AffineTransformOp(finalScaleTransform, AffineTransformOp.TYPE_BICUBIC);
+        image = finalScaleOperation.filter(buffer, new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB));
+        /*//*//-/// Graphics2D method
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D draw = image.createGraphics();
+        draw.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+        draw.drawImage(bufferedImage, 0, 0, width, height, null);
+        draw.dispose();
+        image.flush();
+        //*///
         if (ratio > 1) { // wide
             images.put(width, image);
         } else { // tall
