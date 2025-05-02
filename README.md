@@ -1,6 +1,7 @@
 # Audiodex
 
-This is a temp title
+This is a temp title.<br>
+I plan to rewrite the UI for this from scratch in the near future.
 
 ## About
 ![GUI Preview](./previewgui.png)<br>
