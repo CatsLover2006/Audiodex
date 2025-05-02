@@ -35,5 +35,6 @@
     <orderEntry type="library" name="vavi-sound" level="project" />
     <orderEntry type="library" name="vavi-sound-alac 0.3.2 (Self-Compiled)" level="project" />
     <orderEntry type="library" name="javaFlacEncoder 0.3.2" level="project" />
+    <orderEntry type="library" name="java-image-scaling 0.8.6" level="project" />
   </component>
 </module>

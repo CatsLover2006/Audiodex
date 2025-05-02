@@ -1,5 +1,8 @@
 package ui;
 
+import com.mortennobel.imagescaling.ResampleFilters;
+import com.mortennobel.imagescaling.ResampleOp;
+
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AbstractMultiResolutionImage;
@@ -35,13 +38,13 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
         } else { // tall
             width = (int) (height / ratio);
         }
-        //*// Original method
+        /*// Original method
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D draw = image.createGraphics();
         draw.drawImage(bufferedImage.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING), 0, 0, null);
         draw.dispose();
         image.flush();
-        /*//*//*/// AffineTransform method
+        /*//*//-/// AffineTransform method
         int tHeight = originalHeight;
         int tWidth = originalWidth;
         BufferedImage buffer = bufferedImage;
@@ -75,6 +78,11 @@ public class GenerativeResolutionImage extends AbstractMultiResolutionImage {
         draw.drawImage(bufferedImage, 0, 0, width, height, null);
         draw.dispose();
         image.flush();
+        /*//*//*/// java-image-scaling method
+        ResampleOp resampleOp = new ResampleOp(width, height);
+        resampleOp.setFilter(ResampleFilters.getTriangleFilter()); // Fastest in lib, also looks good
+        BufferedImage image = resampleOp.doFilter(bufferedImage,
+                new BufferedImage(width, height, bufferedImage.getType()), width, height);
         //*///
         if (ratio > 1) { // wide
             images.put(width, image);
