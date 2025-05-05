@@ -1,7 +1,7 @@
 # Audiodex
 
 This is a temp title.<br>
-I plan to rewrite this in the near future, using Maven. Stay *tuned*.
+I plan to rewrite this, largely from scratch with Maven, in the near future. Stay *tuned*.
 
 ## About
 ![GUI Preview](./previewgui.png)<br>
