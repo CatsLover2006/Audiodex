@@ -974,12 +974,13 @@ public class App {
                         if (database.getSettings().doSaveOnClose()) {
                             database.saveDatabaseFile();
                             quitApp();
+                        } else {
+                            new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
+                                    + "Save before quitting?", ErrorImageTypes.WARNING, popup -> {
+                                database.saveDatabaseFile();
+                                quitApp();
+                            }, popup -> quitApp(), "Yes", "No");
                         }
-                        new ConfirmationPopupFrame("Database has been modified<br>since last save.<br>"
-                                + "Save before quitting?", ErrorImageTypes.WARNING, popup -> {
-                            database.saveDatabaseFile();
-                            quitApp();
-                        }, popup -> quitApp(), "Yes", "No");
                     } else quitApp();
                 }
             });
